@@ -40,6 +40,7 @@ public class GameSession {
     private Integer completedMatches;
     private LocalDateTime currentMatchStartedAt;
     private LocalDateTime currentMatchExpiresAt;
+    private Integer warningBeforeExpiryMinutesSnapshot;
     private Boolean matchExpired;
 
     @Column(precision = 10, scale = 2)

@@ -1,5 +1,6 @@
 com\cafe\ps\dto\DashboardSummary.class
 com\cafe\ps\entity\GameSession$GameSessionBuilder.class
+com\cafe\ps\service\PricingService.class
 com\cafe\ps\entity\GameSession.class
 com\cafe\ps\dto\StartSessionRequest.class
 com\cafe\ps\entity\SessionType.class
@@ -7,6 +8,7 @@ com\cafe\ps\entity\DeviceStatus.class
 com\cafe\ps\entity\DeviceType.class
 com\cafe\ps\entity\Device$DeviceBuilder.class
 com\cafe\ps\entity\Pricing$PricingBuilder.class
+com\cafe\ps\dto\UpdatePricingRequest.class
 com\cafe\ps\service\SessionService.class
 com\cafe\ps\controller\SessionController.class
 com\cafe\ps\controller\DashboardController.class

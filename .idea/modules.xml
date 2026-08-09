@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/backend/playstation-cafe-backend.iml" filepath="$PROJECT_DIR$/backend/playstation-cafe-backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Gaming-Cafe-Management-System.iml" filepath="$PROJECT_DIR$/.idea/Gaming-Cafe-Management-System.iml" />
     </modules>
   </component>
 </project>
