@@ -21,34 +21,31 @@ import java.util.Objects;
 public class SessionService {
     private final DeviceRepository deviceRepository;
     private final GameSessionRepository sessionRepository;
-    private final PricingRepository pricingRepository;
+    private final PricingService pricingService;
 
     @Transactional
     public GameSession start(Long deviceId, SessionType sessionType, Integer plannedMinutes, Integer matchCount) {
-        Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new IllegalArgumentException("Device not found"));
+        Device device = deviceRepository.findById(deviceId).orElseThrow(() -> new IllegalArgumentException("Device not found"));
         assertDeviceAvailable(device);
 
-        Pricing pricing = pricingRepository.findByDeviceTypeAndSessionType(device.getType(), sessionType)
-                .orElseThrow(() -> new IllegalStateException("Pricing is not configured for " + device.getType() + " / " + sessionType));
-
+        Pricing pricing = pricingService.getPricing(device.getType(), sessionType);
         LocalDateTime now = LocalDateTime.now();
-        GameSession.GameSessionBuilder builder = GameSession.builder()
-                .device(device)
-                .startTime(now)
-                .sessionType(sessionType)
-                .billingUnit(pricing.getBillingUnit())
-                .unitPriceSnapshot(pricing.getPrice())
-                .hourlyRateSnapshot(pricing.getBillingUnit() == BillingUnit.HOUR ? pricing.getPrice() : device.getHourlyRate())
-                .status(SessionStatus.ACTIVE);
+        GameSession.GameSessionBuilder builder =
+                GameSession.builder().device(device).startTime(now)
+                        .sessionType(sessionType).billingUnit(pricing.getBillingUnit())
+                        .unitPriceSnapshot(pricing.getPrice())
+                        .hourlyRateSnapshot(pricing.getBillingUnit() == BillingUnit.HOUR ?
+                                pricing.getPrice() : BigDecimal.ZERO).status(SessionStatus.ACTIVE);
 
         if (sessionType == SessionType.MATCH) {
             int duration = pricing.getMatchDurationMinutes() == null ? 15 : pricing.getMatchDurationMinutes();
             int count = matchCount == null ? 1 : matchCount;
             builder.plannedMinutes(null)
                     .matchDurationMinutesSnapshot(duration)
-                    .purchasedMatches(count)
-                    .completedMatches(0)
+                    .warningBeforeExpiryMinutesSnapshot(
+                            pricing.getWarningBeforeExpiryMinutes()
+                    )
+                    .purchasedMatches(count).completedMatches(0)
                     .currentMatchStartedAt(now)
                     .currentMatchExpiresAt(now.plusMinutes(duration))
                     .matchExpired(false);
@@ -136,8 +133,7 @@ public class SessionService {
     }
 
     private void assertDeviceAvailable(Device device) {
-        if (device.getStatus() == DeviceStatus.PLAYING ||
-                sessionRepository.findFirstByDeviceIdAndStatusOrderByStartTimeDesc(device.getId(), SessionStatus.ACTIVE).isPresent()) {
+        if (device.getStatus() == DeviceStatus.PLAYING || sessionRepository.findFirstByDeviceIdAndStatusOrderByStartTimeDesc(device.getId(), SessionStatus.ACTIVE).isPresent()) {
             throw new IllegalStateException("Device already has an active session");
         }
         if (device.getStatus() == DeviceStatus.MAINTENANCE || device.getStatus() == DeviceStatus.OFFLINE) {
@@ -153,7 +149,8 @@ public class SessionService {
 
     private GameSession getActiveMatch(Long sessionId) {
         GameSession session = getActive(sessionId);
-        if (session.getSessionType() != SessionType.MATCH) throw new IllegalStateException("Session is not a MATCH session");
+        if (session.getSessionType() != SessionType.MATCH)
+            throw new IllegalStateException("Session is not a MATCH session");
         return session;
     }
 
@@ -177,8 +174,19 @@ public class SessionService {
         return sessionRepository.save(session);
     }
 
-    private static BigDecimal nz(BigDecimal n) { return n == null ? BigDecimal.ZERO : n; }
-    private static int valueOrZero(Integer n) { return n == null ? 0 : n; }
-    private static int valueOrOne(Integer n) { return n == null || n < 1 ? 1 : n; }
-    private static int valueOrDefault(Integer n, int d) { return n == null ? d : n; }
+    private static BigDecimal nz(BigDecimal n) {
+        return n == null ? BigDecimal.ZERO : n;
+    }
+
+    private static int valueOrZero(Integer n) {
+        return n == null ? 0 : n;
+    }
+
+    private static int valueOrOne(Integer n) {
+        return n == null || n < 1 ? 1 : n;
+    }
+
+    private static int valueOrDefault(Integer n, int d) {
+        return n == null ? d : n;
+    }
 }
