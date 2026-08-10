@@ -6,7 +6,7 @@ import org.springframework.context.annotation.*;
 import java.math.BigDecimal;
 @Configuration
 public class SeedData {
-    @Bean CommandLineRunner seed(DeviceRepository devices, PricingRepository pricing) {
+    @Bean CommandLineRunner seed(DeviceRepository devices, PricingRepository pricing, ProductRepository products) {
         return args -> {
             if (devices.count() == 0) {
                 for (int i = 1; i <= 4; i++) devices.save(Device.builder().name("PS4-"+i).type(DeviceType.PS4).status(DeviceStatus.AVAILABLE).hourlyRate(new BigDecimal("40.00")).build());
@@ -71,7 +71,14 @@ public class SeedData {
                     15,
                     2
             );
+
+            seedProduct(products, "Tea", "15.00");
+            seedProduct(products, "Coffee", "20.00");
+            seedProduct(products, "Chips", "15.00");
+            seedProduct(products, "Water", "10.00");
+            seedProduct(products, "Pepsi", "20.00");
         };
+
     }
     private static void seedPrice(
             PricingRepository repo,
@@ -98,6 +105,30 @@ public class SeedData {
                             .warningBeforeExpiryMinutes(
                                     warningBeforeExpiryMinutes
                             )
+                            .active(true)
+                            .build()
+            );
+        }
+    }
+
+    private static void seedProduct(
+            ProductRepository repo,
+            String name,
+            String price
+    ) {
+
+        boolean exists = repo.findAll()
+                .stream()
+                .anyMatch(product ->
+                        product.getName()
+                                .equalsIgnoreCase(name)
+                );
+
+        if (!exists) {
+            repo.save(
+                    Product.builder()
+                            .name(name)
+                            .price(new BigDecimal(price))
                             .active(true)
                             .build()
             );

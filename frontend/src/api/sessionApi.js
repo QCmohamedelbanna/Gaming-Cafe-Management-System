@@ -15,11 +15,11 @@ export async function getActiveSessions() {
 }
 
 export async function startSession({
-  deviceId,
-  sessionType,
-  plannedMinutes = null,
-  matchCount = null,
-}) {
+                                     deviceId,
+                                     sessionType,
+                                     plannedMinutes = null,
+                                     matchCount = null,
+                                   }) {
   const response = await fetch(BASE_URL, {
     method: "POST",
     headers: {
@@ -60,10 +60,10 @@ export async function extendSession(sessionId, minutes) {
 
 export async function finishMatch(sessionId) {
   const response = await fetch(
-    `${BASE_URL}/${sessionId}/match/finish`,
-    {
-      method: "POST",
-    }
+      `${BASE_URL}/${sessionId}/match/finish`,
+      {
+        method: "POST",
+      }
   );
 
   return handleResponse(response);
@@ -71,10 +71,10 @@ export async function finishMatch(sessionId) {
 
 export async function addMatch(sessionId) {
   const response = await fetch(
-    `${BASE_URL}/${sessionId}/match/add`,
-    {
-      method: "POST",
-    }
+      `${BASE_URL}/${sessionId}/match/add`,
+      {
+        method: "POST",
+      }
   );
 
   return handleResponse(response);
