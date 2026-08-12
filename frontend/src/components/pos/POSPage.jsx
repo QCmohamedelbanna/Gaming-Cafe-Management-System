@@ -5,9 +5,11 @@ import {getProducts} from "../../api/productApi";
 import {
     createOrder, addOrderItem, removeOrderItem, completeOrder,
 } from "../../api/orderApi";
+import { refundBill } from "../../api/billingApi";
 
 import ProductCard from "./ProductCard";
 import OrderCart from "./OrderCart";
+import ReceiptModal from "../dashboard/ReceiptModal";
 
 export default function POSPage({
                                     attachedSession = null,
@@ -21,6 +23,8 @@ export default function POSPage({
     const [completing, setCompleting] = useState(false);
 
     const [message, setMessage] = useState("");
+    const [receipt, setReceipt] = useState(null);
+    const [refunding, setRefunding] = useState(false);
 
     useEffect(() => {
         loadProducts();
@@ -110,7 +114,8 @@ export default function POSPage({
 
             const completed = await completeOrder(order.id);
 
-            setMessage(`Order #${completed.id} completed — ${Number(completed.totalAmount).toFixed(2)} EGP`);
+            setMessage(`Bill ${completed.billNumber} completed — ${Number(completed.totalAmount).toFixed(2)} EGP`);
+            setReceipt(completed);
 
             setOrder(null);
         } catch (error) {
@@ -118,6 +123,20 @@ export default function POSPage({
             setMessage("Could not complete order.");
         } finally {
             setCompleting(false);
+        }
+    }
+
+    async function handleRefund(reason) {
+        if (!receipt?.billId) return;
+
+        try {
+            setRefunding(true);
+            setReceipt(await refundBill(receipt.billId, reason));
+        } catch (error) {
+            console.error(error);
+            setMessage(error.message || "Could not refund bill.");
+        } finally {
+            setRefunding(false);
         }
     }
 
@@ -194,5 +213,13 @@ export default function POSPage({
                 completing={completing}
             />
         </div>
+        {receipt && (
+            <ReceiptModal
+                bill={receipt}
+                refunding={refunding}
+                onClose={() => setReceipt(null)}
+                onRefund={handleRefund}
+            />
+        )}
     </div>);
 }

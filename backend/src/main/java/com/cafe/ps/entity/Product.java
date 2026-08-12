@@ -27,4 +27,11 @@ public class Product {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @Column(
+            nullable = false,
+            columnDefinition = "boolean default false"
+    )
+    @Builder.Default
+    private Boolean deleted = false;
 }

@@ -37,11 +37,22 @@ export async function startSession({
 }
 
 export async function stopSession(sessionId) {
-  const response = await fetch(`${BASE_URL}/${sessionId}/stop`, {
-    method: "POST",
-  });
+    const response = await fetch(`${BASE_URL}/${sessionId}/stop`, {
+        method: "POST",
+    });
 
-  return handleResponse(response);
+    return handleResponse(response);
+}
+
+export async function prepareCheckout(sessionId) {
+    const response = await fetch(
+        `${BASE_URL}/${sessionId}/checkout/prepare`,
+        {
+            method: "POST",
+        }
+    );
+
+    return handleResponse(response);
 }
 
 export async function extendSession(sessionId, minutes) {
@@ -74,6 +85,21 @@ export async function addMatch(sessionId) {
       `${BASE_URL}/${sessionId}/match/add`,
       {
         method: "POST",
+      }
+  );
+
+  return handleResponse(response);
+}
+
+export async function checkoutSession(sessionId, data) {
+  const response = await fetch(
+      `${BASE_URL}/${sessionId}/checkout`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       }
   );
 

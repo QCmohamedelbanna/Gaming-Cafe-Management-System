@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 
 import { getDevices } from "../../api/deviceApi";
 import { getPricing } from "../../api/pricingApi";
-
+import { getOpenOrderForSession } from "../../api/orderApi";
+import { payBill, refundBill } from "../../api/billingApi";
 
 import {
     getActiveSessions,
     startSession,
-    stopSession,
+    prepareCheckout,
     extendSession,
     finishMatch,
     addMatch,
@@ -22,6 +23,8 @@ import {
 
 import DeviceCard from "./DeviceCard";
 import StartSessionModal from "./StartSessionModal";
+import CheckoutModal from "./CheckoutModal";
+import ReceiptModal from "./ReceiptModal";
 
 
 export default function Dashboard({ onAddOrder }) {
@@ -41,7 +44,47 @@ export default function Dashboard({ onAddOrder }) {
     const [products, setProducts] = useState([]);
 
     const [addingProductId, setAddingProductId] = useState(null);
+    const [sessionOrders, setSessionOrders] = useState({});
+    const [checkout, setCheckout] = useState(null);
+    const [preparingSessionId, setPreparingSessionId] = useState(null);
+    const [checkingOut, setCheckingOut] = useState(false);
+    const [receipt, setReceipt] = useState(null);
+    const [refunding, setRefunding] = useState(false);
 
+
+    async function loadSessionOrders(sessionsData) {
+        try {
+            const orders = {};
+
+            await Promise.all(
+                sessionsData.map(async (session) => {
+                    try {
+                        const order =
+                            await getOpenOrderForSession(
+                                session.id
+                            );
+
+                        orders[session.id] = order;
+                    } catch (error) {
+                        console.error(
+                            `Could not load order for session ${session.id}`,
+                            error
+                        );
+
+                        orders[session.id] = null;
+                    }
+                })
+            );
+
+            setSessionOrders(orders);
+
+        } catch (error) {
+            console.error(
+                "Could not load session orders",
+                error
+            );
+        }
+    }
 
 
     async function handleQuickAddProduct(
@@ -63,6 +106,7 @@ export default function Dashboard({ onAddOrder }) {
                 1
             );
 
+            await loadActiveSessions();
             setMessage(
                 `${product.name} added to ${session.device?.name}`
             );
@@ -108,6 +152,7 @@ export default function Dashboard({ onAddOrder }) {
             setPricing(pricingData);
             setProducts(productsData);
 
+            await loadSessionOrders(sessionsData);
         } catch (error) {
 
             console.error(
@@ -141,6 +186,7 @@ export default function Dashboard({ onAddOrder }) {
                 await getActiveSessions();
 
             setActiveSessions(sessions);
+            await loadSessionOrders(sessions);
 
         } catch (error) {
 
@@ -236,21 +282,76 @@ export default function Dashboard({ onAddOrder }) {
         );
     }
 
-    async function handleStopSession(sessionId) {
+    async function handleOpenCheckout(session, order) {
+        if (preparingSessionId != null) return;
+
         try {
+            setPreparingSessionId(session.id);
+            setError("");
             setMessage("");
 
-            await stopSession(sessionId);
+            const finalBill = await prepareCheckout(session.id);
+
+            setCheckout({
+                session,
+                order,
+                bill: finalBill,
+            });
 
             await loadDashboard();
+        } catch (error) {
+            console.error("Checkout preparation error:", error);
+            setError(
+                error.message ||
+                "Could not stop the session for checkout."
+            );
+        } finally {
+            setPreparingSessionId(null);
+        }
+    }
+
+    async function handleCheckout(billId, payment) {
+        try {
+            setCheckingOut(true);
+            setError("");
+
+            const result = await payBill(billId, payment);
+
+            setCheckout(null);
+            setReceipt(result);
+            await loadDashboard();
+
+            setMessage(
+                `Bill ${result.billNumber} completed. Total: ${Number(
+                    result.totalAmount || 0
+                ).toFixed(2)} EGP`
+            );
 
         } catch (error) {
             console.error(error);
 
-            setMessage(
+            setError(
                 error.message ||
-                "Could not stop session."
+                "Could not complete checkout."
             );
+        } finally {
+            setCheckingOut(false);
+        }
+    }
+
+    async function handleRefund(reason) {
+        if (!receipt?.billId) return;
+
+        try {
+            setRefunding(true);
+            const updated = await refundBill(receipt.billId, reason);
+            setReceipt(updated);
+            setMessage(`Bill ${updated.billNumber} refunded.`);
+        } catch (error) {
+            console.error(error);
+            setError(error.message || "Could not refund bill.");
+        } finally {
+            setRefunding(false);
         }
     }
 
@@ -364,31 +465,39 @@ export default function Dashboard({ onAddOrder }) {
 
             <div className="device-grid">
 
-                {devices.map((device) => (
+                {devices.map((device) => {
 
-                    <DeviceCard
-                        key={device.id}
-                        device={device}
-                        session={getDeviceSession(device.id)}
+                    const session =
+                        getDeviceSession(device.id);
 
-                        onStart={setSelectedDevice}
+                    const order =
+                        session
+                            ? sessionOrders[session.id] ?? null
+                            : null;
 
-                        onStop={handleStopSession}
+                    return (
+                        <DeviceCard
+                            key={device.id}
+                            device={device}
 
-                        onExtend={handleExtendSession}
+                            session={session}
 
-                        onFinishMatch={handleFinishMatch}
+                            order={order}
+                            onStart={setSelectedDevice}
+                            onStop={handleOpenCheckout}
+                            checkoutLoading={
+                                preparingSessionId === session?.id
+                            }
+                            onExtend={handleExtendSession}
+                            onFinishMatch={handleFinishMatch}
+                            onAddMatch={handleAddMatch}
 
-                        onAddMatch={handleAddMatch}
-
-                        products={products}
-
-                        addingProductId={addingProductId}
-
-                        onQuickAddProduct={handleQuickAddProduct}
-                    />
-
-                ))}
+                            products={products}
+                            addingProductId={addingProductId}
+                            onQuickAddProduct={handleQuickAddProduct}
+                        />
+                    );
+                })}
 
             </div>
 
@@ -407,6 +516,28 @@ export default function Dashboard({ onAddOrder }) {
                     }
                 />
 
+            )}
+
+            {checkout && (
+                <CheckoutModal
+                    device={checkout.session.device}
+                    session={checkout.session}
+                    order={checkout.order}
+                    finalBill={checkout.bill}
+                    loading={checkingOut}
+                    error={error}
+                    onClose={() => setCheckout(null)}
+                    onCheckout={handleCheckout}
+                />
+            )}
+
+            {receipt && (
+                <ReceiptModal
+                    bill={receipt}
+                    refunding={refunding}
+                    onClose={() => setReceipt(null)}
+                    onRefund={handleRefund}
+                />
             )}
 
         </div>
