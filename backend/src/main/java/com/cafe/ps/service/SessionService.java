@@ -9,10 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,6 +20,8 @@ public class SessionService {
     private final DeviceRepository deviceRepository;
     private final GameSessionRepository sessionRepository;
     private final PricingService pricingService;
+    private final BillingService billingService;
+    private final BillRepository billRepository;
 
     @Transactional
     public GameSession start(Long deviceId, SessionType sessionType, Integer plannedMinutes, Integer matchCount) {
@@ -60,8 +60,9 @@ public class SessionService {
 
     @Transactional
     public GameSession stop(Long sessionId) {
-        GameSession session = getActive(sessionId);
-        return completeAt(session, LocalDateTime.now());
+        billingService.finalizeSession(sessionId, LocalDateTime.now());
+        return sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
     }
 
     @Transactional
@@ -85,7 +86,9 @@ public class SessionService {
         session.setMatchExpired(false);
 
         if (completed >= valueOrOne(session.getPurchasedMatches())) {
-            return completeAt(session, LocalDateTime.now());
+            billingService.finalizeSession(sessionId, LocalDateTime.now());
+            return sessionRepository.findById(sessionId)
+                    .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -110,8 +113,28 @@ public class SessionService {
         List<GameSession> sessions = sessionRepository.findByStartTimeBetween(today.atStartOfDay(), today.plusDays(1).atStartOfDay());
         long active = sessions.stream().filter(s -> s.getStatus() == SessionStatus.ACTIVE).count();
         long completed = sessions.stream().filter(s -> s.getStatus() == SessionStatus.COMPLETED).count();
-        BigDecimal revenue = sessions.stream().map(GameSession::getFinalAmount).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new DashboardSummary(deviceRepository.count(), active, completed, revenue);
+        List<Bill> bills = billRepository.findByPaidAtBetweenAndStatus(
+                today.atStartOfDay(),
+                today.plusDays(1).atStartOfDay(),
+                BillStatus.PAID
+        );
+        BigDecimal gamingRevenue = bills.stream()
+                .map(Bill::getGamingAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal productsRevenue = bills.stream()
+                .map(Bill::getOrderAmount)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new DashboardSummary(
+                deviceRepository.count(),
+                active,
+                completed,
+                gamingRevenue.add(productsRevenue),
+                gamingRevenue,
+                productsRevenue,
+                bills.size()
+        );
     }
 
     @Scheduled(fixedDelay = 3000)
@@ -127,7 +150,10 @@ public class SessionService {
                 return;
             }
             if (s.getPlannedMinutes() != null && !s.getStartTime().plusMinutes(s.getPlannedMinutes()).isAfter(now)) {
-                completeAt(s, s.getStartTime().plusMinutes(s.getPlannedMinutes()));
+                billingService.finalizeSession(
+                        s.getId(),
+                        s.getStartTime().plusMinutes(s.getPlannedMinutes())
+                );
             }
         });
     }
@@ -152,30 +178,6 @@ public class SessionService {
         if (session.getSessionType() != SessionType.MATCH)
             throw new IllegalStateException("Session is not a MATCH session");
         return session;
-    }
-
-    private GameSession completeAt(GameSession session, LocalDateTime end) {
-        BigDecimal amount;
-        if (session.getSessionType() == SessionType.MATCH || session.getBillingUnit() == BillingUnit.MATCH) {
-            amount = nz(session.getUnitPriceSnapshot()).multiply(BigDecimal.valueOf(valueOrOne(session.getPurchasedMatches()))).setScale(2, RoundingMode.HALF_UP);
-        } else {
-            long seconds = Math.max(1, ChronoUnit.SECONDS.between(session.getStartTime(), end));
-            if (session.getPlannedMinutes() != null) seconds = Math.min(seconds, session.getPlannedMinutes() * 60L);
-            BigDecimal hours = BigDecimal.valueOf(seconds).divide(BigDecimal.valueOf(3600), 6, RoundingMode.HALF_UP);
-            BigDecimal rate = session.getUnitPriceSnapshot() != null ? session.getUnitPriceSnapshot() : session.getHourlyRateSnapshot();
-            amount = nz(rate).multiply(hours).setScale(2, RoundingMode.HALF_UP);
-        }
-
-        session.setEndTime(end);
-        session.setFinalAmount(amount);
-        session.setStatus(SessionStatus.COMPLETED);
-        session.getDevice().setStatus(DeviceStatus.AVAILABLE);
-        deviceRepository.save(session.getDevice());
-        return sessionRepository.save(session);
-    }
-
-    private static BigDecimal nz(BigDecimal n) {
-        return n == null ? BigDecimal.ZERO : n;
     }
 
     private static int valueOrZero(Integer n) {

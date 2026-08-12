@@ -68,4 +68,23 @@ export async function completeOrder(orderId) {
     );
 
     return handleResponse(response);
+
+}
+
+export async function getOpenOrderForSession(sessionId) {
+    const response = await fetch(
+        `${BASE_URL}/session/${sessionId}/open`
+    );
+
+    if (!response.ok) {
+        const message = await response.text();
+
+        throw new Error(
+            message || "Failed to load session order"
+        );
+    }
+
+    const text = await response.text();
+
+    return text ? JSON.parse(text) : null;
 }

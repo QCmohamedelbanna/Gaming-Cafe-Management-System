@@ -1,6 +1,7 @@
 package com.cafe.ps.controller;
 
 import com.cafe.ps.dto.ProductRequest;
+import com.cafe.ps.dto.ProductActiveRequest;
 import com.cafe.ps.entity.Product;
 import com.cafe.ps.service.ProductService;
 import jakarta.validation.Valid;
@@ -22,6 +23,11 @@ public class ProductController {
         return service.getActiveProducts();
     }
 
+    @GetMapping("/admin")
+    public List<Product> getAllProducts() {
+        return service.getAllProducts();
+    }
+
     @PostMapping
     public Product create(
             @Valid @RequestBody ProductRequest request
@@ -35,6 +41,14 @@ public class ProductController {
             @Valid @RequestBody ProductRequest request
     ) {
         return service.update(id, request);
+    }
+
+    @PatchMapping("/{id}/active")
+    public Product setActive(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductActiveRequest request
+    ) {
+        return service.setActive(id, request.active());
     }
 
     @DeleteMapping("/{id}")

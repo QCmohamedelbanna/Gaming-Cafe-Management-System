@@ -4,11 +4,13 @@ import Layout from "./components/layout/Layout";
 import Dashboard from "./components/dashboard/Dashboard";
 import PricingPage from "./components/pricing/PricingPage";
 import POSPage from "./components/pos/POSPage";
+import ProductsPage from "./components/products/ProductsPage";
+import BillingPage from "./components/billing/BillingPage";
 
 export default function App() {
 
     const [activePage, setActivePage] =
-        useState("dashboard");
+        useState("operations");
 
     /*
      * Session currently attached to POS.
@@ -51,8 +53,29 @@ export default function App() {
 
         switch (activePage) {
 
+            case "operations":
+                return (
+                    <Dashboard
+                        onAddOrder={handleAddOrder}
+                    />
+                );
+
+            case "dashboard":
+                return (
+                    <div className="placeholder-page">
+                        <h2>Admin Dashboard</h2>
+                        <p>Revenue and reports dashboard coming soon.</p>
+                    </div>
+                );
+
             case "pricing":
                 return <PricingPage />;
+
+            case "products":
+                return <ProductsPage />;
+
+            case "billing":
+                return <BillingPage />;
 
             case "pos":
                 return (
@@ -110,6 +133,12 @@ export default function App() {
             case "pricing":
                 return "Pricing";
 
+            case "products":
+                return "Products";
+
+            case "billing":
+                return "Billing";
+
             case "pos":
                 return posSession
                     ? `POS — ${posSession.device?.name}`
@@ -124,8 +153,14 @@ export default function App() {
             case "settings":
                 return "Settings";
 
+            case "operations":
+                return "Operations";
+
+            case "dashboard":
+                return "Admin Dashboard";
+
             default:
-                return "Dashboard";
+                return "Operations";
         }
     }
 

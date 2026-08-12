@@ -2,7 +2,10 @@ package com.cafe.ps.controller;
 
 import com.cafe.ps.dto.ExtendSessionRequest;
 import com.cafe.ps.dto.StartSessionRequest;
+import com.cafe.ps.dto.CheckoutResult;
+import com.cafe.ps.dto.CheckoutRequest;
 import com.cafe.ps.entity.GameSession;
+import com.cafe.ps.service.CheckoutService;
 import com.cafe.ps.service.SessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,7 @@ import java.util.List;
 public class SessionController {
 
     private final SessionService service;
+    private final CheckoutService checkoutService;
 
     @PostMapping
     public GameSession start(
@@ -35,6 +39,25 @@ public class SessionController {
             @PathVariable Long id
     ) {
         return service.stop(id);
+    }
+
+    @PostMapping("/{id}/checkout/prepare")
+    public CheckoutResult prepareCheckout(
+            @PathVariable Long id
+    ) {
+        return checkoutService.prepareCheckout(id);
+    }
+
+    @PostMapping("/{id}/checkout")
+    public CheckoutResult checkout(
+            @PathVariable Long id,
+            @Valid @RequestBody CheckoutRequest request
+    ) {
+        return checkoutService.checkout(
+                id,
+                request.paymentMethod(),
+                request.amountTendered()
+        );
     }
 
     @PostMapping("/{id}/extend")

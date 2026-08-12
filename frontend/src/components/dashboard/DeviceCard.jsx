@@ -8,6 +8,8 @@ function formatTime(totalSeconds) {
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
 
+
+
     return [hours, minutes, secs]
         .map((value) => String(value).padStart(2, "0"))
         .join(":");
@@ -28,6 +30,7 @@ export default function DeviceCard({
                                        device,
                                        session,
                                        onStart,
+                                       order,
                                        onStop,
                                        onExtend,
                                        onFinishMatch,
@@ -35,10 +38,13 @@ export default function DeviceCard({
                                        products,
                                        addingProductId,
                                        onQuickAddProduct,
+                                       checkoutLoading = false,
                                    }) {
     const [now, setNow] = useState(Date.now());
 
     const active = Boolean(session);
+
+
 
     useEffect(() => {
         if (!active) return;
@@ -180,6 +186,12 @@ export default function DeviceCard({
             (billableSeconds / 3600);
     }
 
+    const orderAmount =
+        Number(order?.totalAmount || 0);
+
+    const currentBill =
+        liveAmount + orderAmount;
+
     const currentMatch =
         isMatch
             ? Math.min(
@@ -265,41 +277,33 @@ export default function DeviceCard({
             </div>
 
             <div className="session-info-grid">
+
                 <div>
-                    <span>Current Cost</span>
+                    <span>Gaming Cost</span>
 
                     <strong>
                         {liveAmount.toFixed(2)} EGP
                     </strong>
                 </div>
 
-                {!isMatch && (
-                    <div>
-                        <span>
-                            Billing
-                        </span>
+                <div>
+                    <span>Orders</span>
 
-                        <strong>
-                            {session.plannedMinutes == null
-                                ? "OPEN"
-                                : `${session.plannedMinutes} min`}
-                        </strong>
-                    </div>
-                )}
+                    <strong>
+                        {orderAmount.toFixed(2)} EGP
+                    </strong>
+                </div>
 
-                {isMatch && (
-                    <div>
-                        <span>
-                            Current Match
-                        </span>
+            </div>
 
-                        <strong>
-                            {currentMatch}
-                            {" / "}
-                            {session.purchasedMatches || 1}
-                        </strong>
-                    </div>
-                )}
+            <div className="current-bill-box">
+
+                <span>Current Bill</span>
+
+                <strong>
+                    {currentBill.toFixed(2)} EGP
+                </strong>
+
             </div>
 
             {isMatch && (
@@ -403,11 +407,12 @@ export default function DeviceCard({
             <button
                 type="button"
                 className="stop-session-button"
+                disabled={checkoutLoading}
                 onClick={() =>
-                    onStop(session.id)
+                    onStop(session, order)
                 }
             >
-                Stop Session
+                {checkoutLoading ? "Stopping..." : "Checkout"}
             </button>
         </div>
     );

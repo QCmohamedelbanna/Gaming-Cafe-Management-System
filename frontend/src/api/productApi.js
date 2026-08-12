@@ -3,25 +3,40 @@ const BASE_URL =
 
 async function handleResponse(response) {
 
+    const text = await response.text();
+
     if (!response.ok) {
-        const message = await response.text();
+        let message = text;
+
+        try {
+            message = JSON.parse(text).message || text;
+        } catch {
+            // Keep plain-text API errors as-is.
+        }
 
         throw new Error(
             message || "Product request failed"
         );
     }
 
-    if (response.status === 204) {
+    if (!text) {
         return null;
     }
 
-    return response.json();
+    return JSON.parse(text);
 }
 
 export async function getProducts() {
 
     const response =
         await fetch(BASE_URL);
+
+    return handleResponse(response);
+}
+
+export async function getAdminProducts() {
+
+    const response = await fetch(`${BASE_URL}/admin`);
 
     return handleResponse(response);
 }
@@ -61,6 +76,22 @@ export async function updateProduct(id, data) {
     return handleResponse(response);
 }
 
+export async function setProductActive(id, active) {
+
+    const response = await fetch(
+        `${BASE_URL}/${id}/active`,
+        {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ active }),
+        }
+    );
+
+    return handleResponse(response);
+}
+
 export async function deleteProduct(id) {
 
     const response =
@@ -71,11 +102,5 @@ export async function deleteProduct(id) {
             }
         );
 
-    if (!response.ok) {
-        const message = await response.text();
-
-        throw new Error(
-            message || "Could not delete product"
-        );
-    }
+    return handleResponse(response);
 }

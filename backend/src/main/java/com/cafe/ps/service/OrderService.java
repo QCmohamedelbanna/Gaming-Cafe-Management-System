@@ -3,11 +3,14 @@ package com.cafe.ps.service;
 import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +68,10 @@ public class OrderService {
             Integer quantity
     ) {
 
+        if (quantity == null || quantity < 1) {
+            throw new IllegalArgumentException("Quantity must be at least one");
+        }
+
         CafeOrder order = getOpenOrder(orderId);
 
         Product product = productRepository.findById(productId)
@@ -102,22 +109,22 @@ public class OrderService {
             existingItem.setQuantity(newQuantity);
 
             existingItem.setLineTotal(
-                    existingItem
+                    money(existingItem
                             .getUnitPriceSnapshot()
                             .multiply(
                                     BigDecimal.valueOf(
                                             newQuantity
                                     )
-                            )
+                            ))
             );
 
         } else {
 
             BigDecimal lineTotal =
-                    product.getPrice()
+                    money(product.getPrice()
                             .multiply(
                                     BigDecimal.valueOf(quantity)
-                            );
+                            ));
 
             OrderItem item =
                     OrderItem.builder()
@@ -159,18 +166,10 @@ public class OrderService {
 
         recalculateTotal(order);
 
-        return orderRepository.save(order);
-    }
-
-    @Transactional
-    public CafeOrder completeOrder(Long orderId) {
-
-        CafeOrder order = getOpenOrder(orderId);
-
-        recalculateTotal(order);
-
-        order.setStatus(OrderStatus.COMPLETED);
-        order.setCompletedAt(LocalDateTime.now());
+        if (order.getItems().isEmpty()
+                && order.getGameSession() == null) {
+            order.setStatus(OrderStatus.CANCELLED);
+        }
 
         return orderRepository.save(order);
     }
@@ -201,12 +200,48 @@ public class OrderService {
 
         BigDecimal total = order.getItems()
                 .stream()
-                .map(OrderItem::getLineTotal)
+                .map(item -> {
+                    BigDecimal line = money(item.getLineTotal());
+                    item.setLineTotal(line);
+                    return line;
+                })
                 .reduce(
                         BigDecimal.ZERO,
                         BigDecimal::add
                 );
 
-        order.setTotalAmount(total);
+        order.setTotalAmount(money(total));
+    }
+
+    private static BigDecimal money(BigDecimal value) {
+        return (value == null ? BigDecimal.ZERO : value)
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    @Transactional(readOnly = true)
+    public CafeOrder getOpenOrderForSession(Long sessionId) {
+
+        return orderRepository
+                .findFirstByGameSessionIdAndStatusOrderByCreatedAtDesc(
+                        sessionId,
+                        OrderStatus.OPEN
+                )
+                .orElse(null);
+    }
+
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    public void cancelStaleEmptyStandaloneOrders() {
+        LocalDateTime before = LocalDateTime.now().minusMinutes(5);
+        List<CafeOrder> stale = orderRepository.findStaleEmptyStandaloneOrders(
+                OrderStatus.OPEN,
+                before
+        );
+
+        stale.stream()
+                .filter(order -> order.getItems().isEmpty())
+                .forEach(order -> order.setStatus(OrderStatus.CANCELLED));
+
+        if (!stale.isEmpty()) orderRepository.saveAll(stale);
     }
 }

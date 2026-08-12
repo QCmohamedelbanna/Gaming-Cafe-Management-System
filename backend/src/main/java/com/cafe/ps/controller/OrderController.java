@@ -1,8 +1,12 @@
 package com.cafe.ps.controller;
 
 import com.cafe.ps.dto.AddOrderItemRequest;
+import com.cafe.ps.dto.CheckoutRequest;
+import com.cafe.ps.dto.CheckoutResult;
 import com.cafe.ps.dto.CreateOrderRequest;
 import com.cafe.ps.entity.CafeOrder;
+import com.cafe.ps.entity.PaymentMethod;
+import com.cafe.ps.service.BillingService;
 import com.cafe.ps.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService;
+    private final BillingService billingService;
 
     @PostMapping
     public CafeOrder create(
@@ -30,6 +35,13 @@ public class OrderController {
             @PathVariable Long id
     ) {
         return orderService.get(id);
+    }
+
+    @GetMapping("/session/{sessionId}/open")
+    public CafeOrder getOpenOrderForSession(
+            @PathVariable Long sessionId
+    ) {
+        return orderService.getOpenOrderForSession(sessionId);
     }
 
     @PostMapping("/{id}/items")
@@ -57,9 +69,14 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/complete")
-    public CafeOrder complete(
-            @PathVariable Long id
+    public CheckoutResult complete(
+            @PathVariable Long id,
+            @RequestBody(required = false) CheckoutRequest request
     ) {
-        return orderService.completeOrder(id);
+        return billingService.checkoutOrder(
+                id,
+                request == null ? PaymentMethod.CASH : request.paymentMethod(),
+                request == null ? null : request.amountTendered()
+        );
     }
 }
