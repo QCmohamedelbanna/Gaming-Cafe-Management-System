@@ -23,6 +23,13 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
             BillStatus status
     );
 
+    @EntityGraph(attributePaths = {
+            "session",
+            "session.device",
+            "order",
+            "order.items",
+            "order.items.product"
+    })
     List<Bill> findByStatusOrderByCreatedAtDesc(BillStatus status);
 
     @EntityGraph(attributePaths = {
@@ -30,8 +37,19 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
             "session.device",
             "order",
             "order.items",
-            "order.items.product",
-            "payments"
+            "order.items.product"
+    })
+    List<Bill> findByStatusAndAutomaticExpiryTrueAndNotificationExpiresAtAfterOrderByCreatedAtDesc(
+            BillStatus status,
+            LocalDateTime now
+    );
+
+    @EntityGraph(attributePaths = {
+            "session",
+            "session.device",
+            "order",
+            "order.items",
+            "order.items.product"
     })
     @Query("select distinct b from Bill b where b.id = :id")
     Optional<Bill> findDetailedById(@Param("id") Long id);

@@ -1,5 +1,6 @@
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import BillExpiryAlert from "../billing/BillExpiryAlert";
 
 export default function Layout({
   activePage,
@@ -14,10 +15,12 @@ export default function Layout({
         onNavigate={onNavigate}
       />
 
-      <main className="app-main">
-        <Header title={title} />
+        <main className="app-main">
+            <Header title={title} />
 
-        <div className="app-content">
+            <BillExpiryAlert onNavigate={onNavigate} />
+
+            <div className="app-content">
           {children}
         </div>
       </main>

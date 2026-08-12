@@ -19,6 +19,9 @@ public record CheckoutResult(
         BigDecimal changeAmount,
         LocalDateTime checkedOutAt,
         BillStatus status,
-        List<CheckoutLine> lines
+        List<CheckoutLine> lines,
+        String deviceName,
+        Boolean automaticExpiry,
+        LocalDateTime notificationExpiresAt
 ) {
 }

@@ -24,6 +24,11 @@ public class BillController {
         return billingService.getPendingBills();
     }
 
+    @GetMapping("/alerts")
+    public List<CheckoutResult> alerts() {
+        return billingService.getActiveExpiryAlerts();
+    }
+
     @GetMapping("/{id}")
     public CheckoutResult get(@PathVariable Long id) {
         return billingService.getBill(id);

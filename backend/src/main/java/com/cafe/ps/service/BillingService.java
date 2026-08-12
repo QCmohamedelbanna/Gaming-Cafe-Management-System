@@ -38,9 +38,21 @@ public class BillingService {
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
 
         if (session.getStatus() == SessionStatus.ACTIVE) {
-            throw new IllegalStateException(
-                    "Complete the session before running its bill"
+            /*
+             * Validate before changing the session or its order. This keeps
+             * an invalid payment from leaving a partially completed checkout.
+             */
+            LocalDateTime endTime = LocalDateTime.now();
+            CafeOrder order = findOpenOrder(sessionId);
+            validatePayment(
+                    method,
+                    amountTendered,
+                    calculateSessionAmount(session, endTime)
+                            .add(calculateOrderAmount(order))
             );
+
+            Bill bill = finalizeSession(sessionId, endTime, false);
+            return settleBill(bill, method, amountTendered);
         }
         if (session.getStatus() != SessionStatus.COMPLETED) {
             throw new IllegalStateException("Session cannot be billed");
@@ -59,7 +71,15 @@ public class BillingService {
                             OrderStatus.COMPLETED
                     )
                     .orElse(null);
-            bill = ensureBill(session, order, null);
+            bill = ensureBill(
+                    session,
+                    order,
+                    null,
+                    false,
+                    session.getEndTime() == null
+                            ? LocalDateTime.now()
+                            : session.getEndTime()
+            );
         }
 
         return settleBill(bill, method, amountTendered);
@@ -92,7 +112,13 @@ public class BillingService {
             throw new IllegalStateException("Empty orders cannot be checked out");
         }
 
-        Bill bill = ensureBill(order.getGameSession(), order, null);
+        Bill bill = ensureBill(
+                order.getGameSession(),
+                order,
+                null,
+                false,
+                LocalDateTime.now()
+        );
         return settleBill(bill, method, amountTendered);
     }
 
@@ -103,6 +129,15 @@ public class BillingService {
      */
     @Transactional
     public Bill finalizeSession(Long sessionId, LocalDateTime endTime) {
+        return finalizeSession(sessionId, endTime, false);
+    }
+
+    @Transactional
+    public Bill finalizeSession(
+            Long sessionId,
+            LocalDateTime endTime,
+            boolean automaticExpiry
+    ) {
         GameSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
 
@@ -114,7 +149,7 @@ public class BillingService {
             if (order == null && existing != null) {
                 order = existing.getOrder();
             }
-            return ensureBill(session, order, existing);
+            return ensureBill(session, order, existing, automaticExpiry, endTime);
         }
 
         if (existing != null) return existing;
@@ -125,12 +160,12 @@ public class BillingService {
                         OrderStatus.COMPLETED
                 )
                 .orElse(null);
-        return ensureBill(session, order, null);
+        return ensureBill(session, order, null, automaticExpiry, endTime);
     }
 
     @Transactional(readOnly = true)
     public CheckoutResult getBill(Long billId) {
-        Bill bill = billRepository.findById(billId)
+        Bill bill = billRepository.findDetailedById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found"));
         return toResult(bill);
     }
@@ -139,6 +174,18 @@ public class BillingService {
     public List<CheckoutResult> getPendingBills() {
         return billRepository
                 .findByStatusOrderByCreatedAtDesc(BillStatus.PENDING_PAYMENT)
+                .stream()
+                .map(this::toResult)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CheckoutResult> getActiveExpiryAlerts() {
+        return billRepository
+                .findByStatusAndAutomaticExpiryTrueAndNotificationExpiresAtAfterOrderByCreatedAtDesc(
+                        BillStatus.PENDING_PAYMENT,
+                        LocalDateTime.now()
+                )
                 .stream()
                 .map(this::toResult)
                 .toList();
@@ -210,16 +257,11 @@ public class BillingService {
             return;
         }
 
-        BigDecimal total = order.getItems().stream()
-                .map(item -> {
-                    BigDecimal line = money(
-                            item.getUnitPriceSnapshot()
-                                    .multiply(BigDecimal.valueOf(item.getQuantity()))
-                    );
-                    item.setLineTotal(line);
-                    return line;
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = calculateOrderAmount(order);
+        order.getItems().forEach(item -> item.setLineTotal(
+                money(item.getUnitPriceSnapshot()
+                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+        ));
 
         order.setTotalAmount(money(total));
         order.setStatus(OrderStatus.COMPLETED);
@@ -230,6 +272,20 @@ public class BillingService {
     private void completeSession(GameSession session, LocalDateTime endTime) {
         if (session.getStatus() != SessionStatus.ACTIVE) return;
 
+        BigDecimal amount = calculateSessionAmount(session, endTime);
+        session.setEndTime(endTime);
+        session.setFinalAmount(amount);
+        session.setStatus(SessionStatus.COMPLETED);
+        if (session.getDevice() != null) {
+            session.getDevice().setStatus(DeviceStatus.AVAILABLE);
+        }
+        sessionRepository.save(session);
+    }
+
+    private BigDecimal calculateSessionAmount(
+            GameSession session,
+            LocalDateTime endTime
+    ) {
         BigDecimal amount;
         if (session.getSessionType() == SessionType.MATCH
                 || session.getBillingUnit() == BillingUnit.MATCH) {
@@ -252,19 +308,28 @@ public class BillingService {
             amount = money(nz(rate).multiply(hours));
         }
 
-        session.setEndTime(endTime);
-        session.setFinalAmount(amount);
-        session.setStatus(SessionStatus.COMPLETED);
-        if (session.getDevice() != null) {
-            session.getDevice().setStatus(DeviceStatus.AVAILABLE);
+        return amount;
+    }
+
+    private BigDecimal calculateOrderAmount(CafeOrder order) {
+        if (order == null || order.getItems().isEmpty()) {
+            return BigDecimal.ZERO.setScale(MONEY_SCALE, MONEY_ROUNDING);
         }
-        sessionRepository.save(session);
+
+        return money(order.getItems().stream()
+                .map(item -> money(
+                        item.getUnitPriceSnapshot()
+                                .multiply(BigDecimal.valueOf(item.getQuantity()))
+                ))
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
     private Bill ensureBill(
             GameSession session,
             CafeOrder order,
-            Bill existing
+            Bill existing,
+            boolean automaticExpiry,
+            LocalDateTime endTime
     ) {
         Bill bill = existing;
         if (bill == null && order != null) {
@@ -299,6 +364,13 @@ public class BillingService {
             bill.setTotalAmount(money(gamingAmount.add(orderAmount)));
         }
 
+        if (automaticExpiry) {
+            bill.setAutomaticExpiry(true);
+            if (bill.getNotificationExpiresAt() == null) {
+                bill.setNotificationExpiresAt(endTime.plusMinutes(2));
+            }
+        }
+
         return billRepository.save(bill);
     }
 
@@ -317,19 +389,10 @@ public class BillingService {
         }
 
         BigDecimal total = money(bill.getTotalAmount());
-        BigDecimal tendered = amountTendered == null
-                ? total
-                : money(amountTendered);
+        validatePayment(method, amountTendered, total);
 
-        if (method != PaymentMethod.CASH
-                && tendered.compareTo(total) != 0) {
-            throw new IllegalArgumentException(
-                    "Card and mobile-wallet payments must equal the bill total"
-            );
-        }
-        if (tendered.compareTo(total) < 0) {
-            throw new IllegalArgumentException("Amount tendered is less than the bill total");
-        }
+        // A missing amountTendered intentionally means exact payment.
+        BigDecimal tendered = amountTendered == null ? total : money(amountTendered);
 
         BigDecimal change = method == PaymentMethod.CASH
                 ? money(tendered.subtract(total))
@@ -348,6 +411,33 @@ public class BillingService {
         bill.setPaidAt(payment.getPaidAt());
 
         return toResult(billRepository.save(bill));
+    }
+
+    private void validatePayment(
+            PaymentMethod method,
+            BigDecimal amountTendered,
+            BigDecimal total
+    ) {
+        if (method == null) {
+            throw new IllegalArgumentException("Payment method is required");
+        }
+
+        BigDecimal tendered = amountTendered == null
+                ? total
+                : money(amountTendered);
+
+        if (tendered.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Amount tendered cannot be negative");
+        }
+        if (method != PaymentMethod.CASH
+                && tendered.compareTo(total) != 0) {
+            throw new IllegalArgumentException(
+                    "Card and mobile-wallet payments must equal the bill total"
+            );
+        }
+        if (tendered.compareTo(total) < 0) {
+            throw new IllegalArgumentException("Amount tendered is less than the bill total");
+        }
     }
 
     private CheckoutResult toResult(Bill bill) {
@@ -377,7 +467,12 @@ public class BillingService {
                 payment == null ? null : money(payment.getChangeAmount()),
                 bill.getPaidAt() == null ? bill.getCreatedAt() : bill.getPaidAt(),
                 bill.getStatus(),
-                lines
+                lines,
+                bill.getSession() == null || bill.getSession().getDevice() == null
+                        ? null
+                        : bill.getSession().getDevice().getName(),
+                Boolean.TRUE.equals(bill.getAutomaticExpiry()),
+                bill.getNotificationExpiresAt()
         );
     }
 

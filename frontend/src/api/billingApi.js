@@ -24,6 +24,10 @@ export async function getPendingBills() {
     return handleResponse(await fetch(`${BASE_URL}/pending`));
 }
 
+export async function getBillAlerts() {
+    return handleResponse(await fetch(`${BASE_URL}/alerts`));
+}
+
 export async function payBill(id, data) {
     return handleResponse(await fetch(`${BASE_URL}/${id}/pay`, {
         method: "POST",

@@ -142,17 +142,34 @@ public class SessionService {
     public void maintainActiveSessions() {
         LocalDateTime now = LocalDateTime.now();
         sessionRepository.findAll().stream().filter(s -> s.getStatus() == SessionStatus.ACTIVE).forEach(s -> {
-            if (s.getSessionType() == SessionType.MATCH) {
-                if (s.getCurrentMatchExpiresAt() != null && !s.getCurrentMatchExpiresAt().isAfter(now) && !Boolean.TRUE.equals(s.getMatchExpired())) {
-                    s.setMatchExpired(true);
-                    sessionRepository.save(s);
+            if (s.getSessionType() == SessionType.MATCH
+                    || s.getBillingUnit() == BillingUnit.MATCH) {
+                if (s.getCurrentMatchExpiresAt() != null
+                        && !s.getCurrentMatchExpiresAt().isAfter(now)
+                        && !Boolean.TRUE.equals(s.getMatchExpired())) {
+                    int purchased = valueOrOne(s.getPurchasedMatches());
+                    int completed = valueOrZero(s.getCompletedMatches());
+
+                    if (completed + 1 >= purchased) {
+                        s.setCompletedMatches(purchased);
+                        s.setMatchExpired(false);
+                        billingService.finalizeSession(
+                                s.getId(),
+                                s.getCurrentMatchExpiresAt(),
+                                true
+                        );
+                    } else {
+                        s.setMatchExpired(true);
+                        sessionRepository.save(s);
+                    }
                 }
                 return;
             }
             if (s.getPlannedMinutes() != null && !s.getStartTime().plusMinutes(s.getPlannedMinutes()).isAfter(now)) {
                 billingService.finalizeSession(
                         s.getId(),
-                        s.getStartTime().plusMinutes(s.getPlannedMinutes())
+                        s.getStartTime().plusMinutes(s.getPlannedMinutes()),
+                        true
                 );
             }
         });

@@ -57,6 +57,14 @@ public class Bill {
     private LocalDateTime paidAt;
     private LocalDateTime refundedAt;
 
+    /** True when this bill was generated because a timed session expired. */
+    @Column(name = "automatic_expiry")
+    @Builder.Default
+    private Boolean automaticExpiry = false;
+
+    /** The end of the two-minute cashier alert window for automatic bills. */
+    private LocalDateTime notificationExpiresAt;
+
     @Column(length = 500)
     private String refundReason;
 

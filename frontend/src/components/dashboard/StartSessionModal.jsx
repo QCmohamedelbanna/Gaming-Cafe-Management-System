@@ -1,291 +1,281 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function StartSessionModal({
-                                            device,
-                                            pricing,
-                                            onClose,
-                                            onStart,
-                                            loading,
-                                          }) {
-  const [sessionType, setSessionType] = useState(null);
-  const [duration, setDuration] = useState(undefined);
-  const [matchCount, setMatchCount] = useState(1);
+    device,
+    pricing = [],
+    onClose,
+    onStart,
+    loading,
+}) {
+    const [sessionType, setSessionType] = useState(null);
+    const [duration, setDuration] = useState(undefined);
+    const [matchCount, setMatchCount] = useState(1);
 
-  const rules = useMemo(
-      () =>
-          pricing.filter(
-              (rule) => rule.deviceType === device.type
-          ),
-      [pricing, device]
-  );
-
-  function ruleFor(type) {
-    return rules.find(
-        (rule) => rule.sessionType === type
+    const rules = useMemo(
+        () => pricing.filter((rule) => rule.deviceType === device.type),
+        [pricing, device.type]
     );
-  }
 
-  const selectedRule = sessionType
-      ? ruleFor(sessionType)
-      : null;
-
-  function start() {
-    if (!sessionType) return;
-
-    if (sessionType === "MATCH") {
-      onStart({
-        deviceId: device.id,
-        sessionType,
-        plannedMinutes: null,
-        matchCount,
-      });
-
-      return;
+    function ruleFor(type) {
+        return rules.find((rule) => rule.sessionType === type);
     }
 
-    onStart({
-      deviceId: device.id,
-      sessionType,
-      plannedMinutes: duration,
-      matchCount: null,
-    });
-  }
+    const selectedRule = sessionType ? ruleFor(sessionType) : null;
 
-  return (
-      <div className="modal-overlay">
-        <div className="session-modal">
-          <div className="session-modal-header">
-            <div>
-            <span className="page-label">
-              START SESSION
-            </span>
+    useEffect(() => {
+        function handleKeyDown(event) {
+            if (event.key === "Escape" && !loading) {
+                onClose();
+            }
+        }
 
-              <h2>{device.name}</h2>
+        window.addEventListener("keydown", handleKeyDown);
 
-              <p>{device.type}</p>
-            </div>
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [loading, onClose]);
 
-            <button
-                className="modal-close"
-                onClick={onClose}
+    function start() {
+        if (!sessionType) return;
+
+        if (sessionType === "MATCH") {
+            onStart({
+                deviceId: device.id,
+                sessionType,
+                plannedMinutes: null,
+                matchCount,
+            });
+
+            return;
+        }
+
+        onStart({
+            deviceId: device.id,
+            sessionType,
+            plannedMinutes: duration,
+            matchCount: null,
+        });
+    }
+
+    function handleOverlayMouseDown(event) {
+        if (event.target === event.currentTarget && !loading) {
+            onClose();
+        }
+    }
+
+    return (
+        <div
+            className="modal-overlay"
+            role="presentation"
+            onMouseDown={handleOverlayMouseDown}
+        >
+            <div
+                className="modal-container session-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="start-session-title"
             >
-              ×
-            </button>
-          </div>
+                <div className="modal-header">
+                    <div>
+                        <span className="page-label">START SESSION</span>
 
-          {!sessionType && (
-              <>
-                <h3>Choose session type</h3>
+                        <h2 id="start-session-title">{device.name}</h2>
 
-                <div className="session-type-grid">
-                  {["SINGLE", "MULTI", "MATCH"].map(
-                      (type) => {
-                        const rule = ruleFor(type);
+                        <p>{device.type}</p>
+                    </div>
 
-                        if (!rule || !rule.active) {
-                          return null;
-                        }
+                    <button
+                        type="button"
+                        className="modal-close"
+                        aria-label="Close start session"
+                        disabled={loading}
+                        onClick={onClose}
+                    >
+                        &times;
+                    </button>
+                </div>
 
-                        return (
+                {!sessionType && (
+                    <>
+                        <h3>Choose session type</h3>
+
+                        <div className="session-type-grid">
+                            {["SINGLE", "MULTI", "MATCH"].map((type) => {
+                                const rule = ruleFor(type);
+
+                                if (!rule || !rule.active) {
+                                    return null;
+                                }
+
+                                return (
+                                    <button
+                                        type="button"
+                                        key={type}
+                                        className="session-type-card"
+                                        onClick={() => setSessionType(type)}
+                                    >
+                                        <strong>{type}</strong>
+
+                                        <span>
+                                            {rule.price} EGP / {" "}
+                                            {rule.billingUnit === "MATCH"
+                                                ? "match"
+                                                : "hour"}
+                                        </span>
+
+                                        {type === "MATCH" && (
+                                            <small>
+                                                {rule.matchDurationMinutes} min maximum
+                                            </small>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
+
+                {sessionType && sessionType !== "MATCH" && (
+                    <>
+                        <button
+                            type="button"
+                            className="back-button"
+                            onClick={() => {
+                                setSessionType(null);
+                                setDuration(undefined);
+                            }}
+                        >
+                            &larr; Change session type
+                        </button>
+
+                        <div className="selected-session">
+                            <strong>{sessionType}</strong>
+
+                            <span>{selectedRule?.price} EGP / hour</span>
+                        </div>
+
+                        <h3>Choose duration</h3>
+
+                        <div className="duration-grid">
                             <button
-                                key={type}
-                                className="session-type-card"
+                                type="button"
+                                className={duration === 30
+                                    ? "duration-button selected"
+                                    : "duration-button"}
+                                aria-pressed={duration === 30}
+                                onClick={() => setDuration(30)}
+                            >
+                                30 Minutes
+                            </button>
+
+                            <button
+                                type="button"
+                                className={duration === 60
+                                    ? "duration-button selected"
+                                    : "duration-button"}
+                                aria-pressed={duration === 60}
+                                onClick={() => setDuration(60)}
+                            >
+                                1 Hour
+                            </button>
+
+                            <button
+                                type="button"
+                                className={duration === null
+                                    ? "duration-button selected"
+                                    : "duration-button"}
+                                aria-pressed={duration === null}
+                                onClick={() => setDuration(null)}
+                            >
+                                Open Time
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="primary-action"
+                            disabled={loading || duration === undefined}
+                            onClick={start}
+                        >
+                            {loading ? "Starting..." : "Start Session"}
+                        </button>
+                    </>
+                )}
+
+                {sessionType === "MATCH" && (
+                    <>
+                        <button
+                            type="button"
+                            className="back-button"
+                            onClick={() => setSessionType(null)}
+                        >
+                            &larr; Change session type
+                        </button>
+
+                        <div className="selected-session">
+                            <strong>MATCH</strong>
+
+                            <span>{selectedRule?.price} EGP / match</span>
+                        </div>
+
+                        <div className="match-config">
+                            <div>
+                                <span>Maximum duration</span>
+                                <strong>
+                                    {selectedRule?.matchDurationMinutes} min
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Warning</span>
+                                <strong>
+                                    {selectedRule?.warningBeforeExpiryMinutes} min before expiry
+                                </strong>
+                            </div>
+                        </div>
+
+                        <label htmlFor="match-count">Number of matches</label>
+
+                        <div className="match-counter" id="match-count">
+                            <button
+                                type="button"
+                                aria-label="Decrease number of matches"
                                 onClick={() =>
-                                    setSessionType(type)
+                                    setMatchCount((value) => Math.max(1, value - 1))
                                 }
                             >
-                              <strong>{type}</strong>
-
-                              <span>
-                        {rule.price} EGP /{" "}
-                                {rule.billingUnit === "MATCH"
-                                    ? "match"
-                                    : "hour"}
-                      </span>
-
-                              {type === "MATCH" && (
-                                  <small>
-                                    {
-                                      rule.matchDurationMinutes
-                                    }{" "}
-                                    min maximum
-                                  </small>
-                              )}
+                                &minus;
                             </button>
-                        );
-                      }
-                  )}
-                </div>
-              </>
-          )}
 
-          {sessionType &&
-              sessionType !== "MATCH" && (
-                  <>
-                    <button
-                        className="back-button"
-                        onClick={() => {
-                          setSessionType(null);
-                          setDuration(undefined);
-                        }}
-                    >
-                      ← Change session type
-                    </button>
+                            <strong>{matchCount}</strong>
 
-                    <div className="selected-session">
-                      <strong>{sessionType}</strong>
+                            <button
+                                type="button"
+                                aria-label="Increase number of matches"
+                                onClick={() => setMatchCount((value) => value + 1)}
+                            >
+                                +
+                            </button>
+                        </div>
 
-                      <span>
-                  {selectedRule?.price} EGP /
-                  hour
-                </span>
-                    </div>
+                        <div className="match-total">
+                            <span>Total</span>
 
-                    <h3>Choose duration</h3>
+                            <strong>
+                                {(Number(selectedRule?.price || 0) * matchCount).toFixed(2)} EGP
+                            </strong>
+                        </div>
 
-                    <div className="duration-grid">
-                      <button
-                          className={
-                            duration === 30
-                                ? "duration-button selected"
-                                : "duration-button"
-                          }
-                          onClick={() => setDuration(30)}
-                      >
-                        30 Minutes
-                      </button>
-
-                      <button
-                          className={
-                            duration === 60
-                                ? "duration-button selected"
-                                : "duration-button"
-                          }
-                          onClick={() => setDuration(60)}
-                      >
-                        1 Hour
-                      </button>
-
-                      <button
-                          className={
-                            duration === null
-                                ? "duration-button selected"
-                                : "duration-button"
-                          }
-                          onClick={() => setDuration(null)}
-                      >
-                        Open Time
-                      </button>
-                    </div>
-
-                    <button
-                        className="primary-action"
-                        disabled={
-                            loading ||
-                            (
-                                sessionType !== "MATCH" &&
-                                duration === undefined
-                            )
-                        }
-                        onClick={start}
-                    >
-                      {loading ? "Starting..." : "Start Session"}
-                    </button>
-                  </>
-              )}
-
-          {sessionType === "MATCH" && (
-              <>
-                <button
-                    className="back-button"
-                    onClick={() =>
-                        setSessionType(null)
-                    }
-                >
-                  ← Change session type
-                </button>
-
-                <div className="selected-session">
-                  <strong>MATCH</strong>
-
-                  <span>
-                {selectedRule?.price} EGP /
-                match
-              </span>
-                </div>
-
-                <div className="match-config">
-                  <div>
-                    <span>Maximum duration</span>
-                    <strong>
-                      {
-                        selectedRule?.matchDurationMinutes
-                      }{" "}
-                      min
-                    </strong>
-                  </div>
-
-                  <div>
-                    <span>Warning</span>
-                    <strong>
-                      {
-                        selectedRule?.warningBeforeExpiryMinutes
-                      }{" "}
-                      min before expiry
-                    </strong>
-                  </div>
-                </div>
-
-                <label>Number of matches</label>
-
-                <div className="match-counter">
-                  <button
-                      onClick={() =>
-                          setMatchCount((value) =>
-                              Math.max(1, value - 1)
-                          )
-                      }
-                  >
-                    −
-                  </button>
-
-                  <strong>{matchCount}</strong>
-
-                  <button
-                      onClick={() =>
-                          setMatchCount(
-                              (value) => value + 1
-                          )
-                      }
-                  >
-                    +
-                  </button>
-                </div>
-
-                <div className="match-total">
-                  <span>Total</span>
-
-                  <strong>
-                    {(
-                        Number(
-                            selectedRule?.price || 0
-                        ) * matchCount
-                    ).toFixed(2)}{" "}
-                    EGP
-                  </strong>
-                </div>
-                <button
-                    className="primary-action"
-                    disabled={loading}
-                    onClick={start}
-                >
-                  {loading
-                      ? "Starting..."
-                      : "Start Match"}
-                </button>
-              </>
-          )}
+                        <button
+                            type="button"
+                            className="primary-action"
+                            disabled={loading}
+                            onClick={start}
+                        >
+                            {loading ? "Starting..." : "Start Match"}
+                        </button>
+                    </>
+                )}
+            </div>
         </div>
-      </div>
-  );
+    );
 }

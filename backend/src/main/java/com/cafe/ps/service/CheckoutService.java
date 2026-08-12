@@ -20,7 +20,8 @@ public class CheckoutService {
     public CheckoutResult prepareCheckout(Long sessionId) {
         Bill bill = billingService.finalizeSession(
                 sessionId,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                false
         );
 
         return billingService.getBill(bill.getId());
