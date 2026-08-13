@@ -5,44 +5,122 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2e0e8d5e-aef5-4f93-9c63-6793149568e8" name="Changes" comment="update Main">
-      <change afterPath="$PROJECT_DIR$/.ai/mcp/mcp.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/controller/OrderController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/controller/ProductController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/dto/AddOrderItemRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/dto/CreateOrderRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/dto/ProductRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/entity/CafeOrder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/entity/OrderItem.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/entity/OrderStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/entity/Product.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/repository/CafeOrderRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/repository/OrderItemRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/repository/ProductRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/service/OrderService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/service/ProductService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/api/orderApi.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/api/productApi.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/dashboard/QuickOrderMenu.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/pos/OrderCart.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/pos/POSPage.jsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/pos/ProductCard.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__ch_qos_logback_logback_classic_1_5_6.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__ch_qos_logback_logback_core_1_5_6.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_classmate_1_7_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_annotations_2_17_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_core_2_17_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_core_jackson_databind_2_17_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_datatype_jackson_datatype_jdk8_2_17_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_datatype_jackson_datatype_jsr310_2_17_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_fasterxml_jackson_module_jackson_module_parameter_names_2_17_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_jayway_jsonpath_json_path_2_9_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_sun_istack_istack_commons_runtime_4_1_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_vaadin_external_google_android_json_0_0_20131108_vaadin1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__com_zaxxer_HikariCP_5_1_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__io_micrometer_micrometer_commons_1_13_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__io_micrometer_micrometer_observation_1_13_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__io_smallrye_jandex_3_1_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__jakarta_activation_jakarta_activation_api_2_1_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__jakarta_annotation_jakarta_annotation_api_2_1_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__jakarta_inject_jakarta_inject_api_2_0_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__jakarta_persistence_jakarta_persistence_api_3_1_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__jakarta_transaction_jakarta_transaction_api_2_0_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__jakarta_validation_jakarta_validation_api_3_0_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__jakarta_xml_bind_jakarta_xml_bind_api_4_0_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_bytebuddy_byte_buddy_1_14_18.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_bytebuddy_byte_buddy_agent_1_14_18.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_minidev_accessors_smart_2_5_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__net_minidev_json_smart_2_5_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_antlr_antlr4_runtime_4_13_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_logging_log4j_log4j_api_2_23_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_logging_log4j_log4j_to_slf4j_2_23_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_tomcat_embed_tomcat_embed_core_10_1_26.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_tomcat_embed_tomcat_embed_el_10_1_26.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_tomcat_embed_tomcat_embed_websocket_10_1_26.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_apiguardian_apiguardian_api_1_1_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_aspectj_aspectjweaver_1_9_22_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_assertj_assertj_core_3_25_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_awaitility_awaitility_4_2_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_eclipse_angus_angus_activation_2_0_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_glassfish_jaxb_jaxb_core_4_0_5.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_glassfish_jaxb_jaxb_runtime_4_0_5.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_glassfish_jaxb_txw2_4_0_5.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_hamcrest_hamcrest_2_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_hibernate_common_hibernate_commons_annotations_6_0_6_Final.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_hibernate_orm_hibernate_community_dialects_6_5_2_Final.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_hibernate_orm_hibernate_core_6_5_2_Final.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_hibernate_validator_hibernate_validator_8_0_1_Final.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_jboss_logging_jboss_logging_3_5_3_Final.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_jupiter_junit_jupiter_5_10_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_jupiter_junit_jupiter_api_5_10_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_jupiter_junit_jupiter_engine_5_10_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_jupiter_junit_jupiter_params_5_10_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_platform_junit_platform_commons_1_10_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_junit_platform_junit_platform_engine_1_10_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_mockito_mockito_core_5_11_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_mockito_mockito_junit_jupiter_5_11_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_objenesis_objenesis_3_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_opentest4j_opentest4j_1_3_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_ow2_asm_asm_9_6.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_projectlombok_lombok_1_18_34.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_skyscreamer_jsonassert_1_5_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_slf4j_jul_to_slf4j_2_0_13.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_slf4j_slf4j_api_2_0_13.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_autoconfigure_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_aop_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_data_jpa_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_jdbc_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_json_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_logging_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_test_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_tomcat_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_validation_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_starter_web_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_test_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_boot_spring_boot_test_autoconfigure_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_data_spring_data_commons_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_data_spring_data_jpa_3_3_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_aop_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_aspects_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_beans_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_context_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_core_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_expression_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_jcl_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_jdbc_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_orm_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_test_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_tx_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_web_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_webmvc_6_1_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_xerial_sqlite_jdbc_3_46_1_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_xmlunit_xmlunit_core_2_9_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_yaml_snakeyaml_2_2.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/playstation-cafe-backend.iml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/ps_cafe.db" beforeDir="false" afterPath="$PROJECT_DIR$/backend/ps_cafe.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/config/SeedData.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/config/SeedData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/controller/SessionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/cafe/ps/controller/SessionController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/config/SeedData.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/config/SeedData.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/DeviceController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/DeviceController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/OrderController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/OrderController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/ProductController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/ProductController.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/SessionController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/SessionController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/dto/DashboardSummary.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/dto/DashboardSummary.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Device$DeviceBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Device$DeviceBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Device.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Device.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Product$ProductBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Product$ProductBuilder.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Product.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Product.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/CafeOrderRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/CafeOrderRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/DeviceRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/DeviceRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/OrderItemRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/OrderItemRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/ProductRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/ProductRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/OrderService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/OrderService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/SessionService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/SessionService.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/deviceApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/deviceApi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/sessionApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/sessionApi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/dashboard/Dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/dashboard/Dashboard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/dashboard/DeviceCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/dashboard/DeviceCard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/dashboard/StartSessionModal.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/dashboard/StartSessionModal.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ps_cafe.db" beforeDir="false" afterPath="$PROJECT_DIR$/ps_cafe.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -61,7 +139,7 @@
     </colors>
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="179" />
+    <option name="cachedIndexableFilesCount" value="219" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -73,7 +151,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="branch1" />
+        <entry key="$PROJECT_DIR$" value="feature/product-management" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -96,61 +174,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0655515902188661E-89" />
-      <entry key="MS500" value="1.6051473137425502E-18" />
-      <entry key="S2" value="3.559415801356405E-5" />
-      <entry key="S5" value="0.016616956754930464" />
-      <entry key="S10" value="0.12890677544229573" />
-      <entry key="S30" value="0.5051556889407796" />
-      <entry key="S60" value="0.710743054982455" />
-      <entry key="M2" value="0.843085615274116" />
-      <entry key="M5" value="0.9496217610206981" />
-      <entry key="M10" value="1.106489711437058" />
-      <entry key="M15" value="1.3038793898779253" />
-      <entry key="M30" value="2.0302819386290527" />
-      <entry key="H1" value="5.919977658474505" />
-      <entry key="H2" value="18.669051166139635" />
-      <entry key="H4" value="36.95464681446139" />
-      <entry key="D1" value="67.26923833542891" />
-      <entry key="W1" value="74.68379462628062" />
+      <entry key="MS100" value="1.4958350367768511" />
+      <entry key="MS500" value="3.4137566219519546" />
+      <entry key="S2" value="7.4935016248808255" />
+      <entry key="S5" value="9.784653936316598" />
+      <entry key="S10" value="10.806766425789323" />
+      <entry key="S30" value="11.584642131686905" />
+      <entry key="S60" value="12.359656082884811" />
+      <entry key="M2" value="21.63093998007454" />
+      <entry key="M5" value="79.75181325793872" />
+      <entry key="M10" value="166.1905592799177" />
+      <entry key="M15" value="231.96182886960605" />
+      <entry key="M30" value="375.41263159369925" />
+      <entry key="H1" value="619.4238012199546" />
+      <entry key="H2" value="1006.2661055454109" />
+      <entry key="H4" value="1435.216400455685" />
+      <entry key="D1" value="2116.2067114075016" />
+      <entry key="W1" value="2290.5064920128093" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0000000000405362" />
-      <entry key="S2" value="1.002523251978286" />
-      <entry key="S5" value="1.0913659236405466" />
-      <entry key="S10" value="1.3022679666133126" />
-      <entry key="S30" value="1.6711156630056574" />
-      <entry key="S60" value="1.8192164933685193" />
-      <entry key="M2" value="1.9051070776050851" />
-      <entry key="M5" value="1.967576937762128" />
-      <entry key="M10" value="2.0957859463846162" />
-      <entry key="M15" value="2.2856614284200747" />
-      <entry key="M30" value="2.7687844134255375" />
-      <entry key="H1" value="3.287949739489775" />
-      <entry key="H2" value="3.793947254643112" />
-      <entry key="H4" value="4.242668689380405" />
-      <entry key="D1" value="4.841636720212222" />
-      <entry key="W1" value="4.976391979526878" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="3.960564745215148E-171" />
+      <entry key="M2" value="1.0235855105153152E-85" />
+      <entry key="M5" value="1.9979877321463206E-34" />
+      <entry key="M10" value="2.8218446137943087E-17" />
+      <entry key="M15" value="1.5664139543487876E-11" />
+      <entry key="M30" value="9.514869414336232E-6" />
+      <entry key="H1" value="0.007949398285318196" />
+      <entry key="H2" value="0.24022508888160335" />
+      <entry key="H4" value="1.3592842009995214" />
+      <entry key="D1" value="5.931402450245454" />
+      <entry key="W1" value="7.664447779193128" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="2.132842765301132E-17" />
-      <entry key="MS500" value="4.6322476342811406E-4" />
-      <entry key="S2" value="0.14738875119082917" />
-      <entry key="S5" value="0.5336176172030748" />
-      <entry key="S10" value="1.0400417154143735" />
-      <entry key="S30" value="1.9975053363884419" />
-      <entry key="S60" value="2.4313334754665843" />
-      <entry key="M2" value="2.6962212892090145" />
-      <entry key="M5" value="2.895681005410262" />
-      <entry key="M10" value="3.1911214896931646" />
-      <entry key="M15" value="3.581755344782753" />
-      <entry key="M30" value="4.794682882712007" />
-      <entry key="H1" value="9.205427471474126" />
-      <entry key="H2" value="22.46157975679811" />
-      <entry key="H4" value="41.196527554697816" />
-      <entry key="D1" value="72.11072587024601" />
-      <entry key="W1" value="79.66016471519123" />
+      <entry key="MS100" value="1.4465321302286136" />
+      <entry key="MS500" value="3.388302139631821" />
+      <entry key="S2" value="7.478877957616264" />
+      <entry key="S5" value="9.776870000156151" />
+      <entry key="S10" value="10.802434294416628" />
+      <entry key="S30" value="11.583085353687745" />
+      <entry key="S60" value="12.358821967357887" />
+      <entry key="M2" value="21.63019302879298" />
+      <entry key="M5" value="79.75068391702753" />
+      <entry key="M10" value="166.18935347818805" />
+      <entry key="M15" value="231.960685779315" />
+      <entry key="M30" value="375.41168057741413" />
+      <entry key="H1" value="619.4309202991572" />
+      <entry key="H2" value="1006.5055659185124" />
+      <entry key="H4" value="1436.574967861965" />
+      <entry key="D1" value="2122.1378289082195" />
+      <entry key="W1" value="2298.1708908107826" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -174,7 +252,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "branch2__BuildArightArchitecture",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "D:/Workspace/Gaming-Cafe-Management-System",
@@ -186,7 +264,8 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.general",
-    "settings.editor.splitter.proportion": "0.17272727"
+    "settings.editor.splitter.proportion": "0.17272727",
+    "ts.external.directory.path": "C:\\Users\\20101\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib"
   }
 }]]></component>
   <component name="RecentsManager">
