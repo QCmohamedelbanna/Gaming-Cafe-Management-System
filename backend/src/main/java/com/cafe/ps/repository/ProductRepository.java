@@ -18,4 +18,8 @@ public interface ProductRepository
             String name,
             Long id
     );
+
+    boolean existsBySkuIgnoreCase(String sku);
+
+    boolean existsBySkuIgnoreCaseAndIdNot(String sku, Long id);
 }

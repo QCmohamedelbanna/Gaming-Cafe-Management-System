@@ -42,7 +42,7 @@ export default function DeleteProductModal({
 
                     <div className="delete-product-summary">
                         <span>{product.name}</span>
-                        <strong>{Number(product.price).toFixed(2)} EGP</strong>
+                        <strong>{Number(product.sellingPrice ?? product.price ?? 0).toFixed(2)} EGP</strong>
                     </div>
 
                     <div className="delete-product-note">

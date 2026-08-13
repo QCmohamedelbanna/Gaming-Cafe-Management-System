@@ -155,7 +155,7 @@ export default function ProductsPage() {
                                 return (
                                     <tr key={product.id}>
                                         <td><strong>{product.name}</strong></td>
-                                        <td>{Number(product.price).toFixed(2)} EGP</td>
+                                        <td>{Number(product.sellingPrice ?? product.price ?? 0).toFixed(2)} EGP</td>
                                         <td>
                                             <span className={product.active
                                                 ? "product-status active"

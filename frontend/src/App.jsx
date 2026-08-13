@@ -7,6 +7,7 @@ import POSPage from "./components/pos/POSPage";
 import ProductsPage from "./components/products/ProductsPage";
 import BillingPage from "./components/billing/BillingPage";
 import DevicesPage from "./components/devices/DevicesPage";
+import InventoryPage from "./components/inventory/InventoryPage";
 
 export default function App() {
 
@@ -95,12 +96,7 @@ export default function App() {
                 );
 
             case "inventory":
-                return (
-                    <div className="placeholder-page">
-                        <h2>Inventory</h2>
-                        <p>Coming soon</p>
-                    </div>
-                );
+                return <InventoryPage />;
 
             case "reports":
                 return (

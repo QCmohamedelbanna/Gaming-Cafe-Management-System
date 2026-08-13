@@ -27,6 +27,7 @@ public class BillingService {
     private final BillRepository billRepository;
     private final CafeOrderRepository orderRepository;
     private final GameSessionRepository sessionRepository;
+    private final InventoryService inventoryService;
 
     @Transactional
     public CheckoutResult checkoutSession(
@@ -231,7 +232,11 @@ public class BillingService {
 
         bill.setStatus(BillStatus.REFUNDED);
         bill.setRefundedAt(LocalDateTime.now());
-        bill.setRefundReason(reason.trim());
+        bill.setRefundReason(reason == null ? "Refunded by administrator" : reason.trim());
+        inventoryService.recordRefund(
+                bill.getBillNumber(),
+                "REFUND-" + bill.getBillNumber()
+        );
         bill.getPayments().forEach(payment ->
                 payment.setStatus(PaymentStatus.REFUNDED)
         );
@@ -393,6 +398,11 @@ public class BillingService {
 
         // A missing amountTendered intentionally means exact payment.
         BigDecimal tendered = amountTendered == null ? total : money(amountTendered);
+
+        inventoryService.recordSale(
+                bill.getOrder(),
+                bill.getBillNumber()
+        );
 
         BigDecimal change = method == PaymentMethod.CASH
                 ? money(tendered.subtract(total))

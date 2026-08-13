@@ -47,6 +47,23 @@ export default function POSPage({
 
     async function handleAddProduct(product) {
 
+        const quantityInOrder = Number(
+            order?.items?.find(
+                (item) => item.product?.id === product.id
+            )?.quantity || 0
+        );
+        const availableStock = product.trackStock === true
+            ? Math.max(0, Number(product.currentStock ?? 0))
+            : null;
+
+        if (availableStock !== null
+            && quantityInOrder + 1 > availableStock) {
+            setMessage(
+                `${product.name} does not have enough stock available.`
+            );
+            return;
+        }
+
         try {
 
             setAddingProductId(product.id);
@@ -99,7 +116,20 @@ export default function POSPage({
         try {
             const updated = await removeOrderItem(order.id, itemId);
 
-            setOrder(updated);
+            /*
+             * Removing the last item from a standalone order cancels that
+             * order on the backend. Do not keep the cancelled order in state:
+             * the next product must create a fresh open order.
+             *
+             * Session-attached orders stay open when they become empty, so
+             * they can continue to receive products for the same session.
+             */
+            setOrder(
+                updated?.status === "OPEN"
+                    ? updated
+                    : null
+            );
+            setMessage("");
         } catch (error) {
             console.error(error);
             setMessage("Could not remove product.");
@@ -200,6 +230,11 @@ export default function POSPage({
                         key={product.id}
                         product={product}
                         disabled={addingProductId === product.id}
+                        quantityInOrder={Number(
+                            order?.items?.find(
+                                (item) => item.product?.id === product.id
+                            )?.quantity || 0
+                        )}
                         onAdd={handleAddProduct}
                     />))}
                 </div>)}

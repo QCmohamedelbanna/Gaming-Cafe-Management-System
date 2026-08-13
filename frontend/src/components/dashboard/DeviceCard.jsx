@@ -412,6 +412,7 @@ export default function DeviceCard({
 
             <QuickOrderMenu
                 products={products}
+                order={order}
                 addingProductId={addingProductId}
                 onAddProduct={(product) =>
                     onQuickAddProduct(
