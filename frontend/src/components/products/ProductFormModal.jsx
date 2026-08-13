@@ -2,9 +2,19 @@ import { useEffect, useState } from "react";
 
 export default function ProductFormModal({ product, saving, onClose, onSave }) {
     const [name, setName] = useState(product?.name ?? "");
-    const [price, setPrice] = useState(product?.price ?? "");
+    const [sku, setSku] = useState(product?.sku ?? "");
+    const [category, setCategory] = useState(product?.category ?? "");
+    const [sellingPrice, setSellingPrice] = useState(
+        product?.sellingPrice ?? product?.price ?? ""
+    );
+    const [costPrice, setCostPrice] = useState(product?.costPrice ?? "");
+    const [trackStock, setTrackStock] = useState(
+        product ? Boolean(product.trackStock) : true
+    );
+    const [minimumStock, setMinimumStock] = useState(product?.minimumStock ?? "");
+    const [unit, setUnit] = useState(product?.unit ?? "unit");
     const editing = Boolean(product);
-    const valid = name.trim() && Number(price) > 0;
+    const valid = name.trim() && Number(sellingPrice) > 0;
 
     useEffect(() => {
         function handleKeyDown(event) {
@@ -18,7 +28,17 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
     function submit(event) {
         event.preventDefault();
         if (!valid || saving) return;
-        onSave({ name: name.trim(), price: Number(price) });
+        onSave({
+            name: name.trim(),
+            price: Number(sellingPrice),
+            sellingPrice: Number(sellingPrice),
+            sku: sku.trim() || null,
+            category: category.trim() || "Uncategorized",
+            costPrice: costPrice === "" ? 0 : Number(costPrice),
+            trackStock,
+            minimumStock: minimumStock === "" ? 0 : Number(minimumStock),
+            unit: unit.trim() || "unit",
+        });
     }
 
     return (
@@ -43,8 +63,8 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                         </h2>
                         <p>
                             {editing
-                                ? "Update the product name or price."
-                                : "Create a product for POS and quick orders."}
+                                ? "Update pricing and inventory settings."
+                                : "Create a product for POS and inventory tracking."}
                         </p>
                     </div>
                     <button
@@ -68,19 +88,98 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                     placeholder="Example: Orange Juice"
                 />
 
-                <label htmlFor="product-price">Price</label>
-                <div className="product-price-input">
-                    <input
-                        id="product-price"
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={price}
-                        onChange={(event) => setPrice(event.target.value)}
-                        placeholder="0.00"
-                    />
-                    <span>EGP</span>
+                <div className="product-form-grid">
+                    <div>
+                        <label htmlFor="product-sku">SKU / barcode</label>
+                        <input
+                            id="product-sku"
+                            maxLength="80"
+                            value={sku}
+                            onChange={(event) => setSku(event.target.value)}
+                            placeholder="Optional barcode"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="product-category">Category</label>
+                        <input
+                            id="product-category"
+                            maxLength="80"
+                            value={category}
+                            onChange={(event) => setCategory(event.target.value)}
+                            placeholder="Drinks, snacks..."
+                        />
+                    </div>
                 </div>
+
+                <div className="product-form-grid">
+                    <div>
+                        <label htmlFor="product-selling-price">Selling price</label>
+                        <div className="product-price-input">
+                            <input
+                                id="product-selling-price"
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={sellingPrice}
+                                onChange={(event) => setSellingPrice(event.target.value)}
+                                placeholder="0.00"
+                            />
+                            <span>EGP</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="product-cost-price">Cost price</label>
+                        <div className="product-price-input">
+                            <input
+                                id="product-cost-price"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={costPrice}
+                                onChange={(event) => setCostPrice(event.target.value)}
+                                placeholder="0.00"
+                            />
+                            <span>EGP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="product-form-grid">
+                    <div>
+                        <label htmlFor="product-minimum-stock">Minimum stock</label>
+                        <input
+                            id="product-minimum-stock"
+                            type="number"
+                            min="0"
+                            step="0.001"
+                            value={minimumStock}
+                            onChange={(event) => setMinimumStock(event.target.value)}
+                            placeholder="0"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="product-unit">Unit</label>
+                        <input
+                            id="product-unit"
+                            maxLength="30"
+                            value={unit}
+                            onChange={(event) => setUnit(event.target.value)}
+                            placeholder="piece, bottle..."
+                        />
+                    </div>
+                </div>
+
+                <label className="product-track-toggle">
+                    <input
+                        type="checkbox"
+                        checked={trackStock}
+                        onChange={(event) => setTrackStock(event.target.checked)}
+                    />
+                    <span>
+                        <strong>Track stock for this product</strong>
+                        <small>Sales will reduce inventory and refunds will restore it.</small>
+                    </span>
+                </label>
 
                 <div className="product-form-actions">
                     <button

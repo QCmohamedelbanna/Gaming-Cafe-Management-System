@@ -2,6 +2,7 @@ package com.cafe.ps.service;
 
 import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.*;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,9 @@ public class OrderService {
     private final CafeOrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final GameSessionRepository sessionRepository;
+
+    @Value("${inventory.prevent-negative:true}")
+    private boolean preventNegativeStock;
 
     @Transactional
     public CafeOrder createOrder(Long gameSessionId) {
@@ -101,19 +105,23 @@ public class OrderService {
                 .findFirst()
                 .orElse(null);
 
+        int currentQuantity = existingItem == null
+                ? 0
+                : existingItem.getQuantity();
+        int requestedQuantity = currentQuantity + quantity;
+
+        ensureStockAvailable(product, requestedQuantity);
+
         if (existingItem != null) {
 
-            int newQuantity =
-                    existingItem.getQuantity() + quantity;
-
-            existingItem.setQuantity(newQuantity);
+            existingItem.setQuantity(requestedQuantity);
 
             existingItem.setLineTotal(
                     money(existingItem
                             .getUnitPriceSnapshot()
                             .multiply(
                                     BigDecimal.valueOf(
-                                            newQuantity
+                                            requestedQuantity
                                     )
                             ))
             );
@@ -121,7 +129,7 @@ public class OrderService {
         } else {
 
             BigDecimal lineTotal =
-                    money(product.getPrice()
+                    money(product.effectiveSellingPrice()
                             .multiply(
                                     BigDecimal.valueOf(quantity)
                             ));
@@ -132,7 +140,7 @@ public class OrderService {
                             .product(product)
                             .quantity(quantity)
                             .unitPriceSnapshot(
-                                    product.getPrice()
+                                    product.effectiveSellingPrice()
                             )
                             .lineTotal(lineTotal)
                             .build();
@@ -143,6 +151,25 @@ public class OrderService {
         recalculateTotal(order);
 
         return orderRepository.save(order);
+    }
+
+    private void ensureStockAvailable(Product product, int requestedQuantity) {
+        if (!preventNegativeStock
+                || !Boolean.TRUE.equals(product.getTrackStock())) {
+            return;
+        }
+
+        BigDecimal available = product.getCurrentStock() == null
+                ? BigDecimal.ZERO
+                : product.getCurrentStock();
+
+        if (BigDecimal.valueOf(requestedQuantity).compareTo(available) > 0) {
+            throw new IllegalStateException(
+                    "Insufficient stock for " + product.getName()
+                            + ". Available: "
+                            + available.stripTrailingZeros().toPlainString()
+            );
+        }
     }
 
     @Transactional

@@ -77,6 +77,13 @@ public class SeedData {
             seedProduct(products, "Chips", "15.00");
             seedProduct(products, "Water", "10.00");
             seedProduct(products, "Pepsi", "20.00");
+
+            /*
+             * Persist defaults for products created before inventory existed.
+             * Product's lifecycle callback maps the legacy price into
+             * sellingPrice and supplies safe values for the new metadata.
+             */
+            products.findAll().forEach(products::save);
         };
 
     }
