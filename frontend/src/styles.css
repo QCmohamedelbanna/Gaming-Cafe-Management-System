@@ -2122,6 +2122,25 @@ body {
 .bill-payment-actions .back-button { align-self: center; min-height: 44px; }
 .bill-payment-submit { min-height: 54px; }
 
+/* CANCEL BILL DIALOG */
+.cancel-bill-modal { max-width: 560px; }
+.cancel-bill-icon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 20px; border: 1px solid #773745; border-radius: 14px; background: #301820; color: #ff8998; font-size: 25px; font-weight: 900; }
+.cancel-bill-content h2 { margin: 7px 0 10px; font-size: 27px; }
+.cancel-bill-content > p { margin: 0; color: #9aa8c5; line-height: 1.6; }
+.cancel-bill-content > p strong { color: #ffffff; }
+.cancel-bill-summary { display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 16px; margin-top: 22px; padding: 15px 16px; border: 1px solid #36415a; border-radius: 11px; background: #182133; }
+.cancel-bill-summary div { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.cancel-bill-summary span { color: #8996b3; font-size: 11px; text-transform: uppercase; letter-spacing: .7px; }
+.cancel-bill-summary strong { overflow: hidden; color: #ffffff; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.cancel-bill-note { margin-top: 12px; padding: 13px 15px; border-left: 3px solid #d79a45; border-radius: 7px; background: #271f14; color: #d9bb8c; font-size: 13px; line-height: 1.55; }
+.cancel-bill-inline-error { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; padding: 13px 15px; border: 1px solid #713442; border-radius: 8px; background: #2d171d; color: #ff9aa8; font-size: 13px; line-height: 1.45; }
+.cancel-bill-inline-error strong { color: #ffbec7; }
+.cancel-bill-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.cancel-bill-actions .product-secondary-button, .cancel-bill-confirm-button { min-height: 42px; padding: 10px 14px; border-radius: 8px; font-weight: 750; }
+.cancel-bill-confirm-button { border: 1px solid #773745; background: #a53649; color: #ffffff; cursor: pointer; }
+.cancel-bill-confirm-button:hover { background: #bd3e53; }
+.cancel-bill-confirm-button:disabled { opacity: .55; cursor: not-allowed; }
+
 @media (max-width: 560px) {
   .bill-payment-modal { padding: 23px 20px 22px; }
   .bill-payment-modal .modal-header h2 { font-size: 26px; }
@@ -2129,6 +2148,9 @@ body {
   .pending-bill-total strong { font-size: 23px; }
   .bill-payment-actions { grid-template-columns: 1fr; gap: 10px; }
   .bill-payment-actions .back-button { order: 2; width: 100%; }
+  .cancel-bill-summary { grid-template-columns: 1fr; gap: 12px; }
+  .cancel-bill-actions { flex-direction: column-reverse; }
+  .cancel-bill-actions button { width: 100%; }
 }
 
 /* DEVICE MANAGEMENT */

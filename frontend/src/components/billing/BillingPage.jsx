@@ -6,12 +6,14 @@ import {
     refundBill,
 } from "../../api/billingApi";
 import BillPaymentModal from "./BillPaymentModal";
+import CancelBillModal from "./CancelBillModal";
 import ReceiptModal from "../dashboard/ReceiptModal";
 
 export default function BillingPage() {
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedBill, setSelectedBill] = useState(null);
+    const [cancelTarget, setCancelTarget] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
@@ -53,13 +55,12 @@ export default function BillingPage() {
     }
 
     async function handleCancel(bill) {
-        if (!window.confirm(`Cancel ${bill.billNumber}?`)) return;
-
         try {
             setProcessing(true);
             setError("");
             await cancelBill(bill.billId);
             setBills((current) => current.filter((item) => item.billId !== bill.billId));
+            setCancelTarget(null);
             setMessage(`${bill.billNumber} cancelled.`);
         } catch (cancelError) {
             console.error(cancelError);
@@ -137,7 +138,14 @@ export default function BillingPage() {
                                                 <button type="button" onClick={() => { setError(""); setSelectedBill(bill); }}>
                                                     Pay
                                                 </button>
-                                                <button type="button" className="product-delete-button" onClick={() => handleCancel(bill)}>
+                                                <button
+                                                    type="button"
+                                                    className="product-delete-button"
+                                                    onClick={() => {
+                                                        setError("");
+                                                        setCancelTarget(bill);
+                                                    }}
+                                                >
                                                     Cancel
                                                 </button>
                                             </div>
@@ -157,6 +165,20 @@ export default function BillingPage() {
                     error={error}
                     onClose={() => setSelectedBill(null)}
                     onPay={handlePay}
+                />
+            )}
+
+            {cancelTarget && (
+                <CancelBillModal
+                    bill={cancelTarget}
+                    cancelling={processing}
+                    error={error}
+                    onClose={() => {
+                        if (processing) return;
+                        setCancelTarget(null);
+                        setError("");
+                    }}
+                    onConfirm={() => handleCancel(cancelTarget)}
                 />
             )}
 

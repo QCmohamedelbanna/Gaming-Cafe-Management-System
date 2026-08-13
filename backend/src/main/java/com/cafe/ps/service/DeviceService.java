@@ -21,7 +21,7 @@ public class DeviceService {
 
     @Transactional(readOnly = true)
     public List<Device> getAll() {
-        return deviceRepository.findAll().stream()
+        return deviceRepository.findAllByDeletedFalseOrDeletedIsNull().stream()
                 .peek(this::applyLegacyDefaults)
                 .sorted(Comparator
                         .comparing(Device::getType)
@@ -40,6 +40,7 @@ public class DeviceService {
                 .type(request.type())
                 .status(status)
                 .active(true)
+                .deleted(false)
                 .maintenanceNote(normalizedMaintenanceNote(status, request.maintenanceNote()))
                 .build());
     }
@@ -80,19 +81,18 @@ public class DeviceService {
         Device device = getDevice(id);
         assertNoActiveSession(device);
 
-        if (sessionRepository.existsByDeviceId(id)) {
-            throw new IllegalStateException(
-                    "This device has session history and cannot be deleted"
-            );
-        }
-
-        deviceRepository.delete(device);
+        device.setDeleted(true);
+        device.setActive(false);
+        deviceRepository.save(device);
     }
 
     private Device getDevice(Long id) {
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Device not found"));
         applyLegacyDefaults(device);
+        if (Boolean.TRUE.equals(device.getDeleted())) {
+            throw new IllegalArgumentException("Device not found");
+        }
         return device;
     }
 
@@ -150,6 +150,10 @@ public class DeviceService {
         if (device.getActive() == null) {
             // Devices that existed before the active flag was introduced are enabled.
             device.setActive(true);
+        }
+        if (device.getDeleted() == null) {
+            // Devices that existed before soft deletion was introduced remain visible.
+            device.setDeleted(false);
         }
     }
 }

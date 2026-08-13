@@ -33,10 +33,11 @@ export default function DeleteDeviceModal({
                 <div className="delete-product-icon" aria-hidden="true">!</div>
 
                 <div className="delete-product-content">
-                    <span className="page-label">PERMANENT ACTION</span>
+                    <span className="page-label">REMOVE FROM OPERATIONS</span>
                     <h2 id="delete-device-title">Delete device?</h2>
                     <p id="delete-device-description">
-                        <strong>{device.name}</strong> will be permanently removed.
+                        <strong>{device.name}</strong> will be removed from active devices.
+                        Historical session records will be preserved.
                     </p>
 
                     <div className="delete-product-summary">
@@ -45,7 +46,8 @@ export default function DeleteDeviceModal({
                     </div>
 
                     <div className="delete-product-note">
-                        Only an unused device with no session history can be deleted.
+                        A device can be removed after its active session ends. Its
+                        session history remains available for billing and reporting.
                         Devices with active sessions are protected automatically.
                     </div>
 

@@ -127,7 +127,7 @@ public class SessionService {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new DashboardSummary(
-                deviceRepository.count(),
+                deviceRepository.countByDeletedFalseOrDeletedIsNull(),
                 active,
                 completed,
                 gamingRevenue.add(productsRevenue),
@@ -176,7 +176,8 @@ public class SessionService {
     }
 
     private void assertDeviceAvailable(Device device) {
-        if (Boolean.FALSE.equals(device.getActive())) {
+        if (Boolean.FALSE.equals(device.getActive())
+                || Boolean.TRUE.equals(device.getDeleted())) {
             throw new IllegalStateException("Device is inactive");
         }
         if (device.getStatus() == DeviceStatus.PLAYING || sessionRepository.findFirstByDeviceIdAndStatusOrderByStartTimeDesc(device.getId(), SessionStatus.ACTIVE).isPresent()) {

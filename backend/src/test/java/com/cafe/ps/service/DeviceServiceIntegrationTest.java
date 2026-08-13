@@ -142,19 +142,25 @@ class DeviceServiceIntegrationTest {
     }
 
     @Test
-    void unusedDeviceCanBeDeletedButDeviceWithHistoryCannot() {
+    void unusedDeviceCanBeSoftDeletedAndDeviceHistoryIsPreserved() {
         Device unused = saveDevice("PS4-Unused", DeviceType.PS4, DeviceStatus.OFFLINE);
         deviceService.delete(unused.getId());
-        assertThat(deviceRepository.existsById(unused.getId())).isFalse();
+        assertThat(deviceRepository.findById(unused.getId()).orElseThrow().getDeleted())
+                .isTrue();
+        assertThat(deviceService.getAll())
+                .noneMatch(device -> device.getId().equals(unused.getId()));
 
         Device withHistory = saveDevice("PS4-History", DeviceType.PS4, DeviceStatus.AVAILABLE);
         GameSession completed = saveSession(withHistory, SessionStatus.COMPLETED);
 
-        assertThatThrownBy(() -> deviceService.delete(withHistory.getId()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("This device has session history and cannot be deleted");
+        deviceService.delete(withHistory.getId());
+
+        Device deletedWithHistory = deviceRepository.findById(withHistory.getId()).orElseThrow();
+        assertThat(deletedWithHistory.getDeleted()).isTrue();
+        assertThat(deletedWithHistory.getActive()).isFalse();
         assertThat(sessionRepository.existsById(completed.getId())).isTrue();
-        assertThat(deviceRepository.existsById(withHistory.getId())).isTrue();
+        assertThat(deviceService.getAll())
+                .noneMatch(device -> device.getId().equals(withHistory.getId()));
     }
 
     @Test

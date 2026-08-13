@@ -42,6 +42,15 @@ public class Device {
     @Builder.Default
     private Boolean active = true;
 
+    /**
+     * Soft deletion marker. Deleted devices stay available to historical
+     * sessions and billing records but are hidden from current operations.
+     */
+    @JsonIgnore
+    @Column(name = "deleted")
+    @Builder.Default
+    private Boolean deleted = false;
+
     @Column(length = 500)
     private String maintenanceNote;
 }
