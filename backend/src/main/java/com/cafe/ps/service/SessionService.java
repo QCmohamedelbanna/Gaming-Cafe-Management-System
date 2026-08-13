@@ -176,6 +176,9 @@ public class SessionService {
     }
 
     private void assertDeviceAvailable(Device device) {
+        if (Boolean.FALSE.equals(device.getActive())) {
+            throw new IllegalStateException("Device is inactive");
+        }
         if (device.getStatus() == DeviceStatus.PLAYING || sessionRepository.findFirstByDeviceIdAndStatusOrderByStartTimeDesc(device.getId(), SessionStatus.ACTIVE).isPresent()) {
             throw new IllegalStateException("Device already has an active session");
         }

@@ -9,8 +9,8 @@ public class SeedData {
     @Bean CommandLineRunner seed(DeviceRepository devices, PricingRepository pricing, ProductRepository products) {
         return args -> {
             if (devices.count() == 0) {
-                for (int i = 1; i <= 4; i++) devices.save(Device.builder().name("PS4-"+i).type(DeviceType.PS4).status(DeviceStatus.AVAILABLE).hourlyRate(new BigDecimal("40.00")).build());
-                for (int i = 1; i <= 2; i++) devices.save(Device.builder().name("PS5-"+i).type(DeviceType.PS5).status(DeviceStatus.AVAILABLE).hourlyRate(new BigDecimal("60.00")).build());
+                for (int i = 1; i <= 4; i++) devices.save(Device.builder().name("PS4-"+i).type(DeviceType.PS4).status(DeviceStatus.AVAILABLE).active(true).build());
+                for (int i = 1; i <= 2; i++) devices.save(Device.builder().name("PS5-"+i).type(DeviceType.PS5).status(DeviceStatus.AVAILABLE).active(true).build());
             }
             seedPrice(
                     pricing,

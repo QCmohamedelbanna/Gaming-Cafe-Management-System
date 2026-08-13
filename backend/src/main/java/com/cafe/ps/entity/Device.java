@@ -1,7 +1,9 @@
 package com.cafe.ps.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -22,6 +24,24 @@ public class Device {
     @Column(nullable = false)
     private DeviceStatus status;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal hourlyRate;
+    /**
+     * Kept for databases created before pricing became independent from a
+     * device. New devices use the default only to satisfy the legacy schema;
+     * session prices come from the Pricing entity.
+     */
+    @JsonIgnore
+    @Column(name = "hourly_rate", nullable = false, precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal legacyHourlyRate = BigDecimal.ZERO;
+
+    /**
+     * Administrative availability switch. A null value is treated as active
+     * for devices created before this field was introduced.
+     */
+    @Column(name = "active")
+    @Builder.Default
+    private Boolean active = true;
+
+    @Column(length = 500)
+    private String maintenanceNote;
 }

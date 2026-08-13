@@ -365,7 +365,7 @@ class CheckoutServiceIntegrationTest {
                 .name(name)
                 .type(type)
                 .status(DeviceStatus.PLAYING)
-                .hourlyRate(HOURLY_RATE)
+                .active(true)
                 .build());
     }
 

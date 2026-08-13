@@ -6,5 +6,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 public interface GameSessionRepository extends JpaRepository<GameSession, Long> {
     Optional<GameSession> findFirstByDeviceIdAndStatusOrderByStartTimeDesc(Long deviceId, SessionStatus status);
+    boolean existsByDeviceId(Long deviceId);
     List<GameSession> findByStartTimeBetween(LocalDateTime from, LocalDateTime to);
 }

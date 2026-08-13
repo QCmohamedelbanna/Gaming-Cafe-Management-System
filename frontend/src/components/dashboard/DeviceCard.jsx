@@ -43,6 +43,8 @@ export default function DeviceCard({
     const [now, setNow] = useState(Date.now());
 
     const active = Boolean(session);
+    const deviceEnabled = device.active !== false;
+    const deviceAvailable = deviceEnabled && device.status === "AVAILABLE";
 
 
 
@@ -61,14 +63,22 @@ export default function DeviceCard({
      */
     if (!active) {
         return (
-            <div className="device-card">
+            <div className={`device-card device-card-unavailable ${
+                deviceAvailable ? "" : "device-card-locked"
+            }`}>
                 <div className="device-card-top">
                     <span className="device-type-badge">
                         {device.type}
                     </span>
 
-                    <span className="device-status available">
-                        AVAILABLE
+                    <span className={`device-status ${
+                        deviceAvailable
+                            ? "available"
+                            : deviceEnabled
+                                ? String(device.status || "OFFLINE").toLowerCase()
+                                : "inactive"
+                    }`}>
+                        {deviceEnabled ? device.status : "INACTIVE"}
                     </span>
                 </div>
 
@@ -76,16 +86,23 @@ export default function DeviceCard({
                     {device.name}
                 </h2>
 
-                <div className="device-ready">
-                    Ready for next session
+                <div className="device-ready device-availability-message">
+                    {deviceAvailable && "Ready for next session"}
+                    {!deviceEnabled && "Deactivated in Admin Devices"}
+                    {deviceEnabled && device.status === "MAINTENANCE" && (
+                        device.maintenanceNote || "Maintenance required"
+                    )}
+                    {deviceEnabled && device.status === "OFFLINE" && "Offline"}
+                    {deviceEnabled && device.status === "PLAYING" && "Session state is refreshing"}
                 </div>
 
                 <button
                     type="button"
                     className="device-start-button"
+                    disabled={!deviceAvailable}
                     onClick={() => onStart(device)}
                 >
-                    Start Session
+                    {deviceAvailable ? "Start Session" : "Unavailable"}
                 </button>
             </div>
         );

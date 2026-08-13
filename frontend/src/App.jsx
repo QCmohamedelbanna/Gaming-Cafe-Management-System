@@ -6,6 +6,7 @@ import PricingPage from "./components/pricing/PricingPage";
 import POSPage from "./components/pos/POSPage";
 import ProductsPage from "./components/products/ProductsPage";
 import BillingPage from "./components/billing/BillingPage";
+import DevicesPage from "./components/devices/DevicesPage";
 
 export default function App() {
 
@@ -74,6 +75,9 @@ export default function App() {
             case "products":
                 return <ProductsPage />;
 
+            case "devices":
+                return <DevicesPage />;
+
             case "billing":
                 return <BillingPage />;
 
@@ -135,6 +139,9 @@ export default function App() {
 
             case "products":
                 return "Products";
+
+            case "devices":
+                return "Devices";
 
             case "billing":
                 return "Billing";

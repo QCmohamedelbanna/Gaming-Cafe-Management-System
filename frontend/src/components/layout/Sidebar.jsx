@@ -5,6 +5,7 @@ export default function Sidebar({activePage, onNavigate}) {
 
         // Admin pages later:
         { key: "dashboard", label: "Dashboard" },
+        { key: "devices", label: "Devices" },
         { key: "products", label: "Products" },
         { key: "billing", label: "Billing" },
         { key: "inventory", label: "Inventory" },

@@ -2131,6 +2131,59 @@ body {
   .bill-payment-actions .back-button { order: 2; width: 100%; }
 }
 
+/* DEVICE MANAGEMENT */
+.devices-management-page { width: 100%; max-width: 1400px; }
+.devices-management-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.devices-management-header h1 { margin: 6px 0 4px; font-size: 30px; }
+.devices-management-header p { margin: 0; color: #8996b3; }
+.devices-header-actions { display: flex; align-items: center; gap: 10px; }
+.devices-management-note { display: flex; align-items: center; gap: 9px; margin-bottom: 22px; padding: 13px 16px; border: 1px solid #2d3a56; border-radius: 10px; background: #121c2e; color: #9eafd0; font-size: 13px; }
+.devices-management-note strong { color: #dce5fb; }
+.devices-table-wrap { overflow-x: auto; background: #111620; border: 1px solid #293247; border-radius: 16px; }
+.devices-table { width: 100%; min-width: 920px; border-collapse: collapse; }
+.devices-table th, .devices-table td { padding: 17px 18px; text-align: left; border-bottom: 1px solid #252e40; vertical-align: middle; }
+.devices-table th { color: #8492b0; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+.devices-table tbody tr:last-child td { border-bottom: 0; }
+.devices-table tbody tr:hover { background: #151c29; }
+.devices-table th:last-child, .devices-table td:last-child { text-align: right; }
+.device-type-pill { display: inline-flex; padding: 5px 8px; border-radius: 6px; background: #20283a; color: #a2b2e2; font-size: 10px; font-weight: 800; }
+.device-table-lock { display: block; margin-top: 5px; color: #f0c876; font-size: 11px; }
+.device-admin-status, .device-admin-active { display: inline-flex; align-items: center; padding: 6px 9px; border-radius: 999px; font-size: 10px; font-weight: 850; text-transform: uppercase; white-space: nowrap; }
+.device-admin-status-available { color: #69e4a5; background: #112b22; }
+.device-admin-status-playing { color: #8eb5ff; background: #182849; }
+.device-admin-status-maintenance { color: #f0c876; background: #302714; }
+.device-admin-status-offline { color: #ff9fac; background: #321820; }
+.device-admin-status-reserved { color: #c5b9ff; background: #282143; }
+.device-admin-active.active { color: #69e4a5; background: #112b22; }
+.device-admin-active.inactive { color: #ff9fac; background: #321820; }
+.device-maintenance-note { display: block; max-width: 250px; overflow: hidden; color: #9aa8c5; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.device-row-actions { min-width: 300px; }
+.device-form-modal { max-width: 590px; }
+.device-form-modal > label, .device-form-grid label { display: block; margin: 18px 0 8px; color: #9aa8c5; font-size: 12px; font-weight: 700; }
+.device-form-modal > input, .device-form-modal select, .device-form-modal textarea { width: 100%; box-sizing: border-box; padding: 13px 14px; border: 1px solid #34405a; border-radius: 10px; outline: none; background: #0b111c; color: #ffffff; font: inherit; font-size: 14px; }
+.device-form-modal textarea { resize: vertical; line-height: 1.45; }
+.device-form-modal input:focus, .device-form-modal select:focus, .device-form-modal textarea:focus { border-color: #7386ff; }
+.device-form-modal textarea:disabled { color: #66728c; background: #101621; cursor: not-allowed; }
+.device-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.device-form-grid label { margin-bottom: 8px; }
+.device-form-hint { margin: 14px 0 0; color: #7889aa; font-size: 12px; line-height: 1.5; }
+.delete-device-modal { max-width: 560px; }
+.device-card-locked { border-color: #47364a; }
+.device-card-locked .device-ready { color: #9c8da6; }
+.device-status.maintenance { color: #f0c876; font-size: 11px; font-weight: 800; }
+.device-status.offline { color: #ff9fac; font-size: 11px; font-weight: 800; }
+.device-status.inactive { color: #ff9fac; font-size: 11px; font-weight: 800; }
+.device-start-button:disabled { border-color: #2c3546; background: #151b27; color: #6f7d99; cursor: not-allowed; opacity: .9; }
+.device-start-button:disabled:hover { background: #151b27; }
+
+@media (max-width: 760px) {
+  .devices-management-header { align-items: flex-start; flex-direction: column; }
+  .devices-header-actions { width: 100%; }
+  .devices-header-actions button { flex: 1; }
+  .devices-management-note { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .device-form-grid { grid-template-columns: 1fr; gap: 0; }
+}
+
 .bill-expiry-alert {
   position: fixed;
   top: 82px;
