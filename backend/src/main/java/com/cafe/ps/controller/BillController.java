@@ -45,12 +45,14 @@ public class BillController {
     @PostMapping("/{id}/pay")
     public CheckoutResult pay(
             @PathVariable Long id,
-            @Valid @RequestBody CheckoutRequest request
+            @Valid @RequestBody CheckoutRequest request,
+            @RequestHeader(value = "X-Cashier", defaultValue = "Admin") String cashier
     ) {
         return billingService.payBill(
                 id,
                 request.paymentMethod(),
-                request.amountTendered()
+                request.amountTendered(),
+                cashier
         );
     }
 

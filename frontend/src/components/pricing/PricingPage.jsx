@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 import {
   getPricing,
   updatePricing,
@@ -7,6 +8,7 @@ import {
 import PricingCard from "./PricingCard";
 
 export default function PricingPage() {
+  const { t } = useLanguage();
   const [pricing, setPricing] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
@@ -19,7 +21,7 @@ export default function PricingPage() {
       setPricing(data);
     } catch (error) {
       console.error(error);
-      setMessage("Could not load pricing.");
+      setMessage(t("pricing.loadError"));
     } finally {
       setLoading(false);
     }
@@ -64,35 +66,33 @@ export default function PricingPage() {
         )
       );
 
-      setMessage(
-        `${updated.deviceType} ${updated.sessionType} saved successfully`
-      );
+      setMessage(t("pricing.saved", { name: `${updated.deviceType} ${updated.sessionType}` }));
     } catch (error) {
       console.error(error);
-      setMessage(error.message || "Failed to save pricing");
+      setMessage(error.message || t("pricing.saveError"));
     } finally {
       setSavingId(null);
     }
   }
 
   if (loading) {
-    return <div>Loading pricing...</div>;
+    return <div>{t("pricing.loading")}</div>;
   }
 
   return (
     <div className="pricing-page">
       <div className="pricing-header">
         <div>
-          <span className="page-label">SETTINGS</span>
-          <h1>Pricing</h1>
-          <p>Manage gaming prices and match limits.</p>
+          <span className="page-label">{t("pricing.pageLabel")}</span>
+          <h1>{t("pricing.title")}</h1>
+          <p>{t("pricing.descriptionShort")}</p>
         </div>
 
         <button
           className="refresh-button"
           onClick={loadPricing}
         >
-          Refresh
+          {t("common.refresh")}
         </button>
       </div>
 

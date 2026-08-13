@@ -1,8 +1,5 @@
 import { useEffect } from "react";
-
-function money(value) {
-    return `${Number(value || 0).toFixed(2)} EGP`;
-}
+import { useLanguage } from "../../i18n";
 
 export default function CancelBillModal({
     bill,
@@ -11,6 +8,7 @@ export default function CancelBillModal({
     onClose,
     onConfirm,
 }) {
+    const { t, formatCurrency } = useLanguage();
     useEffect(() => {
         function handleKeyDown(event) {
             if (event.key === "Escape" && !cancelling) onClose();
@@ -39,39 +37,38 @@ export default function CancelBillModal({
                 <div className="cancel-bill-icon" aria-hidden="true">!</div>
 
                 <div className="cancel-bill-content">
-                    <span className="page-label">BILLING ACTION</span>
-                    <h2 id="cancel-bill-title">Cancel bill?</h2>
+                    <span className="page-label">{t("modal.cancelBillLabel")}</span>
+                    <h2 id="cancel-bill-title">{t("billing.cancelBillTitle")}</h2>
                     <p id="cancel-bill-description">
-                        Are you sure you want to cancel <strong>{bill.billNumber}</strong>?
-                        This bill will be removed from pending payments.
+                        {t("billing.cancelBillQuestion", { bill: bill.billNumber })}
                     </p>
 
                     <div className="cancel-bill-summary">
                         <div>
-                            <span>Bill</span>
+                            <span>{t("modal.bill")}</span>
                             <strong>{bill.billNumber}</strong>
                         </div>
                         <div>
-                            <span>Reference</span>
+                            <span>{t("modal.reference")}</span>
                             <strong>
                                 {bill.sessionId
-                                    ? `Session #${bill.sessionId}`
-                                    : `Order #${bill.orderId}`}
+                                    ? t("billing.referenceSession", { id: bill.sessionId })
+                                    : t("billing.referenceOrder", { id: bill.orderId })}
                             </strong>
                         </div>
                         <div>
-                            <span>Amount</span>
-                            <strong>{money(bill.totalAmount)}</strong>
+                            <span>{t("modal.amount")}</span>
+                            <strong>{formatCurrency(bill.totalAmount)}</strong>
                         </div>
                     </div>
 
                     <div className="cancel-bill-note">
-                        Cancelled bills cannot be paid and will remain recorded in billing history.
+                        {t("billing.cancelBillNote")}
                     </div>
 
                     {error && (
                         <div className="cancel-bill-inline-error" role="alert">
-                            <strong>Could not cancel this bill</strong>
+                            <strong>{t("billing.cancelErrorTitle")}</strong>
                             <span>{error}</span>
                         </div>
                     )}
@@ -84,7 +81,7 @@ export default function CancelBillModal({
                         disabled={cancelling}
                         onClick={onClose}
                     >
-                        Keep bill
+                        {t("billing.keepBill")}
                     </button>
 
                     <button
@@ -93,7 +90,7 @@ export default function CancelBillModal({
                         disabled={cancelling}
                         onClick={onConfirm}
                     >
-                        {cancelling ? "Cancelling..." : "Cancel bill"}
+                        {cancelling ? t("billing.cancelling") : t("billing.cancelBillAction")}
                     </button>
                 </div>
             </div>

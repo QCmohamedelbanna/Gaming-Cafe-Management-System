@@ -1,5 +1,6 @@
 package com.cafe.ps.service;
 
+import com.cafe.ps.dto.DiscountRequest;
 import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,9 @@ public class OrderService {
 
     @Value("${inventory.prevent-negative:true}")
     private boolean preventNegativeStock;
+
+    @Value("${pos.discount.allowed-roles:ADMIN,MANAGER}")
+    private String allowedDiscountRoles;
 
     @Transactional
     public CafeOrder createOrder(Long gameSessionId) {
@@ -193,14 +200,149 @@ public class OrderService {
 
         recalculateTotal(order);
 
-        if (order.getItems().isEmpty()
-                && order.getGameSession() == null) {
-            order.setStatus(OrderStatus.CANCELLED);
-        }
+        cancelEmptyStandaloneOrder(order);
 
         return orderRepository.save(order);
     }
 
+    @Transactional
+    public CafeOrder updateItemQuantity(
+            Long orderId,
+            Long itemId,
+            Integer quantity
+    ) {
+        if (quantity == null || quantity < 0) {
+            throw new IllegalArgumentException("Quantity cannot be negative");
+        }
+
+        CafeOrder order = getOpenOrder(orderId);
+        OrderItem item = order.getItems().stream()
+                .filter(candidate -> candidate.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Order item not found"));
+
+        if (quantity == 0) {
+            order.getItems().remove(item);
+            recalculateTotal(order);
+            cancelEmptyStandaloneOrder(order);
+            return orderRepository.save(order);
+        }
+
+        ensureStockAvailable(item.getProduct(), quantity);
+        item.setQuantity(quantity);
+        item.setLineTotal(money(item.getUnitPriceSnapshot()
+                .multiply(BigDecimal.valueOf(quantity))));
+        recalculateTotal(order);
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public CafeOrder applyDiscount(
+            Long orderId,
+            DiscountRequest request,
+            String userRole
+    ) {
+        CafeOrder order = getOpenOrder(orderId);
+        BigDecimal subtotal = calculateSubtotal(order);
+        BigDecimal value = money(request.value());
+
+        if (value.compareTo(BigDecimal.ZERO) > 0
+                && !hasDiscountPermission(userRole)) {
+            throw new IllegalStateException(
+                    "Discounts require manager or administrator permission"
+            );
+        }
+
+        BigDecimal discount;
+        if (request.type() == DiscountType.PERCENTAGE) {
+            if (value.compareTo(new BigDecimal("100")) > 0) {
+                throw new IllegalArgumentException("Percentage discount cannot exceed 100%");
+            }
+            discount = money(subtotal.multiply(value)
+                    .divide(new BigDecimal("100"), 8, RoundingMode.HALF_UP));
+        } else {
+            discount = value;
+        }
+
+        if (discount.compareTo(subtotal) > 0) {
+            throw new IllegalArgumentException(
+                    "Discount cannot exceed the order subtotal"
+            );
+        }
+
+        order.setDiscountAmount(discount);
+        order.setDiscountReason(
+                request.reason() == null || request.reason().isBlank()
+                        ? null
+                        : request.reason().trim()
+        );
+        recalculateTotal(order);
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public CafeOrder clearDiscount(Long orderId) {
+        CafeOrder order = getOpenOrder(orderId);
+        order.setDiscountAmount(BigDecimal.ZERO);
+        order.setDiscountReason(null);
+        recalculateTotal(order);
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public CafeOrder holdOrder(Long orderId) {
+        CafeOrder order = getOpenOrder(orderId);
+        if (order.getGameSession() != null) {
+            throw new IllegalStateException(
+                    "Session-attached orders remain open until session checkout"
+            );
+        }
+        if (order.getItems().isEmpty()) {
+            throw new IllegalStateException("Empty orders cannot be held");
+        }
+        order.setStatus(OrderStatus.HELD);
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public CafeOrder resumeOrder(Long orderId) {
+        CafeOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        if (order.getStatus() != OrderStatus.HELD) {
+            throw new IllegalStateException("Only held orders can be resumed");
+        }
+        if (order.getGameSession() != null) {
+            throw new IllegalStateException("Only standalone orders can be resumed");
+        }
+        order.setStatus(OrderStatus.OPEN);
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public CafeOrder cancelOrder(Long orderId) {
+        CafeOrder order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        if (order.getStatus() != OrderStatus.OPEN
+                && order.getStatus() != OrderStatus.HELD) {
+            throw new IllegalStateException("Only open or held orders can be cancelled");
+        }
+        if (order.getGameSession() != null) {
+            throw new IllegalStateException(
+                    "Session-attached orders cannot be cancelled from POS"
+            );
+        }
+        order.setStatus(OrderStatus.CANCELLED);
+        return orderRepository.save(order);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CafeOrder> getHeldOrders() {
+        return orderRepository.findByGameSessionIsNullAndStatusOrderByCreatedAtDesc(
+                OrderStatus.HELD
+        );
+    }
+
+    @Transactional(readOnly = true)
     public CafeOrder get(Long id) {
         return orderRepository.findById(id)
                 .orElseThrow(() ->
@@ -224,11 +366,11 @@ public class OrderService {
     }
 
     private void recalculateTotal(CafeOrder order) {
-
-        BigDecimal total = order.getItems()
+        BigDecimal subtotal = order.getItems()
                 .stream()
                 .map(item -> {
-                    BigDecimal line = money(item.getLineTotal());
+                    BigDecimal line = money(item.getUnitPriceSnapshot()
+                            .multiply(BigDecimal.valueOf(item.getQuantity())));
                     item.setLineTotal(line);
                     return line;
                 })
@@ -237,7 +379,34 @@ public class OrderService {
                         BigDecimal::add
                 );
 
-        order.setTotalAmount(money(total));
+        BigDecimal discount = money(order.getDiscountAmount());
+        if (discount.compareTo(subtotal) > 0) discount = subtotal;
+        order.setDiscountAmount(discount);
+        order.setTotalAmount(money(subtotal.subtract(discount)));
+    }
+
+    private BigDecimal calculateSubtotal(CafeOrder order) {
+        return order.getItems().stream()
+                .map(item -> money(item.getUnitPriceSnapshot()
+                        .multiply(BigDecimal.valueOf(item.getQuantity()))))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private boolean hasDiscountPermission(String userRole) {
+        if (userRole == null || userRole.isBlank()) return false;
+        Set<String> allowed = Arrays.stream(allowedDiscountRoles.split(","))
+                .map(String::trim)
+                .filter(role -> !role.isBlank())
+                .map(String::toUpperCase)
+                .collect(Collectors.toSet());
+        return allowed.contains(userRole.trim().toUpperCase());
+    }
+
+    private void cancelEmptyStandaloneOrder(CafeOrder order) {
+        if (order.getItems().isEmpty()
+                && order.getGameSession() == null) {
+            order.setStatus(OrderStatus.CANCELLED);
+        }
     }
 
     private static BigDecimal money(BigDecimal value) {

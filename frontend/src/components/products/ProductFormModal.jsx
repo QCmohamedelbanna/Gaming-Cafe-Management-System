@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 
 export default function ProductFormModal({ product, saving, onClose, onSave }) {
+    const { t } = useLanguage();
     const [name, setName] = useState(product?.name ?? "");
     const [sku, setSku] = useState(product?.sku ?? "");
     const [category, setCategory] = useState(product?.category ?? "");
@@ -57,20 +59,20 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
             >
                 <div className="modal-header">
                     <div>
-                        <span className="page-label">PRODUCTS</span>
+                        <span className="page-label">{t("nav.products")}</span>
                         <h2 id="product-form-title">
-                            {editing ? "Edit Product" : "Add Product"}
+                            {editing ? `${t("common.edit")} ${t("products.title")}` : t("products.addProduct")}
                         </h2>
                         <p>
                             {editing
-                                ? "Update pricing and inventory settings."
-                                : "Create a product for POS and inventory tracking."}
+                                ? t("products.updateDescription")
+                                : t("products.createDescription")}
                         </p>
                     </div>
                     <button
                         type="button"
                         className="modal-close"
-                        aria-label="Close"
+                        aria-label={t("common.close")}
                         disabled={saving}
                         onClick={onClose}
                     >
@@ -78,42 +80,42 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                     </button>
                 </div>
 
-                <label htmlFor="product-name">Product name</label>
+                <label htmlFor="product-name">{t("products.productName")}</label>
                 <input
                     id="product-name"
                     autoFocus
                     maxLength="100"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="Example: Orange Juice"
+                    placeholder={t("products.exampleName")}
                 />
 
                 <div className="product-form-grid">
                     <div>
-                        <label htmlFor="product-sku">SKU / barcode</label>
+                        <label htmlFor="product-sku">{t("form.sku")}</label>
                         <input
                             id="product-sku"
                             maxLength="80"
                             value={sku}
                             onChange={(event) => setSku(event.target.value)}
-                            placeholder="Optional barcode"
+                            placeholder={t("products.optionalBarcode")}
                         />
                     </div>
                     <div>
-                        <label htmlFor="product-category">Category</label>
+                        <label htmlFor="product-category">{t("form.category")}</label>
                         <input
                             id="product-category"
                             maxLength="80"
                             value={category}
                             onChange={(event) => setCategory(event.target.value)}
-                            placeholder="Drinks, snacks..."
+                            placeholder={t("products.categoryPlaceholder")}
                         />
                     </div>
                 </div>
 
                 <div className="product-form-grid">
                     <div>
-                        <label htmlFor="product-selling-price">Selling price</label>
+                        <label htmlFor="product-selling-price">{t("form.sellingPrice")}</label>
                         <div className="product-price-input">
                             <input
                                 id="product-selling-price"
@@ -124,11 +126,11 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                                 onChange={(event) => setSellingPrice(event.target.value)}
                                 placeholder="0.00"
                             />
-                            <span>EGP</span>
+                            <span>{t("common.egp")}</span>
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="product-cost-price">Cost price</label>
+                        <label htmlFor="product-cost-price">{t("form.costPrice")}</label>
                         <div className="product-price-input">
                             <input
                                 id="product-cost-price"
@@ -139,14 +141,14 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                                 onChange={(event) => setCostPrice(event.target.value)}
                                 placeholder="0.00"
                             />
-                            <span>EGP</span>
+                            <span>{t("common.egp")}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="product-form-grid">
                     <div>
-                        <label htmlFor="product-minimum-stock">Minimum stock</label>
+                        <label htmlFor="product-minimum-stock">{t("form.minimumStock")}</label>
                         <input
                             id="product-minimum-stock"
                             type="number"
@@ -158,13 +160,13 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                         />
                     </div>
                     <div>
-                        <label htmlFor="product-unit">Unit</label>
+                        <label htmlFor="product-unit">{t("form.unit")}</label>
                         <input
                             id="product-unit"
                             maxLength="30"
                             value={unit}
                             onChange={(event) => setUnit(event.target.value)}
-                            placeholder="piece, bottle..."
+                            placeholder={t("products.piecePlaceholder")}
                         />
                     </div>
                 </div>
@@ -176,8 +178,8 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                         onChange={(event) => setTrackStock(event.target.checked)}
                     />
                     <span>
-                        <strong>Track stock for this product</strong>
-                        <small>Sales will reduce inventory and refunds will restore it.</small>
+                        <strong>{t("products.trackStockLabel")}</strong>
+                        <small>{t("products.trackStockHelp")}</small>
                     </span>
                 </label>
 
@@ -188,7 +190,7 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                         disabled={saving}
                         onClick={onClose}
                     >
-                        Cancel
+                        {t("common.cancel")}
                     </button>
                     <button
                         type="submit"
@@ -196,8 +198,8 @@ export default function ProductFormModal({ product, saving, onClose, onSave }) {
                         disabled={!valid || saving}
                     >
                         {saving
-                            ? "Saving..."
-                            : editing ? "Save Changes" : "Add Product"}
+                            ? t("common.working")
+                            : editing ? t("common.save") : t("products.addProduct")}
                     </button>
                 </div>
             </form>

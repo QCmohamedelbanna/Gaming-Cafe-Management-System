@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 import {
     cancelBill,
     getPendingBills,
@@ -10,6 +11,7 @@ import CancelBillModal from "./CancelBillModal";
 import ReceiptModal from "../dashboard/ReceiptModal";
 
 export default function BillingPage() {
+    const { t, formatCurrency } = useLanguage();
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedBill, setSelectedBill] = useState(null);
@@ -27,7 +29,7 @@ export default function BillingPage() {
             setBills(await getPendingBills());
         } catch (loadError) {
             console.error(loadError);
-            setError(loadError.message || "Could not load pending bills.");
+            setError(loadError.message || t("billing.loadError"));
         } finally {
             setLoading(false);
         }
@@ -45,10 +47,10 @@ export default function BillingPage() {
             setBills((current) => current.filter((bill) => bill.billId !== paid.billId));
             setSelectedBill(null);
             setReceipt(paid);
-            setMessage(`Bill ${paid.billNumber} paid successfully.`);
+            setMessage(t("billing.paid", { bill: paid.billNumber }));
         } catch (payError) {
             console.error(payError);
-            setError(payError.message || "Could not pay bill.");
+            setError(payError.message || t("billing.payError"));
         } finally {
             setProcessing(false);
         }
@@ -61,10 +63,10 @@ export default function BillingPage() {
             await cancelBill(bill.billId);
             setBills((current) => current.filter((item) => item.billId !== bill.billId));
             setCancelTarget(null);
-            setMessage(`${bill.billNumber} cancelled.`);
+            setMessage(t("billing.cancelled", { bill: bill.billNumber }));
         } catch (cancelError) {
             console.error(cancelError);
-            setError(cancelError.message || "Could not cancel bill.");
+            setError(cancelError.message || t("billing.cancelError"));
         } finally {
             setProcessing(false);
         }
@@ -78,7 +80,7 @@ export default function BillingPage() {
             setReceipt(await refundBill(receipt.billId, reason));
         } catch (refundError) {
             console.error(refundError);
-            setError(refundError.message || "Could not refund bill.");
+            setError(refundError.message || t("billing.refundError"));
         } finally {
             setRefunding(false);
         }
@@ -88,12 +90,12 @@ export default function BillingPage() {
         <div className="billing-page">
             <div className="billing-page-header">
                 <div>
-                    <span className="page-label">CASHIER</span>
-                    <h1>Billing</h1>
-                    <p>Settle bills created by automatic session expiry.</p>
+                    <span className="page-label">{t("billing.pageLabel")}</span>
+                    <h1>{t("billing.title")}</h1>
+                    <p>{t("billing.descriptionShort")}</p>
                 </div>
                 <button type="button" className="refresh-button" onClick={loadBills}>
-                    Refresh
+                    {t("common.refresh")}
                 </button>
             </div>
 
@@ -103,40 +105,40 @@ export default function BillingPage() {
             <section className="pending-bills-section">
                 <div className="pending-bills-heading">
                     <div>
-                        <span className="page-label">ACTION REQUIRED</span>
-                        <h2>Pending bills</h2>
+                        <span className="page-label">{t("billing.actionLabel")}</span>
+                        <h2>{t("billing.pendingBills")}</h2>
                     </div>
                     <span className="pending-bills-count">{bills.length}</span>
                 </div>
 
                 {loading ? (
-                    <p>Loading pending bills...</p>
+                    <p>{t("billing.loading")}</p>
                 ) : bills.length === 0 ? (
                     <div className="products-empty-state">
-                        <h2>No pending bills</h2>
-                        <p>All completed sessions have been paid.</p>
+                        <h2>{t("billing.noPending")}</h2>
+                        <p>{t("billing.allPaid")}</p>
                     </div>
                 ) : (
                     <div className="pending-bills-table-wrap">
                         <table className="products-table">
                             <thead>
                                 <tr>
-                                    <th>Bill</th>
-                                    <th>Reference</th>
-                                    <th>Amount</th>
-                                    <th><span className="sr-only">Actions</span></th>
+                                    <th>{t("billing.bill")}</th>
+                                    <th>{t("billing.reference")}</th>
+                                    <th>{t("billing.amount")}</th>
+                                    <th><span className="sr-only">{t("common.actions")}</span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {bills.map((bill) => (
                                     <tr key={bill.billId}>
                                         <td><strong>{bill.billNumber}</strong></td>
-                                        <td>{bill.sessionId ? `Session #${bill.sessionId}` : `Order #${bill.orderId}`}</td>
-                                        <td><strong>{Number(bill.totalAmount).toFixed(2)} EGP</strong></td>
+                                        <td>{bill.sessionId ? t("billing.referenceSession", { id: bill.sessionId }) : t("billing.referenceOrder", { id: bill.orderId })}</td>
+                                        <td><strong>{formatCurrency(bill.totalAmount)}</strong></td>
                                         <td>
                                             <div className="product-row-actions">
                                                 <button type="button" onClick={() => { setError(""); setSelectedBill(bill); }}>
-                                                    Pay
+                                                    {t("billing.pay")}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -146,7 +148,7 @@ export default function BillingPage() {
                                                         setCancelTarget(bill);
                                                     }}
                                                 >
-                                                    Cancel
+                                                    {t("billing.cancel")}
                                                 </button>
                                             </div>
                                         </td>

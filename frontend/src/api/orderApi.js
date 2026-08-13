@@ -1,4 +1,6 @@
 const BASE_URL = "http://localhost:8080/api/orders";
+const CURRENT_USER_ROLE = "ADMIN";
+const CURRENT_CASHIER = "Admin";
 
 async function handleResponse(response) {
     const text = await response.text();
@@ -67,11 +69,79 @@ export async function removeOrderItem(
     return handleResponse(response);
 }
 
-export async function completeOrder(orderId) {
+export async function updateOrderItemQuantity(
+    orderId,
+    itemId,
+    quantity
+) {
+    const response = await fetch(
+        `${BASE_URL}/${orderId}/items/${itemId}/quantity`,
+        {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Cashier": CURRENT_CASHIER,
+            },
+            body: JSON.stringify({ quantity }),
+        }
+    );
+
+    return handleResponse(response);
+}
+
+export async function applyOrderDiscount(orderId, data) {
+    const response = await fetch(`${BASE_URL}/${orderId}/discount`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+            "X-User-Role": CURRENT_USER_ROLE,
+        },
+        body: JSON.stringify(data),
+    });
+
+    return handleResponse(response);
+}
+
+export async function clearOrderDiscount(orderId) {
+    const response = await fetch(`${BASE_URL}/${orderId}/discount`, {
+        method: "DELETE",
+    });
+
+    return handleResponse(response);
+}
+
+export async function holdOrder(orderId) {
+    return handleResponse(await fetch(`${BASE_URL}/${orderId}/hold`, {
+        method: "POST",
+    }));
+}
+
+export async function resumeOrder(orderId) {
+    return handleResponse(await fetch(`${BASE_URL}/${orderId}/resume`, {
+        method: "POST",
+    }));
+}
+
+export async function cancelOrder(orderId) {
+    return handleResponse(await fetch(`${BASE_URL}/${orderId}/cancel`, {
+        method: "POST",
+    }));
+}
+
+export async function getHeldOrders() {
+    return handleResponse(await fetch(`${BASE_URL}/held`));
+}
+
+export async function completeOrder(orderId, payment) {
     const response = await fetch(
         `${BASE_URL}/${orderId}/complete`,
         {
             method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Cashier": CURRENT_CASHIER,
+            },
+            body: JSON.stringify(payment),
         }
     );
 

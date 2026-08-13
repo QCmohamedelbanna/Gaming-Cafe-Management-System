@@ -6,6 +6,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.CommandLineRunner;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -77,6 +80,10 @@ public class InventorySchemaMigration implements CommandLineRunner {
                 CREATE INDEX IF NOT EXISTS idx_stock_movement_reference
                     ON stock_movements(reference)
                 """);
+
+        migrateOrderColumns();
+        migrateOrderStatusConstraint();
+        migratePaymentColumns();
     }
 
     private Set<String> productColumns() {
@@ -99,5 +106,104 @@ public class InventorySchemaMigration implements CommandLineRunner {
                 tableName
         );
         return count != null && count > 0;
+    }
+
+    private void migrateOrderColumns() {
+        if (!tableExists("cafe_orders")) return;
+
+        Set<String> columns = new HashSet<>(jdbcTemplate.query(
+                "PRAGMA table_info(cafe_orders)",
+                (resultSet, rowNum) -> resultSet.getString("name")
+        ));
+        addOrderColumn(columns, "discount_amount", "NUMERIC(10,2)");
+        addOrderColumn(columns, "discount_reason", "VARCHAR(200)");
+        jdbcTemplate.update("UPDATE cafe_orders SET discount_amount = 0 WHERE discount_amount IS NULL");
+    }
+
+    /**
+     * SQLite cannot alter an existing CHECK constraint in place. The original
+     * order table was created before HELD was added to OrderStatus, so rebuild
+     * it once with the expanded constraint while preserving every row and id.
+     */
+    private void migrateOrderStatusConstraint() {
+        if (!tableExists("cafe_orders")) return;
+
+        String createSql = jdbcTemplate.queryForObject(
+                "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'cafe_orders'",
+                String.class
+        );
+
+        if (createSql != null && createSql.toUpperCase().contains("'HELD'")) return;
+
+        jdbcTemplate.execute((org.springframework.jdbc.core.ConnectionCallback<Void>) connection -> {
+            boolean previousAutoCommit = connection.getAutoCommit();
+            boolean foreignKeysEnabled = foreignKeysEnabled(connection);
+
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("PRAGMA foreign_keys = OFF");
+                connection.setAutoCommit(false);
+                statement.execute("DROP TABLE IF EXISTS cafe_orders_phase4");
+                statement.execute("""
+                        CREATE TABLE cafe_orders_phase4 (
+                            id INTEGER,
+                            completed_at TIMESTAMP,
+                            created_at TIMESTAMP NOT NULL,
+                            status VARCHAR(255) NOT NULL CHECK (status IN ('OPEN','HELD','COMPLETED','CANCELLED')),
+                            total_amount NUMERIC(10,2) NOT NULL,
+                            game_session_id BIGINT,
+                            discount_reason VARCHAR(200),
+                            discount_amount NUMERIC(10,2),
+                            PRIMARY KEY (id)
+                        )
+                        """);
+                statement.execute("""
+                        INSERT INTO cafe_orders_phase4
+                            (id, completed_at, created_at, status, total_amount,
+                             game_session_id, discount_reason, discount_amount)
+                        SELECT id, completed_at, created_at, status, total_amount,
+                               game_session_id, discount_reason, discount_amount
+                          FROM cafe_orders
+                        """);
+                statement.execute("DROP TABLE cafe_orders");
+                statement.execute("ALTER TABLE cafe_orders_phase4 RENAME TO cafe_orders");
+                connection.commit();
+                statement.execute("PRAGMA foreign_keys = " + (foreignKeysEnabled ? "ON" : "OFF"));
+            } catch (SQLException exception) {
+                connection.rollback();
+                throw exception;
+            } finally {
+                if (connection.getAutoCommit() != previousAutoCommit) {
+                    connection.setAutoCommit(previousAutoCommit);
+                }
+            }
+
+            return null;
+        });
+    }
+
+    private boolean foreignKeysEnabled(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             var resultSet = statement.executeQuery("PRAGMA foreign_keys")) {
+            return resultSet.next() && resultSet.getInt(1) != 0;
+        }
+    }
+
+    private void addOrderColumn(Set<String> columns, String name, String definition) {
+        if (columns.add(name)) {
+            jdbcTemplate.execute("ALTER TABLE cafe_orders ADD COLUMN " + name + " " + definition);
+        }
+    }
+
+    private void migratePaymentColumns() {
+        if (!tableExists("payments")) return;
+
+        Set<String> columns = new HashSet<>(jdbcTemplate.query(
+                "PRAGMA table_info(payments)",
+                (resultSet, rowNum) -> resultSet.getString("name")
+        ));
+        if (columns.add("cashier")) {
+            jdbcTemplate.execute("ALTER TABLE payments ADD COLUMN cashier VARCHAR(80)");
+        }
+        jdbcTemplate.update("UPDATE payments SET cashier = 'Admin' WHERE cashier IS NULL OR trim(cashier) = ''");
     }
 }

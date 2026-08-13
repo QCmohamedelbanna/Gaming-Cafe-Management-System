@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,13 @@ public class CafeOrder {
     @Builder.Default
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
+    @Column(name = "discount_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Column(name = "discount_reason", length = 200)
+    private String discountReason;
+
     @OneToMany(
             mappedBy = "order",
             cascade = CascadeType.ALL,
@@ -51,5 +59,26 @@ public class CafeOrder {
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);
+    }
+
+    @Transient
+    public BigDecimal getSubtotalAmount() {
+        return items == null
+                ? BigDecimal.ZERO
+                : items.stream()
+                .map(item -> item.getUnitPriceSnapshot() == null
+                        ? BigDecimal.ZERO
+                        : item.getUnitPriceSnapshot()
+                        .multiply(BigDecimal.valueOf(item.getQuantity() == null ? 0 : item.getQuantity()))
+                        .setScale(2, RoundingMode.HALF_UP))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @PostLoad
+    @PrePersist
+    @PreUpdate
+    private void normalizeDefaults() {
+        if (totalAmount == null) totalAmount = BigDecimal.ZERO;
+        if (discountAmount == null) discountAmount = BigDecimal.ZERO;
     }
 }

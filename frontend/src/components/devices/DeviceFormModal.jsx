@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 
 const DEVICE_STATUSES = ["AVAILABLE", "MAINTENANCE", "OFFLINE"];
 
 export default function DeviceFormModal({ device, saving, onClose, onSave }) {
+    const { t } = useLanguage();
     const [name, setName] = useState(device?.name ?? "");
     const [type, setType] = useState(device?.type ?? "PS4");
     const [status, setStatus] = useState(
@@ -61,21 +63,21 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
             >
                 <div className="modal-header">
                     <div>
-                        <span className="page-label">ADMIN DEVICES</span>
+                        <span className="page-label">{t("devices.formLabel")}</span>
                         <h2 id="device-form-title">
-                            {editing ? "Edit Device" : "Add Device"}
+                            {editing ? t("devices.editDevice") : t("devices.addDevice")}
                         </h2>
                         <p>
                             {editing
-                                ? "Update the station identity or operating state."
-                                : "Register a PlayStation station for Operations."}
+                                ? t("devices.updateTitle")
+                                : t("devices.createTitle")}
                         </p>
                     </div>
 
                     <button
                         type="button"
                         className="modal-close"
-                        aria-label="Close device form"
+                        aria-label={t("common.close")}
                         disabled={saving}
                         onClick={onClose}
                     >
@@ -83,19 +85,19 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
                     </button>
                 </div>
 
-                <label htmlFor="device-name">Device name</label>
+                <label htmlFor="device-name">{t("devices.deviceName")}</label>
                 <input
                     id="device-name"
                     autoFocus
                     maxLength="100"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    placeholder="Example: PS5-3"
+                    placeholder={t("devices.exampleName")}
                 />
 
                 <div className="device-form-grid">
                     <div>
-                        <label htmlFor="device-type">Console type</label>
+                        <label htmlFor="device-type">{t("devices.consoleType")}</label>
                         <select
                             id="device-type"
                             value={type}
@@ -107,7 +109,7 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
                     </div>
 
                     <div>
-                        <label htmlFor="device-status">Operating status</label>
+                        <label htmlFor="device-status">{t("devices.operatingStatus")}</label>
                         <select
                             id="device-status"
                             value={status}
@@ -115,14 +117,14 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
                         >
                             {DEVICE_STATUSES.map((value) => (
                                 <option key={value} value={value}>
-                                    {value}
+                                    {value === "AVAILABLE" ? t("devices.available") : value === "MAINTENANCE" ? t("devices.maintenance") : t("devices.offline")}
                                 </option>
                             ))}
                         </select>
                     </div>
                 </div>
 
-                <label htmlFor="maintenance-note">Maintenance note</label>
+                <label htmlFor="maintenance-note">{t("devices.maintenanceNote")}</label>
                 <textarea
                     id="maintenance-note"
                     rows="3"
@@ -130,11 +132,11 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
                     value={maintenanceNote}
                     onChange={(event) => setMaintenanceNote(event.target.value)}
                     disabled={status !== "MAINTENANCE"}
-                    placeholder="Describe the issue or maintenance work"
+                    placeholder={t("devices.maintenancePlaceholder")}
                 />
 
                 <p className="device-form-hint">
-                    Gaming prices are managed centrally in Pricing, not on the device.
+                    {t("devices.formHint")}
                 </p>
 
                 <div className="product-form-actions">
@@ -144,14 +146,14 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
                         disabled={saving}
                         onClick={onClose}
                     >
-                        Cancel
+                        {t("common.cancel")}
                     </button>
                     <button
                         type="submit"
                         className="primary-action"
                         disabled={!valid || saving}
                     >
-                        {saving ? "Saving..." : editing ? "Save Changes" : "Add Device"}
+                        {saving ? t("devices.saving") : editing ? t("devices.saveChanges") : t("devices.addDevice")}
                     </button>
                 </div>
             </form>

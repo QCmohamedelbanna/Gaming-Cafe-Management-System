@@ -44,4 +44,14 @@ public class Payment {
 
     @Column(nullable = false)
     private LocalDateTime paidAt;
+
+    @Column(length = 80)
+    @Builder.Default
+    private String cashier = "Admin";
+
+    @PrePersist
+    @PreUpdate
+    private void normalizeCashier() {
+        if (cashier == null || cashier.isBlank()) cashier = "Admin";
+    }
 }

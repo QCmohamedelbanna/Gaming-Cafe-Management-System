@@ -12,6 +12,8 @@ public record CheckoutResult(
         Long billId,
         String billNumber,
         BigDecimal gamingAmount,
+        BigDecimal orderSubtotal,
+        BigDecimal discountAmount,
         BigDecimal orderAmount,
         BigDecimal totalAmount,
         PaymentMethod paymentMethod,

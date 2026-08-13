@@ -1,6 +1,6 @@
 package com.cafe.ps.controller;
 import com.cafe.ps.dto.DashboardSummary;
-import com.cafe.ps.service.SessionService;
+import com.cafe.ps.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor @CrossOrigin(origins = "http://localhost:5173")
 public class DashboardController {
-    private final SessionService service;
-    @GetMapping("/today") public DashboardSummary today() { return service.todaySummary(); }
+    private final ReportService reportService;
+
+    @GetMapping("/today")
+    public DashboardSummary today() {
+        return reportService.dashboardSummary();
+    }
 }

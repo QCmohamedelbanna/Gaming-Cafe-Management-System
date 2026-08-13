@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLanguage } from "../../i18n";
 import { getBillAlerts } from "../../api/billingApi";
 
 const ALERT_POLL_MS = 2000;
@@ -53,6 +54,7 @@ function ring(contextRef) {
 }
 
 export default function BillExpiryAlert({ onNavigate }) {
+    const { t, formatCurrency, formatNumber, language } = useLanguage();
     const [alerts, setAlerts] = useState([]);
     const audioContextRef = useRef(null);
     const alertSignatureRef = useRef("");
@@ -109,8 +111,8 @@ export default function BillExpiryAlert({ onNavigate }) {
         <aside className="bill-expiry-alert" role="alert" aria-live="assertive">
             <div className="bill-expiry-alert-heading">
                 <span className="bill-expiry-alert-dot" />
-                <strong>Session ended</strong>
-                <span>{alerts.length} bill{alerts.length === 1 ? "" : "s"}</span>
+                <strong>{t("common.sessionEnded")}</strong>
+                <span>{t("billing.billCount", { count: formatNumber(alerts.length), suffix: language === "ar" ? "" : alerts.length === 1 ? "" : "s" })}</span>
             </div>
 
             <div className="bill-expiry-alert-list">
@@ -119,10 +121,10 @@ export default function BillExpiryAlert({ onNavigate }) {
                         <div>
                             <strong>
                                 {alert.deviceName ||
-                                    `Session #${alert.sessionId}`}
+                                    t("billing.referenceSession", { id: alert.sessionId })}
                             </strong>
                             <span>
-                                {alert.billNumber} · {money(alert.totalAmount)}
+                                {alert.billNumber} · {formatCurrency(alert.totalAmount)}
                             </span>
                         </div>
                     </div>
@@ -134,7 +136,7 @@ export default function BillExpiryAlert({ onNavigate }) {
                 className="bill-expiry-alert-action"
                 onClick={() => onNavigate("billing")}
             >
-                Open Billing
+                {t("billing.openBilling")}
             </button>
         </aside>
     );

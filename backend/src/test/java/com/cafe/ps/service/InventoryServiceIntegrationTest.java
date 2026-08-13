@@ -1,11 +1,21 @@
 package com.cafe.ps.service;
 
 import com.cafe.ps.dto.StockMovementRequest;
+import com.cafe.ps.dto.DiscountRequest;
 import com.cafe.ps.entity.BillStatus;
 import com.cafe.ps.entity.CafeOrder;
+import com.cafe.ps.entity.BillingUnit;
+import com.cafe.ps.entity.Device;
+import com.cafe.ps.entity.DeviceStatus;
+import com.cafe.ps.entity.DeviceType;
+import com.cafe.ps.entity.DiscountType;
+import com.cafe.ps.entity.GameSession;
 import com.cafe.ps.entity.OrderItem;
 import com.cafe.ps.entity.OrderStatus;
+import com.cafe.ps.entity.PaymentMethod;
 import com.cafe.ps.entity.Product;
+import com.cafe.ps.entity.SessionStatus;
+import com.cafe.ps.entity.SessionType;
 import com.cafe.ps.entity.StockMovementType;
 import com.cafe.ps.repository.BillRepository;
 import com.cafe.ps.repository.CafeOrderRepository;
@@ -224,6 +234,126 @@ class InventoryServiceIntegrationTest {
 
         assertThat(inventoryService.getMovements(null)).isEmpty();
         assertThat(inventoryService.getMovements(product.getId())).isEmpty();
+    }
+
+    @Test
+    void quantityUpdatesAndAuthorizedDiscountRecalculateOrderTotal() {
+        Product product = saveTrackedProduct("Discount Cola", "5.00", "1.50");
+        inventoryService.purchase(product.getId(), new StockMovementRequest(
+                new BigDecimal("10"), null, "OPENING", "admin"
+        ));
+        CafeOrder order = orderService.createOrder(null);
+
+        CafeOrder withItems = orderService.addItem(order.getId(), product.getId(), 3);
+        Long itemId = withItems.getItems().get(0).getId();
+        CafeOrder quantityUpdated = orderService.updateItemQuantity(
+                order.getId(), itemId, 2
+        );
+        CafeOrder discounted = orderService.applyDiscount(
+                order.getId(),
+                new DiscountRequest(
+                        DiscountType.PERCENTAGE,
+                        new BigDecimal("10"),
+                        "Manager promotion"
+                ),
+                "MANAGER"
+        );
+
+        assertThat(quantityUpdated.getItems().get(0).getQuantity()).isEqualTo(2);
+        assertThat(discounted.getSubtotalAmount()).isEqualByComparingTo("10.00");
+        assertThat(discounted.getDiscountAmount()).isEqualByComparingTo("1.00");
+        assertThat(discounted.getTotalAmount()).isEqualByComparingTo("9.00");
+
+        var paid = billingService.checkoutOrder(
+                order.getId(),
+                PaymentMethod.CASH,
+                new BigDecimal("9.00")
+        );
+        assertThat(paid.orderSubtotal()).isEqualByComparingTo("10.00");
+        assertThat(paid.discountAmount()).isEqualByComparingTo("1.00");
+        assertThat(paid.orderAmount()).isEqualByComparingTo("9.00");
+        assertThat(paid.totalAmount()).isEqualByComparingTo("9.00");
+    }
+
+    @Test
+    void discountRequiresPermissionAndStandaloneOrdersCanHoldResumeAndCancel() {
+        Product product = productRepository.save(Product.builder()
+                .name("Permission Cola")
+                .price(new BigDecimal("5.00"))
+                .sellingPrice(new BigDecimal("5.00"))
+                .active(true)
+                .deleted(false)
+                .build());
+        CafeOrder order = orderService.createOrder(null);
+        orderService.addItem(order.getId(), product.getId(), 1);
+
+        assertThatThrownBy(() -> orderService.applyDiscount(
+                order.getId(),
+                new DiscountRequest(DiscountType.FIXED, new BigDecimal("1"), null),
+                "CASHIER"
+        ))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("permission");
+
+        CafeOrder held = orderService.holdOrder(order.getId());
+        assertThat(held.getStatus()).isEqualTo(OrderStatus.HELD);
+
+        CafeOrder resumed = orderService.resumeOrder(order.getId());
+        assertThat(resumed.getStatus()).isEqualTo(OrderStatus.OPEN);
+
+        CafeOrder cancelled = orderService.cancelOrder(order.getId());
+        assertThat(cancelled.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    @Test
+    void sessionAttachedOrderCannotBePaidAsStandaloneOrder() {
+        Device device = deviceRepository.save(Device.builder()
+                .name("POS-SESSION-PS4")
+                .type(DeviceType.PS4)
+                .status(DeviceStatus.PLAYING)
+                .active(true)
+                .build());
+        GameSession session = sessionRepository.save(GameSession.builder()
+                .device(device)
+                .startTime(java.time.LocalDateTime.now())
+                .hourlyRateSnapshot(new BigDecimal("50.00"))
+                .unitPriceSnapshot(new BigDecimal("50.00"))
+                .sessionType(SessionType.SINGLE)
+                .billingUnit(BillingUnit.HOUR)
+                .status(SessionStatus.ACTIVE)
+                .build());
+        Product product = productRepository.save(Product.builder()
+                .name("Session Cola")
+                .price(new BigDecimal("5.00"))
+                .sellingPrice(new BigDecimal("5.00"))
+                .active(true)
+                .deleted(false)
+                .build());
+        CafeOrder order = CafeOrder.builder()
+                .gameSession(session)
+                .createdAt(java.time.LocalDateTime.now())
+                .status(OrderStatus.OPEN)
+                .totalAmount(BigDecimal.ZERO)
+                .build();
+        order.addItem(OrderItem.builder()
+                .product(product)
+                .quantity(1)
+                .unitPriceSnapshot(new BigDecimal("5.00"))
+                .lineTotal(new BigDecimal("5.00"))
+                .build());
+        order = orderRepository.save(order);
+
+        CafeOrder attachedOrder = order;
+        assertThatThrownBy(() -> billingService.checkoutOrder(
+                attachedOrder.getId(),
+                PaymentMethod.CASH,
+                new BigDecimal("5.00")
+        ))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("session checkout");
+        assertThat(orderRepository.findById(order.getId()).orElseThrow().getStatus())
+                .isEqualTo(OrderStatus.OPEN);
+        assertThat(billRepository.count()).isZero();
     }
 
     private Product saveTrackedProduct(String name, String price, String cost) {

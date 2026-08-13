@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 
 function formatMoney(value) {
     return `${Number(value || 0).toFixed(2)} EGP`;
@@ -48,6 +49,8 @@ export default function CheckoutModal({
     onClose,
     onCheckout,
 }) {
+    const { t, formatCurrency } = useLanguage();
+    const formatMoney = formatCurrency;
     const finalized = Boolean(finalBill);
     const items = finalized
         ? finalBill.lines ?? []
@@ -63,6 +66,12 @@ export default function CheckoutModal({
     const orderAmount = finalized
         ? Number(finalBill.orderAmount || 0)
         : Number(order?.totalAmount || 0);
+    const orderSubtotal = finalized
+        ? Number(finalBill.orderSubtotal || orderAmount)
+        : Number(order?.subtotalAmount || orderAmount);
+    const discountAmount = finalized
+        ? Number(finalBill.discountAmount || 0)
+        : Number(order?.discountAmount || 0);
     const grandTotal = finalized
         ? Number(finalBill.totalAmount || 0)
         : sessionAmount + orderAmount;
@@ -114,22 +123,22 @@ export default function CheckoutModal({
                 <div className="modal-header">
                     <div>
                         <span className="page-label">
-                            {finalized ? "FINAL CALCULATION" : "CHECKOUT"}
+                            {finalized ? t("modal.finalCalculation") : t("modal.checkoutLabel")}
                         </span>
                         <h2 id="checkout-title">
                             {device?.name || session?.device?.name || "Session"}
                         </h2>
                         <p>
                             {finalized
-                                ? "Session time stopped"
-                                : session?.sessionType || "Gaming session"}
+                                ? t("modal.sessionTimeStopped")
+                                : session?.sessionType || t("modal.gamingSession")}
                         </p>
                     </div>
 
                     <button
                         type="button"
                         className="modal-close"
-                        aria-label="Close checkout"
+                        aria-label={t("modal.closeCheckout")}
                         disabled={loading}
                         onClick={onClose}
                     >
@@ -139,15 +148,22 @@ export default function CheckoutModal({
 
                 <div className="checkout-summary">
                     <div className="checkout-summary-row">
-                        <span>Gaming cost</span>
+                        <span>{t("modal.gamingCost")}</span>
                         <strong>{formatMoney(sessionAmount)}</strong>
                     </div>
 
                     <div className="checkout-order-section">
                         <div className="checkout-summary-row">
-                            <span>Orders</span>
+                            <span>{t("common.orders")}</span>
                             <strong>{formatMoney(orderAmount)}</strong>
                         </div>
+
+                        {discountAmount > 0 && (
+                            <div className="checkout-discount-summary">
+                                <span>{t("modal.productSubtotal")} {formatMoney(orderSubtotal)}</span>
+                                <strong>{t("modal.discountAmount")} −{formatMoney(discountAmount)}</strong>
+                            </div>
+                        )}
 
                         {items.length > 0 && (
                             <div className="checkout-items">
@@ -160,7 +176,7 @@ export default function CheckoutModal({
                                             <strong>
                                                 {item.productName ||
                                                     item.product?.name ||
-                                                    "Product"}
+                                                    t("modal.product")}
                                             </strong>
                                             <span>
                                                 {item.quantity} × {formatMoney(
@@ -180,12 +196,12 @@ export default function CheckoutModal({
                     </div>
 
                     <div className="checkout-total">
-                        <span>Total due</span>
+                        <span>{t("modal.totalDue")}</span>
                         <strong>{formatMoney(grandTotal)}</strong>
                     </div>
 
                     <div className="payment-method-section">
-                        <span className="payment-section-label">Payment method</span>
+                        <span className="payment-section-label">{t("modal.paymentMethod")}</span>
                         <div className="payment-method-grid">
                             {["CASH", "CARD", "MOBILE_WALLET"].map((method) => (
                                 <button
@@ -197,15 +213,15 @@ export default function CheckoutModal({
                                     onClick={() => setPaymentMethod(method)}
                                 >
                                     {method === "MOBILE_WALLET"
-                                        ? "Mobile wallet"
-                                        : method}
+                                        ? t("common.mobileWallet")
+                                        : method === "CASH" ? t("common.cash") : t("common.card")}
                                 </button>
                             ))}
                         </div>
 
                         {paymentMethod === "CASH" && (
                             <div className="cash-tendered-row">
-                                <label htmlFor="cash-tendered">Cash received</label>
+                                <label htmlFor="cash-tendered">{t("modal.cashReceived")}</label>
                                 <div>
                                     <input
                                         id="cash-tendered"
@@ -218,14 +234,14 @@ export default function CheckoutModal({
                                         }
                                         placeholder={grandTotal.toFixed(2)}
                                     />
-                                    <span>EGP</span>
+                                    <span>{t("common.egp")}</span>
                                 </div>
                             </div>
                         )}
 
                         {paymentMethod === "CASH" && cashTendered >= grandTotal && (
                             <div className="cash-change-preview">
-                                Change: <strong>{formatMoney(cashTendered - grandTotal)}</strong>
+                                {t("modal.change")}: <strong>{formatMoney(cashTendered - grandTotal)}</strong>
                             </div>
                         )}
                     </div>
@@ -244,7 +260,7 @@ export default function CheckoutModal({
                         disabled={loading}
                         onClick={onClose}
                     >
-                        Cancel
+                        {t("common.cancel")}
                     </button>
 
                     <button
@@ -259,8 +275,8 @@ export default function CheckoutModal({
                         })}
                     >
                         {loading
-                            ? "Processing..."
-                            : `Confirm ${formatMoney(grandTotal)}`}
+                            ? t("modal.processing")
+                            : t("modal.confirm", { amount: formatMoney(grandTotal) })}
                     </button>
                 </div>
             </div>

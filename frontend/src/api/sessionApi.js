@@ -1,4 +1,5 @@
 const BASE_URL = "http://localhost:8080/api/sessions";
+const CURRENT_CASHIER = "Admin";
 
 async function handleResponse(response) {
   if (!response.ok) {
@@ -98,6 +99,7 @@ export async function checkoutSession(sessionId, data) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Cashier": CURRENT_CASHIER,
         },
         body: JSON.stringify(data),
       }

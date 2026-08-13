@@ -35,6 +35,16 @@ public class BillingService {
             PaymentMethod method,
             BigDecimal amountTendered
     ) {
+        return checkoutSession(sessionId, method, amountTendered, "Admin");
+    }
+
+    @Transactional
+    public CheckoutResult checkoutSession(
+            Long sessionId,
+            PaymentMethod method,
+            BigDecimal amountTendered,
+            String cashier
+    ) {
         GameSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
 
@@ -53,7 +63,7 @@ public class BillingService {
             );
 
             Bill bill = finalizeSession(sessionId, endTime, false);
-            return settleBill(bill, method, amountTendered);
+            return settleBill(bill, method, amountTendered, cashier);
         }
         if (session.getStatus() != SessionStatus.COMPLETED) {
             throw new IllegalStateException("Session cannot be billed");
@@ -83,7 +93,7 @@ public class BillingService {
             );
         }
 
-        return settleBill(bill, method, amountTendered);
+        return settleBill(bill, method, amountTendered, cashier);
     }
 
     @Transactional
@@ -92,20 +102,29 @@ public class BillingService {
             PaymentMethod method,
             BigDecimal amountTendered
     ) {
+        return checkoutOrder(orderId, method, amountTendered, "Admin");
+    }
+
+    @Transactional
+    public CheckoutResult checkoutOrder(
+            Long orderId,
+            PaymentMethod method,
+            BigDecimal amountTendered,
+            String cashier
+    ) {
         CafeOrder order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+        if (order.getGameSession() != null) {
+            throw new IllegalStateException(
+                    "Session-attached orders are paid during session checkout"
+            );
+        }
 
         if (order.getStatus() != OrderStatus.OPEN) {
             Bill existing = billRepository.findByOrderId(orderId)
                     .orElseThrow(() -> new IllegalStateException("Order is not open"));
-            return settleBill(existing, method, amountTendered);
-        }
-
-        if (order.getGameSession() != null
-                && order.getGameSession().getStatus() == SessionStatus.ACTIVE) {
-            throw new IllegalStateException(
-                    "Session-attached orders are paid during session checkout"
-            );
+            return settleBill(existing, method, amountTendered, cashier);
         }
 
         completeOrder(order);
@@ -120,7 +139,7 @@ public class BillingService {
                 false,
                 LocalDateTime.now()
         );
-        return settleBill(bill, method, amountTendered);
+        return settleBill(bill, method, amountTendered, cashier);
     }
 
     /**
@@ -198,9 +217,19 @@ public class BillingService {
             PaymentMethod method,
             BigDecimal amountTendered
     ) {
+        return payBill(billId, method, amountTendered, "Admin");
+    }
+
+    @Transactional
+    public CheckoutResult payBill(
+            Long billId,
+            PaymentMethod method,
+            BigDecimal amountTendered,
+            String cashier
+    ) {
         Bill bill = billRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found"));
-        return settleBill(bill, method, amountTendered);
+        return settleBill(bill, method, amountTendered, cashier);
     }
 
     @Transactional
@@ -321,12 +350,15 @@ public class BillingService {
             return BigDecimal.ZERO.setScale(MONEY_SCALE, MONEY_ROUNDING);
         }
 
-        return money(order.getItems().stream()
+        BigDecimal subtotal = order.getItems().stream()
                 .map(item -> money(
                         item.getUnitPriceSnapshot()
                                 .multiply(BigDecimal.valueOf(item.getQuantity()))
                 ))
-                .reduce(BigDecimal.ZERO, BigDecimal::add));
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal discount = money(order.getDiscountAmount());
+        if (discount.compareTo(subtotal) > 0) discount = subtotal;
+        return money(subtotal.subtract(discount));
     }
 
     private Bill ensureBill(
@@ -382,7 +414,8 @@ public class BillingService {
     private CheckoutResult settleBill(
             Bill bill,
             PaymentMethod method,
-            BigDecimal amountTendered
+            BigDecimal amountTendered,
+            String cashier
     ) {
         if (bill.getStatus() == BillStatus.REFUNDED
                 || bill.getStatus() == BillStatus.CANCELLED) {
@@ -415,12 +448,17 @@ public class BillingService {
                 .changeAmount(change)
                 .status(PaymentStatus.COMPLETED)
                 .paidAt(LocalDateTime.now())
+                .cashier(normalizeCashier(cashier))
                 .build();
         bill.addPayment(payment);
         bill.setStatus(BillStatus.PAID);
         bill.setPaidAt(payment.getPaidAt());
 
         return toResult(billRepository.save(bill));
+    }
+
+    private String normalizeCashier(String cashier) {
+        return cashier == null || cashier.isBlank() ? "Admin" : cashier.trim();
     }
 
     private void validatePayment(
@@ -464,12 +502,24 @@ public class BillingService {
                 ))
                 .toList();
 
+        BigDecimal orderSubtotal = bill.getOrder() == null
+                ? BigDecimal.ZERO
+                : bill.getOrder().getItems().stream()
+                .map(item -> money(item.getUnitPriceSnapshot()
+                        .multiply(BigDecimal.valueOf(item.getQuantity()))))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal discountAmount = bill.getOrder() == null
+                ? BigDecimal.ZERO
+                : money(bill.getOrder().getDiscountAmount());
+
         return new CheckoutResult(
                 bill.getSession() == null ? null : bill.getSession().getId(),
                 bill.getOrder() == null ? null : bill.getOrder().getId(),
                 bill.getId(),
                 bill.getBillNumber(),
                 money(bill.getGamingAmount()),
+                money(orderSubtotal),
+                discountAmount,
                 money(bill.getOrderAmount()),
                 money(bill.getTotalAmount()),
                 payment == null ? null : payment.getMethod(),

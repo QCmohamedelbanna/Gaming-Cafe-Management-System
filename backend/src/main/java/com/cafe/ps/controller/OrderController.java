@@ -4,6 +4,8 @@ import com.cafe.ps.dto.AddOrderItemRequest;
 import com.cafe.ps.dto.CheckoutRequest;
 import com.cafe.ps.dto.CheckoutResult;
 import com.cafe.ps.dto.CreateOrderRequest;
+import com.cafe.ps.dto.DiscountRequest;
+import com.cafe.ps.dto.UpdateOrderItemQuantityRequest;
 import com.cafe.ps.entity.CafeOrder;
 import com.cafe.ps.entity.PaymentMethod;
 import com.cafe.ps.service.BillingService;
@@ -68,15 +70,64 @@ public class OrderController {
         );
     }
 
+    @PatchMapping("/{orderId}/items/{itemId}/quantity")
+    public CafeOrder updateItemQuantity(
+            @PathVariable Long orderId,
+            @PathVariable Long itemId,
+            @Valid @RequestBody UpdateOrderItemQuantityRequest request
+    ) {
+        return orderService.updateItemQuantity(
+                orderId,
+                itemId,
+                request.quantity()
+        );
+    }
+
+    @PatchMapping("/{id}/discount")
+    public CafeOrder applyDiscount(
+            @PathVariable Long id,
+            @Valid @RequestBody DiscountRequest request,
+            @RequestHeader(value = "X-User-Role", defaultValue = "CASHIER") String userRole
+    ) {
+        return orderService.applyDiscount(id, request, userRole);
+    }
+
+    @DeleteMapping("/{id}/discount")
+    public CafeOrder clearDiscount(@PathVariable Long id) {
+        return orderService.clearDiscount(id);
+    }
+
+    @PostMapping("/{id}/hold")
+    public CafeOrder hold(@PathVariable Long id) {
+        return orderService.holdOrder(id);
+    }
+
+    @PostMapping("/{id}/resume")
+    public CafeOrder resume(@PathVariable Long id) {
+        return orderService.resumeOrder(id);
+    }
+
+    @PostMapping("/{id}/cancel")
+    public CafeOrder cancel(@PathVariable Long id) {
+        return orderService.cancelOrder(id);
+    }
+
+    @GetMapping("/held")
+    public java.util.List<CafeOrder> held() {
+        return orderService.getHeldOrders();
+    }
+
     @PostMapping("/{id}/complete")
     public CheckoutResult complete(
             @PathVariable Long id,
-            @RequestBody(required = false) CheckoutRequest request
+            @RequestBody(required = false) CheckoutRequest request,
+            @RequestHeader(value = "X-Cashier", defaultValue = "Admin") String cashier
     ) {
         return billingService.checkoutOrder(
                 id,
                 request == null ? PaymentMethod.CASH : request.paymentMethod(),
-                request == null ? null : request.amountTendered()
+                request == null ? null : request.amountTendered(),
+                cashier
         );
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Collection;
 
 public interface StockMovementRepository extends JpaRepository<StockMovement, Long> {
 
@@ -20,6 +21,12 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, Lo
     List<StockMovement> findByTypeAndReferenceOrderByCreatedAtAsc(
             StockMovementType type,
             String reference
+    );
+
+    @EntityGraph(attributePaths = "product")
+    List<StockMovement> findByTypeAndReferenceIn(
+            StockMovementType type,
+            Collection<String> references
     );
 
     boolean existsByProductIdAndTypeAndReference(

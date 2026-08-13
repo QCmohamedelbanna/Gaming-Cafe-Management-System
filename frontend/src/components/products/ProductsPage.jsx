@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 import {
     createProduct,
     deleteProduct,
@@ -10,6 +11,7 @@ import ProductFormModal from "./ProductFormModal";
 import DeleteProductModal from "./DeleteProductModal";
 
 export default function ProductsPage() {
+    const { t, formatCurrency } = useLanguage();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [busyId, setBusyId] = useState(null);
@@ -27,7 +29,7 @@ export default function ProductsPage() {
             setProducts(await getAdminProducts());
         } catch (loadError) {
             console.error(loadError);
-            setError(loadError.message || "Could not load products.");
+            setError(loadError.message || t("products.loadError"));
         } finally {
             setLoading(false);
         }
@@ -57,10 +59,10 @@ export default function ProductsPage() {
                 return next.sort((a, b) => a.name.localeCompare(b.name));
             });
             setFormProduct(undefined);
-            showSuccess(`${saved.name} saved successfully.`);
+            showSuccess(t("products.saved", { name: saved.name }));
         } catch (saveError) {
             console.error(saveError);
-            setError(saveError.message || "Could not save product.");
+            setError(saveError.message || t("products.saveError"));
         } finally {
             setSaving(false);
         }
@@ -76,12 +78,14 @@ export default function ProductsPage() {
                 current.map((item) => item.id === updated.id ? updated : item)
             );
             showSuccess(
-                `${updated.name} ${updated.active ? "activated" : "deactivated"}.`
+                updated.active
+                    ? t("products.activated", { name: updated.name })
+                    : t("products.deactivated", { name: updated.name })
             );
             return true;
         } catch (toggleError) {
             console.error(toggleError);
-            setError(toggleError.message || "Could not update product status.");
+            setError(toggleError.message || t("products.statusError"));
             return false;
         } finally {
             setBusyId(null);
@@ -100,10 +104,10 @@ export default function ProductsPage() {
             );
             setDeleteTarget(null);
             setDeleteError("");
-            showSuccess(`${product.name} deleted.`);
+            showSuccess(t("products.deleted", { name: product.name }));
         } catch (deleteError) {
             console.error(deleteError);
-            const message = deleteError.message || "Could not delete product.";
+            const message = deleteError.message || t("products.deleteError");
             setDeleteError(message);
             setError(message);
         } finally {
@@ -115,16 +119,16 @@ export default function ProductsPage() {
         <div className="products-management-page">
             <div className="products-management-header">
                 <div>
-                    <span className="page-label">ADMIN</span>
-                    <h1>Products</h1>
-                    <p>Manage POS products, prices, and availability.</p>
+                    <span className="page-label">{t("products.pageLabel")}</span>
+                    <h1>{t("products.title")}</h1>
+                    <p>{t("products.descriptionShort")}</p>
                 </div>
                 <button
                     type="button"
                     className="product-add-button"
                     onClick={() => setFormProduct(null)}
                 >
-                    + Add Product
+                    + {t("products.addProduct")}
                 </button>
             </div>
 
@@ -132,21 +136,21 @@ export default function ProductsPage() {
             {error && <div className="product-error-message">{error}</div>}
 
             {loading ? (
-                <p>Loading products...</p>
+                <p>{t("products.loading")}</p>
             ) : products.length === 0 ? (
                 <div className="products-empty-state">
-                    <h2>No products yet</h2>
-                    <p>Add the first product to make it available in POS.</p>
+                    <h2>{t("products.noProducts")}</h2>
+                    <p>{t("products.addFirst")}</p>
                 </div>
             ) : (
                 <div className="products-table-wrap">
                     <table className="products-table">
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>Price</th>
-                                <th>Status</th>
-                                <th><span className="sr-only">Actions</span></th>
+                                <th>{t("products.name")}</th>
+                                <th>{t("products.price")}</th>
+                                <th>{t("products.status")}</th>
+                                <th><span className="sr-only">{t("common.actions")}</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -155,13 +159,13 @@ export default function ProductsPage() {
                                 return (
                                     <tr key={product.id}>
                                         <td><strong>{product.name}</strong></td>
-                                        <td>{Number(product.sellingPrice ?? product.price ?? 0).toFixed(2)} EGP</td>
+                                        <td>{formatCurrency(product.sellingPrice ?? product.price ?? 0)}</td>
                                         <td>
                                             <span className={product.active
                                                 ? "product-status active"
                                                 : "product-status inactive"}
                                             >
-                                                {product.active ? "ACTIVE" : "INACTIVE"}
+                                                {product.active ? t("products.active") : t("products.inactive")}
                                             </span>
                                         </td>
                                         <td>
@@ -170,13 +174,13 @@ export default function ProductsPage() {
                                                     disabled={busy}
                                                     onClick={() => setFormProduct(product)}
                                                 >
-                                                    Edit
+                                                    {t("common.edit")}
                                                 </button>
                                                 <button
                                                     disabled={busy}
                                                     onClick={() => handleToggle(product)}
                                                 >
-                                                    {product.active ? "Deactivate" : "Activate"}
+                                                    {product.active ? t("products.deactivate") : t("products.activate")}
                                                 </button>
                                                 <button
                                                     className="product-delete-button"
@@ -186,7 +190,7 @@ export default function ProductsPage() {
                                                         setDeleteTarget(product);
                                                     }}
                                                 >
-                                                    {busy ? "Working..." : "Delete"}
+                                                    {busy ? t("common.working") : t("common.delete")}
                                                 </button>
                                             </div>
                                         </td>

@@ -1,28 +1,36 @@
+import { useLanguage } from "../../i18n";
+
 export default function PricingCard({
   pricing,
   onChange,
   onSave,
   saving,
 }) {
+  const { t, formatCurrency, formatNumber } = useLanguage();
   const isMatch = pricing.sessionType === "MATCH";
+  const sessionLabel = pricing.sessionType === "SINGLE"
+    ? t("modal.single")
+    : pricing.sessionType === "MULTI"
+      ? t("modal.multi")
+      : t("modal.match");
 
   return (
     <div className="pricing-card">
       <div className="pricing-card-header">
         <div>
           <span className="pricing-badge">
-            {pricing.billingUnit}
+            {pricing.billingUnit === "MATCH" ? t("modal.match") : t("pricing.hour")}
           </span>
 
-          <h3>{pricing.sessionType}</h3>
+          <h3>{sessionLabel}</h3>
         </div>
 
         <span className={pricing.active ? "pricing-active" : "pricing-inactive"}>
-          {pricing.active ? "ACTIVE" : "DISABLED"}
+          {pricing.active ? t("pricing.active") : t("pricing.disabled")}
         </span>
       </div>
 
-      <label>Price</label>
+      <label>{t("pricing.price")}</label>
 
       <div className="pricing-input-row">
         <input
@@ -36,13 +44,13 @@ export default function PricingCard({
         />
 
         <span>
-          EGP / {pricing.billingUnit === "MATCH" ? "match" : "hour"}
+          {t("common.egp")} / {pricing.billingUnit === "MATCH" ? t("modal.match").toLowerCase() : t("pricing.hour").toLowerCase()}
         </span>
       </div>
 
       {isMatch && (
         <>
-          <label>Maximum Match Duration</label>
+          <label>{t("pricing.maximumMatchDuration")}</label>
 
           <div className="pricing-input-row">
             <input
@@ -58,10 +66,10 @@ export default function PricingCard({
               }
             />
 
-            <span>minutes</span>
+            <span>{t("pricing.minutes")}</span>
           </div>
 
-          <label>Warning Before Expiry</label>
+          <label>{t("pricing.warningBeforeExpiry")}</label>
 
           <div className="pricing-input-row">
             <input
@@ -77,7 +85,7 @@ export default function PricingCard({
               }
             />
 
-            <span>minutes</span>
+            <span>{t("pricing.minutes")}</span>
           </div>
         </>
       )}
@@ -87,7 +95,7 @@ export default function PricingCard({
         disabled={saving}
         onClick={() => onSave(pricing)}
       >
-        {saving ? "Saving..." : "Save Changes"}
+        {saving ? t("pricing.saving") : t("pricing.saveChanges")}
       </button>
     </div>
   );

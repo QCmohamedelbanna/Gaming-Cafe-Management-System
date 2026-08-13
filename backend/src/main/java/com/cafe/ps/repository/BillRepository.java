@@ -30,6 +30,45 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
             "order.items",
             "order.items.product"
     })
+    List<Bill> findByStatusAndPaidAtBetweenOrderByPaidAtAsc(
+            BillStatus status,
+            LocalDateTime from,
+            LocalDateTime to
+    );
+
+    @EntityGraph(attributePaths = {
+            "session",
+            "session.device",
+            "order",
+            "order.items",
+            "order.items.product"
+    })
+    List<Bill> findByStatusAndCreatedAtBetweenOrderByCreatedAtAsc(
+            BillStatus status,
+            LocalDateTime from,
+            LocalDateTime to
+    );
+
+    @EntityGraph(attributePaths = {
+            "session",
+            "session.device",
+            "order",
+            "order.items",
+            "order.items.product"
+    })
+    List<Bill> findByStatusAndRefundedAtBetweenOrderByRefundedAtAsc(
+            BillStatus status,
+            LocalDateTime from,
+            LocalDateTime to
+    );
+
+    @EntityGraph(attributePaths = {
+            "session",
+            "session.device",
+            "order",
+            "order.items",
+            "order.items.product"
+    })
     List<Bill> findByStatusOrderByCreatedAtDesc(BillStatus status);
 
     @EntityGraph(attributePaths = {

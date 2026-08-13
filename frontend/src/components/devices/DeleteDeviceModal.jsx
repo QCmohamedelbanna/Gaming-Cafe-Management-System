@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLanguage } from "../../i18n";
 
 export default function DeleteDeviceModal({
     device,
@@ -7,6 +8,7 @@ export default function DeleteDeviceModal({
     onClose,
     onConfirm,
 }) {
+    const { t } = useLanguage();
     useEffect(() => {
         function handleKeyDown(event) {
             if (event.key === "Escape" && !deleting) onClose();
@@ -33,27 +35,24 @@ export default function DeleteDeviceModal({
                 <div className="delete-product-icon" aria-hidden="true">!</div>
 
                 <div className="delete-product-content">
-                    <span className="page-label">REMOVE FROM OPERATIONS</span>
-                    <h2 id="delete-device-title">Delete device?</h2>
+                    <span className="page-label">{t("devices.removeLabel")}</span>
+                    <h2 id="delete-device-title">{t("devices.deleteTitle")}</h2>
                     <p id="delete-device-description">
-                        <strong>{device.name}</strong> will be removed from active devices.
-                        Historical session records will be preserved.
+                        {t("devices.deleteDescription", { name: device.name })}
                     </p>
 
                     <div className="delete-product-summary">
                         <span>{device.type} station</span>
-                        <strong>{device.status}</strong>
+                        <strong>{device.status === "AVAILABLE" ? t("devices.available") : device.status === "MAINTENANCE" ? t("devices.maintenance") : device.status === "OFFLINE" ? t("devices.offline") : device.status}</strong>
                     </div>
 
                     <div className="delete-product-note">
-                        A device can be removed after its active session ends. Its
-                        session history remains available for billing and reporting.
-                        Devices with active sessions are protected automatically.
+                        {t("devices.deleteNote")}
                     </div>
 
                     {error && (
                         <div className="delete-product-inline-error" role="alert">
-                            <strong>Could not delete this device</strong>
+                            <strong>{t("devices.deleteErrorTitle")}</strong>
                             <span>{error}</span>
                         </div>
                     )}
@@ -66,7 +65,7 @@ export default function DeleteDeviceModal({
                         disabled={deleting}
                         onClick={onClose}
                     >
-                        Cancel
+                        {t("common.cancel")}
                     </button>
                     <button
                         type="button"
@@ -74,7 +73,7 @@ export default function DeleteDeviceModal({
                         disabled={deleting}
                         onClick={onConfirm}
                     >
-                        {deleting ? "Deleting..." : "Delete Device"}
+                        {deleting ? t("devices.deleting") : t("devices.deleteDevice")}
                     </button>
                 </div>
             </div>

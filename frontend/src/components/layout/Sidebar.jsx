@@ -1,17 +1,20 @@
+import { useLanguage } from "../../i18n";
+
 export default function Sidebar({activePage, onNavigate}) {
+    const { t } = useLanguage();
     const items = [
-        { key: "operations", label: "Operations" },
-        { key: "pos", label: "POS" },
+        { key: "operations", label: t("nav.operations") },
+        { key: "pos", label: t("nav.pos") },
 
         // Admin pages later:
-        { key: "dashboard", label: "Dashboard" },
-        { key: "devices", label: "Devices" },
-        { key: "products", label: "Products" },
-        { key: "billing", label: "Billing" },
-        { key: "inventory", label: "Inventory" },
-        { key: "pricing", label: "Pricing" },
-        { key: "reports", label: "Reports" },
-        { key: "settings", label: "Settings" },
+        { key: "dashboard", label: t("nav.dashboard") },
+        { key: "devices", label: t("nav.devices") },
+        { key: "products", label: t("nav.products") },
+        { key: "billing", label: t("nav.billing") },
+        { key: "inventory", label: t("nav.inventory") },
+        { key: "pricing", label: t("nav.pricing") },
+        { key: "reports", label: t("nav.reports") },
+        { key: "settings", label: t("nav.settings") },
     ];
 
     return (
@@ -20,8 +23,8 @@ export default function Sidebar({activePage, onNavigate}) {
                 <div className="brand-icon">🎮</div>
 
                 <div>
-                    <h2>Gaming Cafe</h2>
-                    <span>Management System</span>
+                    <h2>{t("brand.name")}</h2>
+                    <span>{t("brand.system")}</span>
                 </div>
             </div>
 

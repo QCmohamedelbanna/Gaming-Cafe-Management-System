@@ -1,4 +1,5 @@
 const BASE_URL = "http://localhost:8080/api/bills";
+const CURRENT_CASHIER = "Admin";
 
 async function handleResponse(response) {
     const text = await response.text();
@@ -33,6 +34,7 @@ export async function payBill(id, data) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "X-Cashier": CURRENT_CASHIER,
         },
         body: JSON.stringify(data),
     }));

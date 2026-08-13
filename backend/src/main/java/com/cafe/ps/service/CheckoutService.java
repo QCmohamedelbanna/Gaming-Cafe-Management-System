@@ -32,10 +32,20 @@ public class CheckoutService {
             PaymentMethod method,
             BigDecimal amountTendered
     ) {
+        return checkout(sessionId, method, amountTendered, "Admin");
+    }
+
+    public CheckoutResult checkout(
+            Long sessionId,
+            PaymentMethod method,
+            BigDecimal amountTendered,
+            String cashier
+    ) {
         return billingService.checkoutSession(
                 sessionId,
                 method,
-                amountTendered
+                amountTendered,
+                cashier
         );
     }
 }

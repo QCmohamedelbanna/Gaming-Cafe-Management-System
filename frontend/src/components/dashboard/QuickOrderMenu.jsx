@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useLanguage } from "../../i18n";
 
 export default function QuickOrderMenu({
                                            products,
                                            order,
                                            onAddProduct,
-                                           addingProductId,
+                                       addingProductId,
                                        }) {
+    const { t, formatCurrency, formatNumber } = useLanguage();
 
     const [open, setOpen] =
         useState(false);
@@ -20,7 +22,7 @@ export default function QuickOrderMenu({
                     setOpen(!open)
                 }
             >
-                🛒 Add Order
+                🛒 {t("quickOrder.addOrder")}
                 <span>
                     {open ? " ▲" : " ▼"}
                 </span>
@@ -31,7 +33,7 @@ export default function QuickOrderMenu({
                 <div className="quick-order-menu">
 
                     <div className="quick-order-title">
-                        Add Product
+                        {t("quickOrder.addProduct")}
                     </div>
 
                     {products.map(product => {
@@ -49,9 +51,11 @@ export default function QuickOrderMenu({
                             ? null
                             : stockLimitReached
                                 ? availableStock <= 0
-                                    ? "Out of stock"
-                                    : "Stock limit reached"
-                                : `${formatStockQuantity(availableStock - quantityInOrder)} available`;
+                                    ? t("quickOrder.outOfStock")
+                                    : t("quickOrder.stockLimitReached")
+                                : t("quickOrder.available", {
+                                    count: formatStockQuantity(availableStock - quantityInOrder),
+                                });
 
                         return (
 
@@ -75,11 +79,7 @@ export default function QuickOrderMenu({
                                 </strong>
 
                                 <span>
-                                    {Number(
-                                        product.sellingPrice ?? product.price ?? 0
-                                    ).toFixed(2)}
-                                    {" "}
-                                    EGP
+                                    {formatCurrency(product.sellingPrice ?? product.price ?? 0)}
                                 </span>
                                 {stockLabel && <small>{stockLabel}</small>}
                             </div>

@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-
-function money(value) {
-    return `${Number(value || 0).toFixed(2)} EGP`;
-}
+import { useLanguage } from "../../i18n";
 
 export default function BillPaymentModal({ bill, loading, error, onClose, onPay }) {
+    const { t, formatCurrency } = useLanguage();
     const [method, setMethod] = useState("CASH");
     const [tendered, setTendered] = useState("");
     const total = Number(bill.totalAmount || 0);
@@ -43,15 +41,15 @@ export default function BillPaymentModal({ bill, loading, error, onClose, onPay 
             >
                 <div className="modal-header">
                     <div>
-                        <span className="page-label">PENDING PAYMENT</span>
+                        <span className="page-label">{t("modal.pendingPayment")}</span>
                         <h2 id="bill-payment-title">{bill.billNumber}</h2>
-                        <p>{bill.sessionId ? `Session #${bill.sessionId}` : "Standalone order"}</p>
+                        <p>{bill.sessionId ? t("billing.referenceSession", { id: bill.sessionId }) : t("billing.standaloneOrder")}</p>
                     </div>
 
                     <button
                         type="button"
                         className="modal-close"
-                        aria-label="Close payment dialog"
+                        aria-label={t("billing.closePayment")}
                         disabled={loading}
                         onClick={onClose}
                     >
@@ -60,12 +58,12 @@ export default function BillPaymentModal({ bill, loading, error, onClose, onPay 
                 </div>
 
                 <div className="pending-bill-total">
-                    <span>Total due</span>
-                    <strong>{money(total)}</strong>
+                    <span>{t("common.totalDue")}</span>
+                    <strong>{formatCurrency(total)}</strong>
                 </div>
 
                 <div className="payment-method-section">
-                    <span className="payment-section-label">Payment method</span>
+                    <span className="payment-section-label">{t("common.paymentMethod")}</span>
 
                     <div className="payment-method-grid">
                         {["CASH", "CARD", "MOBILE_WALLET"].map((value) => (
@@ -78,14 +76,14 @@ export default function BillPaymentModal({ bill, loading, error, onClose, onPay 
                                 aria-pressed={method === value}
                                 onClick={() => setMethod(value)}
                             >
-                                {value === "MOBILE_WALLET" ? "Mobile wallet" : value}
+                                {value === "MOBILE_WALLET" ? t("common.mobileWallet") : value === "CASH" ? t("common.cash") : t("common.card")}
                             </button>
                         ))}
                     </div>
 
                     {method === "CASH" && (
                         <div className="cash-tendered-row">
-                            <label htmlFor="pending-cash">Cash received</label>
+                            <label htmlFor="pending-cash">{t("common.cashReceived")}</label>
                             <div>
                                 <input
                                     id="pending-cash"
@@ -96,7 +94,7 @@ export default function BillPaymentModal({ bill, loading, error, onClose, onPay 
                                     onChange={(event) => setTendered(event.target.value)}
                                     placeholder={total.toFixed(2)}
                                 />
-                                <span>EGP</span>
+                                <span>{t("common.egp")}</span>
                             </div>
                         </div>
                     )}
@@ -111,7 +109,7 @@ export default function BillPaymentModal({ bill, loading, error, onClose, onPay 
                         disabled={loading}
                         onClick={onClose}
                     >
-                        Cancel
+                        {t("common.cancel")}
                     </button>
 
                     <button
@@ -123,7 +121,7 @@ export default function BillPaymentModal({ bill, loading, error, onClose, onPay 
                             amountTendered: method === "CASH" ? received : null,
                         })}
                     >
-                        {loading ? "Processing..." : `Pay ${money(total)}`}
+                        {loading ? t("modal.processing") : t("billing.payTotal", { amount: formatCurrency(total) })}
                     </button>
                 </div>
             </div>

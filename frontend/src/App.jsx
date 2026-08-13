@@ -1,15 +1,19 @@
 import { useState } from "react";
+import { useLanguage } from "./i18n";
 
 import Layout from "./components/layout/Layout";
 import Dashboard from "./components/dashboard/Dashboard";
+import AdminDashboardPage from "./components/dashboard/AdminDashboardPage";
 import PricingPage from "./components/pricing/PricingPage";
 import POSPage from "./components/pos/POSPage";
 import ProductsPage from "./components/products/ProductsPage";
 import BillingPage from "./components/billing/BillingPage";
 import DevicesPage from "./components/devices/DevicesPage";
 import InventoryPage from "./components/inventory/InventoryPage";
+import ReportsPage from "./components/reports/ReportsPage";
 
 export default function App() {
+    const { t } = useLanguage();
 
     const [activePage, setActivePage] =
         useState("operations");
@@ -27,14 +31,6 @@ export default function App() {
      * Normal sidebar navigation
      */
     function handleNavigate(page) {
-
-        /*
-         * Clicking POS directly from sidebar
-         * means standalone sale.
-         */
-        if (page === "pos") {
-            setPosSession(null);
-        }
 
         setActivePage(page);
     }
@@ -63,12 +59,7 @@ export default function App() {
                 );
 
             case "dashboard":
-                return (
-                    <div className="placeholder-page">
-                        <h2>Admin Dashboard</h2>
-                        <p>Revenue and reports dashboard coming soon.</p>
-                    </div>
-                );
+                return <AdminDashboardPage />;
 
             case "pricing":
                 return <PricingPage />;
@@ -92,6 +83,7 @@ export default function App() {
                         attachedSession={
                             posSession
                         }
+                        onStartStandalone={() => setPosSession(null)}
                     />
                 );
 
@@ -99,18 +91,13 @@ export default function App() {
                 return <InventoryPage />;
 
             case "reports":
-                return (
-                    <div className="placeholder-page">
-                        <h2>Reports</h2>
-                        <p>Coming soon</p>
-                    </div>
-                );
+                return <ReportsPage />;
 
             case "settings":
                 return (
                     <div className="placeholder-page">
-                        <h2>Settings</h2>
-                        <p>Coming soon</p>
+                        <h2>{t("page.settings")}</h2>
+                        <p>{t("settings.comingSoon")}</p>
                     </div>
                 );
 
@@ -127,6 +114,27 @@ export default function App() {
 
 
     function getTitle() {
+        const titleKeys = {
+            operations: "page.operations",
+            dashboard: "page.dashboard",
+            pricing: "page.pricing",
+            products: "page.products",
+            devices: "page.devices",
+            billing: "page.billing",
+            inventory: "page.inventory",
+            reports: "page.reports",
+            settings: "page.settings",
+        };
+
+        if (activePage === "pos") {
+            return posSession
+                ? t("pos.attachedTitle", { device: posSession.device?.name ?? "" })
+                : t("page.pos");
+        }
+
+        if (titleKeys[activePage]) {
+            return t(titleKeys[activePage]);
+        }
 
         switch (activePage) {
 

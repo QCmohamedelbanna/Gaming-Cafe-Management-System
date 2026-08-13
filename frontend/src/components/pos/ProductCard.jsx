@@ -1,9 +1,12 @@
+import { useLanguage } from "../../i18n";
+
 export default function ProductCard({
                                         product,
                                         onAdd,
                                         disabled,
                                         quantityInOrder = 0,
-                                    }) {
+}) {
+    const { t, formatCurrency } = useLanguage();
     const trackStock = product.trackStock === true;
     const availableStock = trackStock
         ? Math.max(0, Number(product.currentStock ?? 0))
@@ -11,10 +14,10 @@ export default function ProductCard({
     const stockLimitReached = availableStock !== null
         && Number(quantityInOrder) + 1 > availableStock;
     const stockLabel = !trackStock
-        ? "+ Add"
+        ? `+ ${t("pos.add")}`
         : stockLimitReached
-            ? availableStock <= 0 ? "Out of stock" : "Stock limit reached"
-            : `${formatStockQuantity(availableStock - Number(quantityInOrder))} available`;
+            ? availableStock <= 0 ? t("pos.outOfStock") : t("pos.stockLimitReached")
+            : t("pos.available", { count: formatStockQuantity(availableStock - Number(quantityInOrder)) });
 
     return (
         <button
@@ -30,7 +33,7 @@ export default function ProductCard({
             <strong>{product.name}</strong>
 
             <span>
-        {Number(product.sellingPrice ?? product.price ?? 0).toFixed(2)} EGP
+        {formatCurrency(product.sellingPrice ?? product.price ?? 0)}
       </span>
 
             <small>{stockLabel}</small>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "../../i18n";
 
 export default function StartSessionModal({
     device,
@@ -7,6 +8,7 @@ export default function StartSessionModal({
     onStart,
     loading,
 }) {
+    const { t, formatCurrency, formatNumber } = useLanguage();
     const [sessionType, setSessionType] = useState(null);
     const [duration, setDuration] = useState(undefined);
     const [matchCount, setMatchCount] = useState(1);
@@ -76,7 +78,7 @@ export default function StartSessionModal({
             >
                 <div className="modal-header">
                     <div>
-                        <span className="page-label">START SESSION</span>
+                        <span className="page-label">{t("modal.startSession")}</span>
 
                         <h2 id="start-session-title">{device.name}</h2>
 
@@ -86,7 +88,7 @@ export default function StartSessionModal({
                     <button
                         type="button"
                         className="modal-close"
-                        aria-label="Close start session"
+                        aria-label={t("modal.closeStartSession")}
                         disabled={loading}
                         onClick={onClose}
                     >
@@ -96,7 +98,7 @@ export default function StartSessionModal({
 
                 {!sessionType && (
                     <>
-                        <h3>Choose session type</h3>
+                        <h3>{t("modal.chooseSessionType")}</h3>
 
                         <div className="session-type-grid">
                             {["SINGLE", "MULTI", "MATCH"].map((type) => {
@@ -113,18 +115,18 @@ export default function StartSessionModal({
                                         className="session-type-card"
                                         onClick={() => setSessionType(type)}
                                     >
-                                        <strong>{type}</strong>
+                                        <strong>{type === "SINGLE" ? t("modal.single") : type === "MULTI" ? t("modal.multi") : t("modal.match")}</strong>
 
                                         <span>
-                                            {rule.price} EGP / {" "}
+                                            {formatCurrency(rule.price)} / {" "}
                                             {rule.billingUnit === "MATCH"
-                                                ? "match"
-                                                : "hour"}
+                                                ? t("modal.match")
+                                                : t("pricing.hour")}
                                         </span>
 
                                         {type === "MATCH" && (
                                             <small>
-                                                {rule.matchDurationMinutes} min maximum
+                                                {formatNumber(rule.matchDurationMinutes)} {t("pricing.minutes")} {t("modal.maximumDuration").toLowerCase()}
                                             </small>
                                         )}
                                     </button>
@@ -144,16 +146,16 @@ export default function StartSessionModal({
                                 setDuration(undefined);
                             }}
                         >
-                            &larr; Change session type
+                            &larr; {t("modal.changeSessionType")}
                         </button>
 
                         <div className="selected-session">
-                            <strong>{sessionType}</strong>
+                            <strong>{sessionType === "SINGLE" ? t("modal.single") : t("modal.multi")}</strong>
 
-                            <span>{selectedRule?.price} EGP / hour</span>
+                            <span>{formatCurrency(selectedRule?.price)} / {t("pricing.hour").toLowerCase()}</span>
                         </div>
 
-                        <h3>Choose duration</h3>
+                        <h3>{t("modal.selectDuration")}</h3>
 
                         <div className="duration-grid">
                             <button
@@ -164,7 +166,7 @@ export default function StartSessionModal({
                                 aria-pressed={duration === 30}
                                 onClick={() => setDuration(30)}
                             >
-                                30 Minutes
+                                {t("modal.minutes30")}
                             </button>
 
                             <button
@@ -175,7 +177,7 @@ export default function StartSessionModal({
                                 aria-pressed={duration === 60}
                                 onClick={() => setDuration(60)}
                             >
-                                1 Hour
+                                {t("modal.hour1")}
                             </button>
 
                             <button
@@ -186,7 +188,7 @@ export default function StartSessionModal({
                                 aria-pressed={duration === null}
                                 onClick={() => setDuration(null)}
                             >
-                                Open Time
+                                {t("modal.openTime")}
                             </button>
                         </div>
 
@@ -196,7 +198,7 @@ export default function StartSessionModal({
                             disabled={loading || duration === undefined}
                             onClick={start}
                         >
-                            {loading ? "Starting..." : "Start Session"}
+                            {loading ? t("modal.starting") : t("modal.startSession")}
                         </button>
                     </>
                 )}
@@ -208,37 +210,37 @@ export default function StartSessionModal({
                             className="back-button"
                             onClick={() => setSessionType(null)}
                         >
-                            &larr; Change session type
+                            &larr; {t("modal.changeSessionType")}
                         </button>
 
                         <div className="selected-session">
-                            <strong>MATCH</strong>
+                            <strong>{t("modal.match")}</strong>
 
-                            <span>{selectedRule?.price} EGP / match</span>
+                            <span>{formatCurrency(selectedRule?.price)} / {t("modal.match").toLowerCase()}</span>
                         </div>
 
                         <div className="match-config">
                             <div>
-                                <span>Maximum duration</span>
+                                <span>{t("modal.maximumDuration")}</span>
                                 <strong>
-                                    {selectedRule?.matchDurationMinutes} min
+                                    {formatNumber(selectedRule?.matchDurationMinutes)} {t("pricing.minutes")}
                                 </strong>
                             </div>
 
                             <div>
-                                <span>Warning</span>
+                                <span>{t("modal.warning")}</span>
                                 <strong>
-                                    {selectedRule?.warningBeforeExpiryMinutes} min before expiry
+                                    {formatNumber(selectedRule?.warningBeforeExpiryMinutes)} {t("modal.beforeExpiry")}
                                 </strong>
                             </div>
                         </div>
 
-                        <label htmlFor="match-count">Number of matches</label>
+                        <label htmlFor="match-count">{t("modal.matchCount")}</label>
 
                         <div className="match-counter" id="match-count">
                             <button
                                 type="button"
-                                aria-label="Decrease number of matches"
+                                aria-label={t("modal.decreaseMatches")}
                                 onClick={() =>
                                     setMatchCount((value) => Math.max(1, value - 1))
                                 }
@@ -250,7 +252,7 @@ export default function StartSessionModal({
 
                             <button
                                 type="button"
-                                aria-label="Increase number of matches"
+                                aria-label={t("modal.increaseMatches")}
                                 onClick={() => setMatchCount((value) => value + 1)}
                             >
                                 +
@@ -258,10 +260,10 @@ export default function StartSessionModal({
                         </div>
 
                         <div className="match-total">
-                            <span>Total</span>
+                            <span>{t("modal.total")}</span>
 
                             <strong>
-                                {(Number(selectedRule?.price || 0) * matchCount).toFixed(2)} EGP
+                                {formatCurrency(Number(selectedRule?.price || 0) * matchCount)}
                             </strong>
                         </div>
 
@@ -271,7 +273,7 @@ export default function StartSessionModal({
                             disabled={loading}
                             onClick={start}
                         >
-                            {loading ? "Starting..." : "Start Match"}
+                            {loading ? t("modal.starting") : t("modal.startMatch")}
                         </button>
                     </>
                 )}

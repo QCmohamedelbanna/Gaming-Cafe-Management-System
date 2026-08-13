@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "../../i18n";
 
 import {
     adjustStock,
@@ -19,6 +20,7 @@ import DeleteProductModal from "../products/DeleteProductModal";
 import StockMovementModal from "./StockMovementModal";
 
 export default function InventoryPage() {
+    const { t, formatCurrency, formatNumber, language } = useLanguage();
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [movements, setMovements] = useState([]);
@@ -51,7 +53,7 @@ export default function InventoryPage() {
             setMovements(movementData || []);
         } catch (loadError) {
             console.error(loadError);
-            setError(loadError.message || "Could not load inventory.");
+            setError(loadError.message || t("inventory.loadError"));
         } finally {
             setLoading(false);
         }
@@ -107,10 +109,10 @@ export default function InventoryPage() {
             replaceProduct(saved);
             setFormProduct(undefined);
             await refreshCategories();
-            showSuccess(`${saved.name} saved successfully.`);
+            showSuccess(t("products.saved", { name: saved.name }));
         } catch (saveError) {
             console.error(saveError);
-            setError(saveError.message || "Could not save product.");
+            setError(saveError.message || t("products.saveError"));
         } finally {
             setSaving(false);
         }
@@ -131,10 +133,12 @@ export default function InventoryPage() {
             setError("");
             const updated = await setProductActive(product.id, !product.active);
             replaceProduct(updated);
-            showSuccess(`${updated.name} ${updated.active ? "activated" : "deactivated"}.`);
+            showSuccess(updated.active
+                ? t("products.activated", { name: updated.name })
+                : t("products.deactivated", { name: updated.name }));
         } catch (toggleError) {
             console.error(toggleError);
-            setError(toggleError.message || "Could not update product status.");
+            setError(toggleError.message || t("products.statusError"));
         } finally {
             setBusyId(null);
         }
@@ -147,10 +151,10 @@ export default function InventoryPage() {
             await deleteProduct(product.id);
             setProducts((current) => current.filter((item) => item.id !== product.id));
             setDeleteTarget(null);
-            showSuccess(`${product.name} deleted.`);
+            showSuccess(t("products.deleted", { name: product.name }));
         } catch (deleteErrorValue) {
             console.error(deleteErrorValue);
-            const messageValue = deleteErrorValue.message || "Could not delete product.";
+            const messageValue = deleteErrorValue.message || t("products.deleteError");
             setDeleteError(messageValue);
             setError(messageValue);
         } finally {
@@ -174,14 +178,14 @@ export default function InventoryPage() {
             await refreshMovements(ledgerProduct?.id ?? null);
             showSuccess(
                 movementMode === "purchase"
-                    ? `${updated.name} purchase recorded.`
+                    ? t("inventory.movementPurchase", { name: updated.name })
                     : movementMode === "waste"
-                        ? `${updated.name} waste recorded.`
-                        : `${updated.name} stock adjusted.`
+                        ? t("inventory.movementWaste", { name: updated.name })
+                        : t("inventory.movementAdjustment", { name: updated.name })
             );
         } catch (stockError) {
             console.error(stockError);
-            setError(stockError.message || "Could not save stock movement.");
+            setError(stockError.message || t("inventory.stockSaveError"));
         } finally {
             setSaving(false);
         }
@@ -193,7 +197,7 @@ export default function InventoryPage() {
             setMovements(await getStockMovements(productId));
         } catch (movementError) {
             console.error(movementError);
-            setError(movementError.message || "Could not load stock ledger.");
+            setError(movementError.message || t("inventory.ledgerLoadError"));
         } finally {
             setMovementLoading(false);
         }
@@ -213,16 +217,16 @@ export default function InventoryPage() {
         <div className="inventory-page">
             <div className="inventory-header">
                 <div>
-                    <span className="page-label">ADMIN · INVENTORY</span>
-                    <h1>Inventory</h1>
-                    <p>Track products, stock balances, and the movement ledger.</p>
+                    <span className="page-label">{t("inventory.adminInventory")}</span>
+                    <h1>{t("inventory.title")}</h1>
+                    <p>{t("inventory.descriptionShort")}</p>
                 </div>
                 <button
                     type="button"
                     className="product-add-button"
                     onClick={() => setFormProduct(null)}
                 >
-                    + Add Product
+                    + {t("inventory.addProductAction")}
                 </button>
             </div>
 
@@ -231,44 +235,44 @@ export default function InventoryPage() {
 
             <div className="inventory-summary">
                 <div className="inventory-stat">
-                    <span>Total products</span>
-                    <strong>{products.length}</strong>
-                    <small>{trackedCount} tracking stock</small>
+                    <span>{t("inventory.totalProducts")}</span>
+                    <strong>{formatNumber(products.length)}</strong>
+                    <small>{t("inventory.tracking", { count: formatNumber(trackedCount) })}</small>
                 </div>
                 <div className={`inventory-stat ${lowStockCount ? "warning" : ""}`}>
-                    <span>Low stock</span>
-                    <strong>{lowStockCount}</strong>
-                    <small>{lowStockCount ? "Needs attention" : "All levels look good"}</small>
+                    <span>{t("inventory.lowStock")}</span>
+                    <strong>{formatNumber(lowStockCount)}</strong>
+                    <small>{lowStockCount ? t("inventory.needsAttention") : t("inventory.allLevelsGood")}</small>
                 </div>
                 <div className="inventory-stat">
-                    <span>Categories</span>
-                    <strong>{categories.length}</strong>
-                    <small>Product groups</small>
+                    <span>{t("inventory.categories")}</span>
+                    <strong>{formatNumber(categories.length)}</strong>
+                    <small>{t("inventory.productGroups")}</small>
                 </div>
                 <div className="inventory-stat">
-                    <span>Stock at cost</span>
-                    <strong>{stockValue.toFixed(2)} EGP</strong>
-                    <small>Tracked items only</small>
+                    <span>{t("inventory.stockValue")}</span>
+                    <strong>{formatCurrency(stockValue)}</strong>
+                    <small>{t("inventory.trackedOnly")}</small>
                 </div>
             </div>
 
             <div className="inventory-toolbar">
                 <label className="inventory-search">
-                    <span>Search products</span>
+                    <span>{t("inventory.searchProducts")}</span>
                     <input
                         type="search"
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Name, SKU, or category"
+                        placeholder={t("inventory.searchPlaceholder")}
                     />
                 </label>
                 <label className="inventory-filter">
-                    <span>Category</span>
+                    <span>{t("inventory.category")}</span>
                     <select
                         value={categoryFilter}
                         onChange={(event) => setCategoryFilter(event.target.value)}
                     >
-                        <option value="">All categories</option>
+                        <option value="">{t("inventory.allCategories")}</option>
                         {categories.map((category) => (
                             <option key={category} value={category}>{category}</option>
                         ))}
@@ -283,29 +287,29 @@ export default function InventoryPage() {
                             setCategoryFilter("");
                         }}
                     >
-                        Clear filters
+                        {t("inventory.clearFiltersAction")}
                     </button>
                 )}
             </div>
 
             {loading ? (
-                <p>Loading inventory...</p>
+                <p>{t("inventory.loading")}</p>
             ) : visibleProducts.length === 0 ? (
                 <div className="products-empty-state">
-                    <h2>{products.length ? "No matching products" : "No products yet"}</h2>
-                    <p>{products.length ? "Try a different search or category." : "Add a product to start tracking inventory."}</p>
+                    <h2>{products.length ? t("inventory.noMatchingProducts") : t("inventory.noProducts")}</h2>
+                    <p>{products.length ? t("inventory.trySearch") : t("inventory.noProductsStart")}</p>
                 </div>
             ) : (
                 <div className="products-table-wrap inventory-table-wrap">
                     <table className="products-table inventory-table">
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>Category</th>
-                                <th>Selling / cost</th>
-                                <th>Stock</th>
-                                <th>Status</th>
-                                <th><span className="sr-only">Actions</span></th>
+                                <th>{t("inventory.product")}</th>
+                                <th>{t("inventory.category")}</th>
+                                <th>{t("inventory.sellingCost")}</th>
+                                <th>{t("inventory.stock")}</th>
+                                <th>{t("inventory.status")}</th>
+                                <th><span className="sr-only">{t("common.actions")}</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -316,67 +320,67 @@ export default function InventoryPage() {
                                     <tr key={product.id} className={lowStock ? "low-stock-row" : ""}>
                                         <td>
                                             <strong>{product.name}</strong>
-                                            <small className="inventory-sku">{product.sku || "No SKU / barcode"}</small>
+                                            <small className="inventory-sku">{product.sku || t("inventory.noSkuBarcode")}</small>
                                         </td>
-                                        <td>{product.category || "Uncategorized"}</td>
+                                        <td>{product.category || t("inventory.uncategorized")}</td>
                                         <td>
-                                            <strong>{Number(product.sellingPrice ?? product.price ?? 0).toFixed(2)} EGP</strong>
-                                            <small className="inventory-muted">Cost {Number(product.costPrice || 0).toFixed(2)} EGP</small>
+                                            <strong>{formatCurrency(product.sellingPrice ?? product.price ?? 0)}</strong>
+                                            <small className="inventory-muted">{t("inventory.cost", { value: formatCurrency(product.costPrice || 0) })}</small>
                                         </td>
                                         <td>
                                             {product.trackStock ? (
                                                 <>
                                                     <strong className={lowStock ? "low-stock-value" : ""}>
-                                                        {Number(product.currentStock || 0).toFixed(3)} {product.unit || "unit"}
+                                                        {formatNumber(product.currentStock || 0, { maximumFractionDigits: 3 })} {product.unit || t("form.unit")}
                                                     </strong>
-                                                    <small className="inventory-muted">Min {Number(product.minimumStock || 0).toFixed(3)}</small>
+                                                    <small className="inventory-muted">{t("inventory.min", { value: formatNumber(product.minimumStock || 0, { maximumFractionDigits: 3 }) })}</small>
                                                 </>
                                             ) : (
-                                                <span className="inventory-muted">Not tracked</span>
+                                                <span className="inventory-muted">{t("inventory.notTracked")}</span>
                                             )}
                                         </td>
                                         <td>
                                             <span className={product.active ? "product-status active" : "product-status inactive"}>
-                                                {product.active ? "ACTIVE" : "INACTIVE"}
+                                                {product.active ? t("products.active") : t("products.inactive")}
                                             </span>
-                                            {lowStock && <span className="low-stock-badge">LOW STOCK</span>}
+                                            {lowStock && <span className="low-stock-badge">{t("inventory.lowBadge")}</span>}
                                         </td>
                                         <td>
                                             <div className="product-row-actions inventory-row-actions">
-                                                <button disabled={busy} onClick={() => setFormProduct(product)}>Edit</button>
+                                            <button disabled={busy} onClick={() => setFormProduct(product)}>{t("common.edit")}</button>
                                                 <button
                                                     disabled={busy || !product.trackStock}
-                                                    title={product.trackStock ? "Record a purchase" : "Enable stock tracking first"}
+                                                    title={product.trackStock ? t("inventory.recordPurchase") : t("inventory.enableTracking")}
                                                     onClick={() => {
                                                         setMovementTarget(product);
                                                         setMovementMode("purchase");
                                                     }}
                                                 >
-                                                    Purchase
+                                                    {t("inventory.purchase")}
                                                 </button>
                                                 <button
                                                     disabled={busy || !product.trackStock}
-                                                    title={product.trackStock ? "Adjust stock" : "Enable stock tracking first"}
+                                                    title={product.trackStock ? t("inventory.adjustStock") : t("inventory.enableTracking")}
                                                     onClick={() => {
                                                         setMovementTarget(product);
                                                         setMovementMode("adjustment");
                                                     }}
                                                 >
-                                                    Adjust
+                                                    {t("inventory.adjust")}
                                                 </button>
                                                 <button
                                                     disabled={busy || !product.trackStock}
-                                                    title={product.trackStock ? "Record wasted stock" : "Enable stock tracking first"}
+                                                    title={product.trackStock ? t("inventory.recordWaste") : t("inventory.enableTracking")}
                                                     onClick={() => {
                                                         setMovementTarget(product);
                                                         setMovementMode("waste");
                                                     }}
                                                 >
-                                                    Waste
+                                                    {t("inventory.waste")}
                                                 </button>
-                                                <button disabled={busy} onClick={() => showLedger(product)}>Ledger</button>
+                                                <button disabled={busy} onClick={() => showLedger(product)}>{t("inventory.ledger")}</button>
                                                 <button disabled={busy} onClick={() => handleToggle(product)}>
-                                                    {product.active ? "Deactivate" : "Activate"}
+                                                    {product.active ? t("products.deactivate") : t("products.activate")}
                                                 </button>
                                                 <button
                                                     className="product-delete-button"
@@ -386,7 +390,7 @@ export default function InventoryPage() {
                                                         setDeleteTarget(product);
                                                     }}
                                                 >
-                                                    {busy ? "Working..." : "Delete"}
+                                                    {busy ? t("common.working") : t("common.delete")}
                                                 </button>
                                             </div>
                                         </td>
@@ -401,33 +405,33 @@ export default function InventoryPage() {
             <section className="inventory-ledger-section">
                 <div className="inventory-section-header">
                     <div>
-                        <span className="page-label">AUDIT TRAIL</span>
-                        <h2>{ledgerProduct ? `${ledgerProduct.name} ledger` : "Recent stock activity"}</h2>
+                        <span className="page-label">{t("inventory.auditLabel")}</span>
+                        <h2>{ledgerProduct ? t("inventory.ledgerTitle", { name: ledgerProduct.name }) : t("inventory.recentStockActivity")}</h2>
                     </div>
                     {ledgerProduct && (
                         <button type="button" className="product-secondary-button" onClick={showAllMovements}>
-                            Show all movements
+                            {t("inventory.showAllMovements")}
                         </button>
                     )}
                 </div>
                 {movementLoading ? (
-                    <p>Loading stock movements...</p>
+                    <p>{t("inventory.loadingMovements")}</p>
                 ) : movements.length === 0 ? (
-                    <p className="inventory-empty-ledger">No stock movements recorded yet.</p>
+                    <p className="inventory-empty-ledger">{t("inventory.noMovements")}</p>
                 ) : (
                     <div className="inventory-movement-list">
                         {movements.map((movement) => (
                             <div className="inventory-movement-row" key={movement.id}>
                                 <div>
                                     <strong>{movement.productName}</strong>
-                                    <small>{movement.type} · {movement.reference || "No reference"}</small>
+                                    <small>{movement.type === "PURCHASE" ? t("inventory.purchase") : movement.type === "SALE" ? t("common.sale") : movement.type === "RETURN" ? t("common.return") : movement.type === "ADJUSTMENT" ? t("common.adjustment") : t("common.waste")} · {movement.reference || t("inventory.noReference")}</small>
                                 </div>
                                 <strong className={Number(movement.quantity) < 0 ? "movement-negative" : "movement-positive"}>
                                     {Number(movement.quantity) > 0 ? "+" : ""}{Number(movement.quantity).toFixed(3)}
                                 </strong>
                                 <div className="inventory-movement-meta">
                                     <span>{movement.createdBy}</span>
-                                    <small>{formatDate(movement.createdAt)}</small>
+                                    <small>{formatDate(movement.createdAt, language)}</small>
                                 </div>
                             </div>
                         ))}
@@ -474,9 +478,9 @@ export default function InventoryPage() {
     );
 }
 
-function formatDate(value) {
+function formatDate(value, language = "en") {
     if (!value) return "—";
-    return new Date(value).toLocaleString([], {
+    return new Date(value).toLocaleString(language === "ar" ? "ar-EG" : "en-EG", {
         dateStyle: "medium",
         timeStyle: "short",
     });

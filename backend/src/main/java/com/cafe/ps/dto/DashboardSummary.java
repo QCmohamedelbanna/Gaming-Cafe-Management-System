@@ -1,5 +1,6 @@
 package com.cafe.ps.dto;
 import java.math.BigDecimal;
+import java.util.List;
 public record DashboardSummary(
         long totalDevices,
         long activeSessions,
@@ -7,5 +8,14 @@ public record DashboardSummary(
         BigDecimal revenueToday,
         BigDecimal gamingRevenueToday,
         BigDecimal productsRevenueToday,
-        long paidBillsToday
+        long paidBillsToday,
+        long availableDevices,
+        long offlineDevices,
+        BigDecimal cafeRevenueToday,
+        BigDecimal totalRevenueToday,
+        long completedBillsToday,
+        BigDecimal averageBillValueToday,
+        long lowStockProducts,
+        List<SessionEndingSoon> sessionsEndingSoon,
+        List<PaymentMethodTotal> salesByPaymentMethod
 ) {}

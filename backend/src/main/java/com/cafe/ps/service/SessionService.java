@@ -9,10 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +19,7 @@ public class SessionService {
     private final GameSessionRepository sessionRepository;
     private final PricingService pricingService;
     private final BillingService billingService;
-    private final BillRepository billRepository;
+    private final ReportService reportService;
 
     @Transactional
     public GameSession start(Long deviceId, SessionType sessionType, Integer plannedMinutes, Integer matchCount) {
@@ -109,32 +107,7 @@ public class SessionService {
     }
 
     public DashboardSummary todaySummary() {
-        LocalDate today = LocalDate.now();
-        List<GameSession> sessions = sessionRepository.findByStartTimeBetween(today.atStartOfDay(), today.plusDays(1).atStartOfDay());
-        long active = sessions.stream().filter(s -> s.getStatus() == SessionStatus.ACTIVE).count();
-        long completed = sessions.stream().filter(s -> s.getStatus() == SessionStatus.COMPLETED).count();
-        List<Bill> bills = billRepository.findByPaidAtBetweenAndStatus(
-                today.atStartOfDay(),
-                today.plusDays(1).atStartOfDay(),
-                BillStatus.PAID
-        );
-        BigDecimal gamingRevenue = bills.stream()
-                .map(Bill::getGamingAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal productsRevenue = bills.stream()
-                .map(Bill::getOrderAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new DashboardSummary(
-                deviceRepository.countByDeletedFalseOrDeletedIsNull(),
-                active,
-                completed,
-                gamingRevenue.add(productsRevenue),
-                gamingRevenue,
-                productsRevenue,
-                bills.size()
-        );
+        return reportService.dashboardSummary();
     }
 
     @Scheduled(fixedDelay = 3000)

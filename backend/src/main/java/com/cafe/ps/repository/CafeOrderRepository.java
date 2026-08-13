@@ -15,6 +15,13 @@ import java.util.List;
 public interface CafeOrderRepository
         extends JpaRepository<CafeOrder, Long> {
 
+    @Override
+    @EntityGraph(attributePaths = {
+            "items",
+            "items.product"
+    })
+    Optional<CafeOrder> findById(Long id);
+
     @EntityGraph(attributePaths = {
             "items",
             "items.product"
@@ -22,6 +29,14 @@ public interface CafeOrderRepository
     Optional<CafeOrder>
     findFirstByGameSessionIdAndStatusOrderByCreatedAtDesc(
             Long gameSessionId,
+            OrderStatus status
+    );
+
+    @EntityGraph(attributePaths = {
+            "items",
+            "items.product"
+    })
+    List<CafeOrder> findByGameSessionIsNullAndStatusOrderByCreatedAtDesc(
             OrderStatus status
     );
 

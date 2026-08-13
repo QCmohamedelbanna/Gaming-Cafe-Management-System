@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 import {
     createDevice,
     deleteDevice,
@@ -18,6 +19,7 @@ function statusClass(status) {
 }
 
 export default function DevicesPage() {
+    const { t } = useLanguage();
     const [devices, setDevices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [busyId, setBusyId] = useState(null);
@@ -35,7 +37,7 @@ export default function DevicesPage() {
             setDevices(await getDevices());
         } catch (loadError) {
             console.error(loadError);
-            setError(loadError.message || "Could not load devices.");
+            setError(loadError.message || t("devices.loadError"));
         } finally {
             setLoading(false);
         }
@@ -68,10 +70,10 @@ export default function DevicesPage() {
                 });
             });
             setFormDevice(undefined);
-            showSuccess(`${saved.name} saved successfully.`);
+            showSuccess(t("devices.saved", { name: saved.name }));
         } catch (saveError) {
             console.error(saveError);
-            setError(saveError.message || "Could not save device.");
+            setError(saveError.message || t("devices.saveError"));
         } finally {
             setSaving(false);
         }
@@ -87,11 +89,13 @@ export default function DevicesPage() {
                 current.map((item) => item.id === updated.id ? updated : item)
             );
             showSuccess(
-                `${updated.name} ${updated.active ? "activated" : "deactivated"}.`
+                updated.active
+                    ? t("devices.activated", { name: updated.name })
+                    : t("devices.deactivated", { name: updated.name })
             );
         } catch (toggleError) {
             console.error(toggleError);
-            setError(toggleError.message || "Could not update device availability.");
+            setError(toggleError.message || t("devices.saveError"));
         } finally {
             setBusyId(null);
         }
@@ -106,10 +110,10 @@ export default function DevicesPage() {
             await deleteDevice(device.id);
             setDevices((current) => current.filter((item) => item.id !== device.id));
             setDeleteTarget(null);
-            showSuccess(`${device.name} deleted.`);
+            showSuccess(t("devices.deleted", { name: device.name }));
         } catch (deleteError) {
             console.error(deleteError);
-            const message = deleteError.message || "Could not delete device.";
+            const message = deleteError.message || t("devices.deleteError");
             setDeleteError(message);
             setError(message);
         } finally {
@@ -121,21 +125,21 @@ export default function DevicesPage() {
         <div className="devices-management-page">
             <div className="devices-management-header">
                 <div>
-                    <span className="page-label">ADMIN</span>
-                    <h1>Devices</h1>
-                    <p>Manage gaming stations, availability, and maintenance status.</p>
+                    <span className="page-label">{t("devices.pageLabel")}</span>
+                    <h1>{t("devices.title")}</h1>
+                    <p>{t("devices.descriptionShort")}</p>
                 </div>
 
                 <div className="devices-header-actions">
                     <button type="button" className="refresh-button" onClick={loadDevices}>
-                        Refresh
+                        {t("common.refresh")}
                     </button>
                     <button
                         type="button"
                         className="product-add-button"
                         onClick={() => setFormDevice(null)}
                     >
-                        + Add Device
+                        + {t("devices.addDevice")}
                     </button>
                 </div>
             </div>
@@ -144,28 +148,28 @@ export default function DevicesPage() {
             {error && <div className="product-error-message">{error}</div>}
 
             <div className="devices-management-note">
-                <strong>Pricing is separate from device management.</strong>
-                <span>Set gaming prices by console and session type in Pricing.</span>
+                <strong>{t("devices.pricingNoteTitle")}</strong>
+                <span>{t("devices.pricingNote")}</span>
             </div>
 
             {loading ? (
-                <p>Loading devices...</p>
+                <p>{t("devices.loading")}</p>
             ) : devices.length === 0 ? (
                 <div className="products-empty-state">
-                    <h2>No devices yet</h2>
-                    <p>Add a PS4 or PS5 station to make it available in Operations.</p>
+                    <h2>{t("devices.noDevices")}</h2>
+                    <p>{t("devices.addFirst")}</p>
                 </div>
             ) : (
                 <div className="devices-table-wrap">
                     <table className="devices-table">
                         <thead>
                             <tr>
-                                <th>Device</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>Availability</th>
-                                <th>Maintenance note</th>
-                                <th><span className="sr-only">Actions</span></th>
+                                <th>{t("devices.name")}</th>
+                                <th>{t("devices.type")}</th>
+                                <th>{t("devices.status")}</th>
+                                <th>{t("devices.availability")}</th>
+                                <th>{t("devices.maintenanceNote")}</th>
+                                <th><span className="sr-only">{t("common.actions")}</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -178,12 +182,12 @@ export default function DevicesPage() {
                                     <tr key={device.id}>
                                         <td>
                                             <strong>{device.name}</strong>
-                                            {inUse && <small className="device-table-lock">Active session</small>}
+                                            {inUse && <small className="device-table-lock">{t("devices.activeSession")}</small>}
                                         </td>
                                         <td><span className="device-type-pill">{device.type}</span></td>
                                         <td>
                                             <span className={statusClass(device.status)}>
-                                                {device.status}
+                                                {device.status === "AVAILABLE" ? t("devices.available") : device.status === "MAINTENANCE" ? t("devices.maintenance") : device.status === "OFFLINE" ? t("devices.offline") : device.status === "PLAYING" ? t("devices.playing") : device.status}
                                             </span>
                                         </td>
                                         <td>
@@ -191,7 +195,7 @@ export default function DevicesPage() {
                                                 ? "device-admin-active active"
                                                 : "device-admin-active inactive"}
                                             >
-                                                {active ? "ACTIVE" : "INACTIVE"}
+                                                {active ? t("devices.yesActive") : t("devices.noActive")}
                                             </span>
                                         </td>
                                         <td>
@@ -204,32 +208,32 @@ export default function DevicesPage() {
                                                 <button
                                                     type="button"
                                                     disabled={busy || inUse}
-                                                    title={inUse ? "Editing is disabled during an active session" : "Edit device"}
+                                                    title={inUse ? t("devices.editLocked") : t("devices.editTitle")}
                                                     onClick={() => setFormDevice(device)}
                                                 >
-                                                    Edit
+                                                    {t("common.edit")}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     disabled={busy || inUse}
                                                     title={inUse
-                                                        ? "Availability is locked during an active session"
-                                                        : "Change availability"}
+                                                        ? t("devices.availabilityLocked")
+                                                        : t("devices.changeAvailability")}
                                                     onClick={() => handleToggle(device)}
                                                 >
-                                                    {active ? "Deactivate" : "Activate"}
+                                                    {active ? t("devices.deactivate") : t("devices.activate")}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     className="product-delete-button"
                                                     disabled={busy || inUse}
-                                                    title={inUse ? "Deleting is disabled during an active session" : "Delete device"}
+                                                    title={inUse ? t("devices.deleteLocked") : t("devices.deleteTitle")}
                                                     onClick={() => {
                                                         setDeleteError("");
                                                         setDeleteTarget(device);
                                                     }}
                                                 >
-                                                    {busy ? "Working..." : "Delete"}
+                                                    {busy ? t("common.working") : t("common.delete")}
                                                 </button>
                                             </div>
                                         </td>

@@ -51,12 +51,14 @@ public class SessionController {
     @PostMapping("/{id}/checkout")
     public CheckoutResult checkout(
             @PathVariable Long id,
-            @Valid @RequestBody CheckoutRequest request
+            @Valid @RequestBody CheckoutRequest request,
+            @RequestHeader(value = "X-Cashier", defaultValue = "Admin") String cashier
     ) {
         return checkoutService.checkout(
                 id,
                 request.paymentMethod(),
-                request.amountTendered()
+                request.amountTendered(),
+                cashier
         );
     }
 

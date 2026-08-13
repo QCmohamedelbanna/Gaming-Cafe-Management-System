@@ -7,4 +7,5 @@ import java.util.*;
 public interface GameSessionRepository extends JpaRepository<GameSession, Long> {
     Optional<GameSession> findFirstByDeviceIdAndStatusOrderByStartTimeDesc(Long deviceId, SessionStatus status);
     List<GameSession> findByStartTimeBetween(LocalDateTime from, LocalDateTime to);
+    List<GameSession> findByStatus(SessionStatus status);
 }

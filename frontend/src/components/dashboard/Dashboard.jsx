@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 
 import { getDevices } from "../../api/deviceApi";
 import { getPricing } from "../../api/pricingApi";
@@ -28,6 +29,7 @@ import ReceiptModal from "./ReceiptModal";
 
 
 export default function Dashboard({ onAddOrder }) {
+    const { t } = useLanguage();
 
     const [devices, setDevices] = useState([]);
     const [activeSessions, setActiveSessions] = useState([]);
@@ -108,7 +110,10 @@ export default function Dashboard({ onAddOrder }) {
 
             await loadActiveSessions();
             setMessage(
-                `${product.name} added to ${session.device?.name}`
+                t("operations.addedProduct", {
+                    product: product.name,
+                    device: session.device?.name,
+                })
             );
 
         } catch (error) {
@@ -117,7 +122,7 @@ export default function Dashboard({ onAddOrder }) {
 
             setMessage(
                 error.message ||
-                "Could not add product."
+                t("operations.addProductError")
             );
 
         } finally {
@@ -162,7 +167,7 @@ export default function Dashboard({ onAddOrder }) {
 
             setError(
                 error.message ||
-                "Failed to load dashboard."
+                t("operations.loadError")
             );
 
         } finally {
@@ -249,7 +254,7 @@ export default function Dashboard({ onAddOrder }) {
             await loadDashboard();
 
             setMessage(
-                "Session started successfully."
+                t("operations.sessionStarted")
             );
 
         } catch (error) {
@@ -261,7 +266,7 @@ export default function Dashboard({ onAddOrder }) {
 
             setError(
                 error.message ||
-                "Could not start session."
+                t("operations.startSessionError")
             );
 
         } finally {
@@ -278,7 +283,7 @@ export default function Dashboard({ onAddOrder }) {
     if (loading && devices.length === 0) {
 
         return (
-            <p>Loading dashboard...</p>
+            <p>{t("operations.loading")}</p>
         );
     }
 
@@ -303,7 +308,7 @@ export default function Dashboard({ onAddOrder }) {
             console.error("Checkout preparation error:", error);
             setError(
                 error.message ||
-                "Could not stop the session for checkout."
+                t("operations.stopSessionError")
             );
         } finally {
             setPreparingSessionId(null);
@@ -322,9 +327,10 @@ export default function Dashboard({ onAddOrder }) {
             await loadDashboard();
 
             setMessage(
-                `Bill ${result.billNumber} completed. Total: ${Number(
-                    result.totalAmount || 0
-                ).toFixed(2)} EGP`
+                t("operations.billCompleted", {
+                    bill: result.billNumber,
+                    total: Number(result.totalAmount || 0).toFixed(2),
+                })
             );
 
         } catch (error) {
@@ -332,7 +338,7 @@ export default function Dashboard({ onAddOrder }) {
 
             setError(
                 error.message ||
-                "Could not complete checkout."
+                t("operations.checkoutError")
             );
         } finally {
             setCheckingOut(false);
@@ -346,10 +352,10 @@ export default function Dashboard({ onAddOrder }) {
             setRefunding(true);
             const updated = await refundBill(receipt.billId, reason);
             setReceipt(updated);
-            setMessage(`Bill ${updated.billNumber} refunded.`);
+            setMessage(t("operations.billRefunded", { bill: updated.billNumber }));
         } catch (error) {
             console.error(error);
-            setError(error.message || "Could not refund bill.");
+            setError(error.message || t("billing.refundError"));
         } finally {
             setRefunding(false);
         }
@@ -368,7 +374,7 @@ export default function Dashboard({ onAddOrder }) {
 
             setMessage(
                 error.message ||
-                "Could not extend session."
+                t("operations.extendError")
             );
         }
     }
@@ -386,7 +392,7 @@ export default function Dashboard({ onAddOrder }) {
 
             setMessage(
                 error.message ||
-                "Could not finish match."
+                t("operations.finishMatchError")
             );
         }
     }
@@ -404,7 +410,7 @@ export default function Dashboard({ onAddOrder }) {
 
             setMessage(
                 error.message ||
-                "Could not add match."
+                t("operations.addMatchError")
             );
         }
     }
@@ -422,15 +428,15 @@ export default function Dashboard({ onAddOrder }) {
                 <div>
 
                     <span className="page-label">
-                        LIVE OPERATIONS
+                        {t("operations.live")}
                     </span>
 
                     <h2>
-                        Gaming Stations
+                        {t("operations.stations")}
                     </h2>
 
                     <p>
-                        Manage active PlayStation sessions.
+                        {t("operations.description")}
                     </p>
 
                 </div>
@@ -439,7 +445,7 @@ export default function Dashboard({ onAddOrder }) {
                     className="refresh-button"
                     onClick={loadDashboard}
                 >
-                    Refresh
+                    {t("operations.refresh")}
                 </button>
 
             </div>

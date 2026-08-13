@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 
 export default function StockMovementModal({
     product,
@@ -7,6 +8,7 @@ export default function StockMovementModal({
     onClose,
     onSave,
 }) {
+    const { t, formatNumber } = useLanguage();
     const purchase = mode === "purchase";
     const waste = mode === "waste";
     const [quantity, setQuantity] = useState("");
@@ -59,18 +61,18 @@ export default function StockMovementModal({
             >
                 <div className="modal-header">
                     <div>
-                        <span className="page-label">INVENTORY LEDGER</span>
+                        <span className="page-label">{t("inventory.ledger")}</span>
                         <h2 id="stock-movement-title">
-                            {purchase ? "Record purchase" : waste ? "Record waste" : "Adjust stock"}
+                            {purchase ? t("inventory.purchaseTitle") : waste ? t("inventory.wasteTitle") : t("inventory.adjustTitle")}
                         </h2>
                         <p>
-                            {product?.name} · Current stock {Number(product?.currentStock ?? 0).toFixed(3)} {product?.unit || "unit"}
+                            {product?.name} · {t("inventory.stock")} {formatNumber(product?.currentStock ?? 0, { maximumFractionDigits: 3 })} {product?.unit || t("form.unit")}
                         </p>
                     </div>
                     <button
                         type="button"
                         className="modal-close"
-                        aria-label="Close"
+                        aria-label={t("common.close")}
                         disabled={saving}
                         onClick={onClose}
                     >
@@ -80,16 +82,16 @@ export default function StockMovementModal({
 
                 <div className="stock-entry-callout">
                     {purchase
-                        ? "Purchases increase the cached balance and create a PURCHASE ledger entry."
+                        ? t("inventory.purchaseCallout")
                         : waste
-                            ? "Waste removes stock and creates a WASTE ledger entry. Negative balances are blocked when configured."
-                            : "Enter a positive number to add stock or a negative number to remove it."}
+                            ? t("inventory.wasteCallout")
+                            : t("inventory.adjustCallout")}
                 </div>
 
                 <div className="product-form-grid">
                     <div>
                         <label htmlFor="stock-quantity">
-                            {purchase ? "Quantity purchased" : waste ? "Quantity wasted" : "Quantity change"}
+                            {purchase ? t("inventory.quantityPurchased") : waste ? t("inventory.quantityWasted") : t("inventory.quantityChange")}
                         </label>
                         <input
                             id="stock-quantity"
@@ -102,7 +104,7 @@ export default function StockMovementModal({
                         />
                     </div>
                     <div>
-                        <label htmlFor="stock-unit-cost">Unit cost</label>
+                        <label htmlFor="stock-unit-cost">{t("inventory.unitCost")}</label>
                         <div className="product-price-input">
                             <input
                                 id="stock-unit-cost"
@@ -113,21 +115,21 @@ export default function StockMovementModal({
                                 onChange={(event) => setUnitCost(event.target.value)}
                                 placeholder="0.00"
                             />
-                            <span>EGP</span>
+                            <span>{t("common.egp")}</span>
                         </div>
                     </div>
                 </div>
 
-                <label htmlFor="stock-reference">Reference</label>
+                <label htmlFor="stock-reference">{t("form.reason")}</label>
                 <input
                     id="stock-reference"
                     maxLength="160"
                     value={reference}
                     onChange={(event) => setReference(event.target.value)}
-                    placeholder={purchase ? "Supplier invoice or delivery note" : "Reason or count sheet"}
+                    placeholder={purchase ? t("inventory.referencePlaceholderPurchase") : t("inventory.referencePlaceholderOther")}
                 />
 
-                <label htmlFor="stock-created-by">Recorded by</label>
+                <label htmlFor="stock-created-by">{t("inventory.recordedBy")}</label>
                 <input
                     id="stock-created-by"
                     maxLength="80"
@@ -143,14 +145,14 @@ export default function StockMovementModal({
                         disabled={saving}
                         onClick={onClose}
                     >
-                        Cancel
+                        {t("common.cancel")}
                     </button>
                     <button
                         type="submit"
                         className="primary-action"
                         disabled={!valid}
                     >
-                        {saving ? "Saving..." : purchase ? "Record purchase" : waste ? "Record waste" : "Save adjustment"}
+                        {saving ? t("common.working") : purchase ? t("inventory.purchaseTitle") : waste ? t("inventory.wasteTitle") : t("inventory.saveAdjustment")}
                     </button>
                 </div>
             </form>

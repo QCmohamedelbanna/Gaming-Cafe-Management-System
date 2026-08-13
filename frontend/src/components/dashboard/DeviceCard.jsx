@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../i18n";
 import QuickOrderMenu from "./QuickOrderMenu";
 
 function formatTime(totalSeconds) {
@@ -39,12 +40,21 @@ export default function DeviceCard({
                                        addingProductId,
                                        onQuickAddProduct,
                                        checkoutLoading = false,
-                                   }) {
+}) {
+    const { t, formatCurrency, formatNumber } = useLanguage();
     const [now, setNow] = useState(Date.now());
 
     const active = Boolean(session);
     const deviceEnabled = device.active !== false;
     const deviceAvailable = deviceEnabled && device.status === "AVAILABLE";
+    const statusLabel = deviceEnabled
+        ? (device.status === "AVAILABLE" ? t("devices.available")
+            : device.status === "PLAYING" ? t("devices.playing")
+                : device.status === "RESERVED" ? t("devices.reserved")
+                    : device.status === "MAINTENANCE" ? t("devices.maintenance")
+                        : device.status === "OFFLINE" ? t("devices.offline")
+                            : device.status)
+        : t("devices.noActive");
 
 
 
@@ -78,7 +88,7 @@ export default function DeviceCard({
                                 ? String(device.status || "OFFLINE").toLowerCase()
                                 : "inactive"
                     }`}>
-                        {deviceEnabled ? device.status : "INACTIVE"}
+                        {statusLabel}
                     </span>
                 </div>
 
@@ -87,13 +97,13 @@ export default function DeviceCard({
                 </h2>
 
                 <div className="device-ready device-availability-message">
-                    {deviceAvailable && "Ready for next session"}
-                    {!deviceEnabled && "Deactivated in Admin Devices"}
+                    {deviceAvailable && t("device.ready")}
+                    {!deviceEnabled && t("device.deactivated")}
                     {deviceEnabled && device.status === "MAINTENANCE" && (
-                        device.maintenanceNote || "Maintenance required"
+                        device.maintenanceNote || t("device.maintenanceRequired")
                     )}
-                    {deviceEnabled && device.status === "OFFLINE" && "Offline"}
-                    {deviceEnabled && device.status === "PLAYING" && "Session state is refreshing"}
+                    {deviceEnabled && device.status === "OFFLINE" && t("device.offline")}
+                    {deviceEnabled && device.status === "PLAYING" && t("device.refreshing")}
                 </div>
 
                 <button
@@ -102,7 +112,7 @@ export default function DeviceCard({
                     disabled={!deviceAvailable}
                     onClick={() => onStart(device)}
                 >
-                    {deviceAvailable ? "Start Session" : "Unavailable"}
+                    {deviceAvailable ? t("device.startSession") : t("device.unavailable")}
                 </button>
             </div>
         );
@@ -122,10 +132,10 @@ export default function DeviceCard({
      */
 
     let timerSeconds = elapsedSeconds;
-    let timerLabel = "TIME ELAPSED";
+    let timerLabel = t("device.timeElapsed");
 
     if (isMatch) {
-        timerLabel = "MATCH TIME LEFT";
+        timerLabel = t("device.matchTimeLeft");
 
         if (session.currentMatchExpiresAt) {
             timerSeconds = Math.max(
@@ -140,7 +150,7 @@ export default function DeviceCard({
             );
         }
     } else if (session.plannedMinutes != null) {
-        timerLabel = "TIME REMAINING";
+        timerLabel = t("device.timeRemaining");
 
         timerSeconds = Math.max(
             0,
@@ -240,7 +250,7 @@ export default function DeviceCard({
                 </span>
 
                 <span className="device-status playing">
-                    ● PLAYING
+                    ● {t("device.playing")}
                 </span>
             </div>
 
@@ -250,26 +260,26 @@ export default function DeviceCard({
                 </h2>
 
                 <span className="session-mode-badge">
-                    {session.sessionType}
+                    {session.sessionType === "SINGLE" ? t("modal.single") : session.sessionType === "MULTI" ? t("modal.multi") : t("modal.match")}
                 </span>
             </div>
 
             {!isMatch &&
                 session.plannedMinutes == null && (
                     <div className="open-time-badge">
-                        OPEN TIME
+                        {t("device.openTime")}
                     </div>
                 )}
 
             {matchExpired && (
                 <div className="match-expired-banner">
-                    MATCH TIME EXPIRED
+                    {t("device.matchExpired")}
                 </div>
             )}
 
             {matchEndingSoon && (
                 <div className="match-warning-banner">
-                    Match ending soon
+                    {t("device.matchEndingSoon")}
                 </div>
             )}
 
@@ -296,18 +306,18 @@ export default function DeviceCard({
             <div className="session-info-grid">
 
                 <div>
-                    <span>Gaming Cost</span>
+                        <span>{t("device.gamingCost")}</span>
 
                     <strong>
-                        {liveAmount.toFixed(2)} EGP
+                        {formatCurrency(liveAmount)}
                     </strong>
                 </div>
 
                 <div>
-                    <span>Orders</span>
+                        <span>{t("device.orders")}</span>
 
                     <strong>
-                        {orderAmount.toFixed(2)} EGP
+                        {formatCurrency(orderAmount)}
                     </strong>
                 </div>
 
@@ -315,10 +325,10 @@ export default function DeviceCard({
 
             <div className="current-bill-box">
 
-                <span>Current Bill</span>
+                <span>{t("device.currentBill")}</span>
 
                 <strong>
-                    {currentBill.toFixed(2)} EGP
+                    {formatCurrency(currentBill)}
                 </strong>
 
             </div>
@@ -326,27 +336,25 @@ export default function DeviceCard({
             {isMatch && (
                 <div className="match-session-info">
                     <div>
-                        <span>Purchased</span>
+                        <span>{t("device.purchased")}</span>
                         <strong>
                             {session.purchasedMatches || 1}
                         </strong>
                     </div>
 
                     <div>
-                        <span>Completed</span>
+                        <span>{t("device.completed")}</span>
                         <strong>
                             {session.completedMatches || 0}
                         </strong>
                     </div>
 
                     <div>
-                        <span>Price / Match</span>
+                        <span>{t("common.pricePerMatch")}</span>
                         <strong>
                             {Number(
                                 session.unitPriceSnapshot || 0
-                            ).toFixed(2)}
-                            {" "}
-                            EGP
+                            )}
                         </strong>
                     </div>
                 </div>
@@ -364,7 +372,7 @@ export default function DeviceCard({
                                 )
                             }
                         >
-                            +30 min
+                            {t("device.extend30")}
                         </button>
 
                         <button
@@ -376,7 +384,7 @@ export default function DeviceCard({
                                 )
                             }
                         >
-                            +1 hour
+                            {t("device.extendHour")}
                         </button>
                     </div>
                 )}
@@ -395,8 +403,8 @@ export default function DeviceCard({
                         }
                     >
                         {matchExpired
-                            ? "Finish Expired Match"
-                            : "Finish Match"}
+                            ? t("device.finishExpiredMatch")
+                            : t("device.finishMatch")}
                     </button>
 
                     <button
@@ -405,7 +413,7 @@ export default function DeviceCard({
                             onAddMatch(session.id)
                         }
                     >
-                        + Add Match
+                        + {t("device.addMatch")}
                     </button>
                 </div>
             )}
@@ -430,7 +438,7 @@ export default function DeviceCard({
                     onStop(session, order)
                 }
             >
-                {checkoutLoading ? "Stopping..." : "Checkout"}
+                {checkoutLoading ? t("device.stopping") : t("modal.checkout")}
             </button>
         </div>
     );
