@@ -6,6 +6,8 @@ import com.cafe.ps.dto.RefundRequest;
 import com.cafe.ps.service.BillingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,7 +16,8 @@ import com.cafe.ps.entity.PaymentMethod;
 @RestController
 @RequestMapping("/api/bills")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
 public class BillController {
 
     private final BillingService billingService;
@@ -35,6 +38,7 @@ public class BillController {
     }
 
     @PostMapping("/{id}/refund")
+    @PreAuthorize("hasRole('ADMIN')")
     public CheckoutResult refund(
             @PathVariable Long id,
             @Valid @RequestBody RefundRequest request
@@ -46,17 +50,18 @@ public class BillController {
     public CheckoutResult pay(
             @PathVariable Long id,
             @Valid @RequestBody CheckoutRequest request,
-            @RequestHeader(value = "X-Cashier", defaultValue = "Admin") String cashier
+            Authentication authentication
     ) {
         return billingService.payBill(
                 id,
                 request.paymentMethod(),
                 request.amountTendered(),
-                cashier
+                authentication.getName()
         );
     }
 
     @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public CheckoutResult cancel(@PathVariable Long id) {
         return billingService.cancelBill(id);
     }

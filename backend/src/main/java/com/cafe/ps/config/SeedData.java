@@ -2,12 +2,27 @@ package com.cafe.ps.config;
 import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import java.math.BigDecimal;
 @Configuration
 public class SeedData {
-    @Bean CommandLineRunner seed(DeviceRepository devices, PricingRepository pricing, ProductRepository products) {
+    @Value("${app.default-admin-username:admin}")
+    private String defaultAdminUsername;
+
+    @Value("${app.default-admin-password:admin123}")
+    private String defaultAdminPassword;
+
+    @Bean CommandLineRunner seed(
+            DeviceRepository devices,
+            PricingRepository pricing,
+            ProductRepository products,
+            AppUserRepository users,
+            PasswordEncoder passwordEncoder
+    ) {
         return args -> {
+            seedAdmin(users, passwordEncoder);
             if (devices.count() == 0) {
                 for (int i = 1; i <= 4; i++) devices.save(Device.builder().name("PS4-"+i).type(DeviceType.PS4).status(DeviceStatus.AVAILABLE).active(true).build());
                 for (int i = 1; i <= 2; i++) devices.save(Device.builder().name("PS5-"+i).type(DeviceType.PS5).status(DeviceStatus.AVAILABLE).active(true).build());
@@ -86,6 +101,18 @@ public class SeedData {
             products.findAll().forEach(products::save);
         };
 
+    }
+
+    private void seedAdmin(AppUserRepository users, PasswordEncoder passwordEncoder) {
+        if (users.findByUsernameIgnoreCase(defaultAdminUsername).isEmpty()) {
+            users.save(AppUser.builder()
+                    .username(defaultAdminUsername)
+                    .displayName("Administrator")
+                    .passwordHash(passwordEncoder.encode(defaultAdminPassword))
+                    .role(com.cafe.ps.entity.Role.ADMIN)
+                    .active(true)
+                    .build());
+        }
     }
     private static void seedPrice(
             PricingRepository repo,

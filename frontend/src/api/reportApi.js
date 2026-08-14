@@ -1,3 +1,5 @@
+import { apiFetch } from "./http";
+
 const BASE_URL = "http://localhost:8080/api/reports";
 
 async function handleResponse(response) {
@@ -23,5 +25,5 @@ export async function getReport(from, to) {
     if (to) params.set("to", to);
 
     const query = params.toString();
-    return handleResponse(await fetch(`${BASE_URL}${query ? `?${query}` : ""}`));
+    return handleResponse(await apiFetch(`${BASE_URL}${query ? `?${query}` : ""}`));
 }

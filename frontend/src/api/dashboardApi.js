@@ -1,3 +1,5 @@
+import { apiFetch } from "./http";
+
 const BASE_URL = "http://localhost:8080/api/dashboard";
 
 async function handleResponse(response) {
@@ -18,5 +20,5 @@ async function handleResponse(response) {
 }
 
 export async function getDashboardSummary() {
-    return handleResponse(await fetch(`${BASE_URL}/today`));
+    return handleResponse(await apiFetch(`${BASE_URL}/today`));
 }

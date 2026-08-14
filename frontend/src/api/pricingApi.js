@@ -1,7 +1,9 @@
+import { apiFetch } from "./http";
+
 const BASE_URL = "http://localhost:8080/api/pricing";
 
 export async function getPricing() {
-  const response = await fetch(BASE_URL, { cache: "no-store" });
+  const response = await apiFetch(BASE_URL, { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error("Failed to load pricing");
@@ -11,7 +13,7 @@ export async function getPricing() {
 }
 
 export async function updatePricing(id, data) {
-  const response = await fetch(`${BASE_URL}/${id}`, {
+  const response = await apiFetch(`${BASE_URL}/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

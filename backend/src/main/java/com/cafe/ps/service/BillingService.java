@@ -6,6 +6,7 @@ import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.BillRepository;
 import com.cafe.ps.repository.CafeOrderRepository;
 import com.cafe.ps.repository.GameSessionRepository;
+import com.cafe.ps.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,8 @@ public class BillingService {
     private final CafeOrderRepository orderRepository;
     private final GameSessionRepository sessionRepository;
     private final InventoryService inventoryService;
+    private final AppUserRepository userRepository;
+    private final ShiftService shiftService;
 
     @Transactional
     public CheckoutResult checkoutSession(
@@ -432,6 +435,8 @@ public class BillingService {
         // A missing amountTendered intentionally means exact payment.
         BigDecimal tendered = amountTendered == null ? total : money(amountTendered);
 
+        Shift shift = resolveShift(cashier);
+
         inventoryService.recordSale(
                 bill.getOrder(),
                 bill.getBillNumber()
@@ -449,6 +454,7 @@ public class BillingService {
                 .status(PaymentStatus.COMPLETED)
                 .paidAt(LocalDateTime.now())
                 .cashier(normalizeCashier(cashier))
+                .shift(shift)
                 .build();
         bill.addPayment(payment);
         bill.setStatus(BillStatus.PAID);
@@ -459,6 +465,17 @@ public class BillingService {
 
     private String normalizeCashier(String cashier) {
         return cashier == null || cashier.isBlank() ? "Admin" : cashier.trim();
+    }
+
+    private Shift resolveShift(String cashier) {
+        if (cashier == null || cashier.isBlank()) return null;
+
+        AppUser user = userRepository.findByUsernameIgnoreCase(cashier).orElse(null);
+        if (user == null) return null;
+        if (user.getRole() == Role.CASHIER) {
+            return shiftService.requireOpenShiftForCashier(user);
+        }
+        return shiftService.openShiftFor(user).orElse(null);
     }
 
     private void validatePayment(

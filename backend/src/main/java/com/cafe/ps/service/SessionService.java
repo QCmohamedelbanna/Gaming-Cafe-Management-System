@@ -4,6 +4,7 @@ import com.cafe.ps.dto.DashboardSummary;
 import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,9 @@ public class SessionService {
     private final PricingService pricingService;
     private final BillingService billingService;
     private final ReportService reportService;
+
+    @Value("${spring.task.scheduling.enabled:true}")
+    private boolean schedulingEnabled;
 
     @Transactional
     public GameSession start(Long deviceId, SessionType sessionType, Integer plannedMinutes, Integer matchCount) {
@@ -113,6 +117,7 @@ public class SessionService {
     @Scheduled(fixedDelay = 3000)
     @Transactional
     public void maintainActiveSessions() {
+        if (!schedulingEnabled) return;
         LocalDateTime now = LocalDateTime.now();
         sessionRepository.findAll().stream().filter(s -> s.getStatus() == SessionStatus.ACTIVE).forEach(s -> {
             if (s.getSessionType() == SessionType.MATCH

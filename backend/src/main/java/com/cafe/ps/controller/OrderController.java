@@ -12,12 +12,15 @@ import com.cafe.ps.service.BillingService;
 import com.cafe.ps.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
 public class OrderController {
 
     private final OrderService orderService;
@@ -84,11 +87,18 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/discount")
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public CafeOrder applyDiscount(
             @PathVariable Long id,
             @Valid @RequestBody DiscountRequest request,
-            @RequestHeader(value = "X-User-Role", defaultValue = "CASHIER") String userRole
+            Authentication authentication
     ) {
+        String userRole = authentication.getAuthorities().stream()
+                .map(granted -> granted.getAuthority())
+                .filter(value -> value.startsWith("ROLE_"))
+                .map(value -> value.substring("ROLE_".length()))
+                .findFirst()
+                .orElse("");
         return orderService.applyDiscount(id, request, userRole);
     }
 
@@ -121,13 +131,13 @@ public class OrderController {
     public CheckoutResult complete(
             @PathVariable Long id,
             @RequestBody(required = false) CheckoutRequest request,
-            @RequestHeader(value = "X-Cashier", defaultValue = "Admin") String cashier
+            Authentication authentication
     ) {
         return billingService.checkoutOrder(
                 id,
                 request == null ? PaymentMethod.CASH : request.paymentMethod(),
                 request == null ? null : request.amountTendered(),
-                cashier
+                authentication.getName()
         );
     }
 }

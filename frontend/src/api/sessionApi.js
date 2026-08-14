@@ -1,109 +1,62 @@
+import { apiFetch } from "./http";
+
 const BASE_URL = "http://localhost:8080/api/sessions";
-const CURRENT_CASHIER = "Admin";
 
 async function handleResponse(response) {
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Request failed");
-  }
-
-  return response.json();
+    const text = await response.text();
+    if (!response.ok) {
+        let message = text;
+        try {
+            const payload = JSON.parse(text);
+            message = payload.message || payload.error || text;
+        } catch {
+            // Keep plain-text API errors.
+        }
+        throw new Error(message || "Request failed");
+    }
+    return text ? JSON.parse(text) : null;
 }
 
 export async function getActiveSessions() {
-  const response = await fetch(`${BASE_URL}/active`, { cache: "no-store" });
-  return handleResponse(response);
+    return handleResponse(await apiFetch(`${BASE_URL}/active`, { cache: "no-store" }));
 }
 
-export async function startSession({
-                                     deviceId,
-                                     sessionType,
-                                     plannedMinutes = null,
-                                     matchCount = null,
-                                   }) {
-  const response = await fetch(BASE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      deviceId,
-      sessionType,
-      plannedMinutes,
-      matchCount,
-    }),
-  });
-
-  return handleResponse(response);
+export async function startSession({ deviceId, sessionType, plannedMinutes = null, matchCount = null }) {
+    return handleResponse(await apiFetch(BASE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId, sessionType, plannedMinutes, matchCount }),
+    }));
 }
 
 export async function stopSession(sessionId) {
-    const response = await fetch(`${BASE_URL}/${sessionId}/stop`, {
-        method: "POST",
-    });
-
-    return handleResponse(response);
+    return handleResponse(await apiFetch(`${BASE_URL}/${sessionId}/stop`, { method: "POST" }));
 }
 
 export async function prepareCheckout(sessionId) {
-    const response = await fetch(
-        `${BASE_URL}/${sessionId}/checkout/prepare`,
-        {
-            method: "POST",
-        }
-    );
-
-    return handleResponse(response);
+    return handleResponse(await apiFetch(`${BASE_URL}/${sessionId}/checkout/prepare`, { method: "POST" }));
 }
 
 export async function extendSession(sessionId, minutes) {
-  const response = await fetch(`${BASE_URL}/${sessionId}/extend`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      minutes,
-    }),
-  });
-
-  return handleResponse(response);
+    return handleResponse(await apiFetch(`${BASE_URL}/${sessionId}/extend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minutes }),
+    }));
 }
 
 export async function finishMatch(sessionId) {
-  const response = await fetch(
-      `${BASE_URL}/${sessionId}/match/finish`,
-      {
-        method: "POST",
-      }
-  );
-
-  return handleResponse(response);
+    return handleResponse(await apiFetch(`${BASE_URL}/${sessionId}/match/finish`, { method: "POST" }));
 }
 
 export async function addMatch(sessionId) {
-  const response = await fetch(
-      `${BASE_URL}/${sessionId}/match/add`,
-      {
-        method: "POST",
-      }
-  );
-
-  return handleResponse(response);
+    return handleResponse(await apiFetch(`${BASE_URL}/${sessionId}/match/add`, { method: "POST" }));
 }
 
 export async function checkoutSession(sessionId, data) {
-  const response = await fetch(
-      `${BASE_URL}/${sessionId}/checkout`,
-      {
+    return handleResponse(await apiFetch(`${BASE_URL}/${sessionId}/checkout`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Cashier": CURRENT_CASHIER,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      }
-  );
-
-  return handleResponse(response);
+    }));
 }

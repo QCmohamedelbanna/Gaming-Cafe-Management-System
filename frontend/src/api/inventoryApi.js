@@ -1,3 +1,5 @@
+import { apiFetch } from "./http";
+
 const BASE_URL = "http://localhost:8080/api/inventory";
 
 async function handleResponse(response) {
@@ -26,20 +28,20 @@ async function handleResponse(response) {
 }
 
 export async function getInventoryProducts() {
-    return handleResponse(await fetch(`${BASE_URL}/products`));
+    return handleResponse(await apiFetch(`${BASE_URL}/products`));
 }
 
 export async function getInventoryCategories() {
-    return handleResponse(await fetch(`${BASE_URL}/categories`));
+    return handleResponse(await apiFetch(`${BASE_URL}/categories`));
 }
 
 export async function getStockMovements(productId = null) {
     const query = productId == null ? "" : `?productId=${productId}`;
-    return handleResponse(await fetch(`${BASE_URL}/movements${query}`));
+    return handleResponse(await apiFetch(`${BASE_URL}/movements${query}`));
 }
 
 export async function purchaseStock(productId, data) {
-    return handleResponse(await fetch(
+    return handleResponse(await apiFetch(
         `${BASE_URL}/products/${productId}/purchase`,
         {
             method: "POST",
@@ -50,7 +52,7 @@ export async function purchaseStock(productId, data) {
 }
 
 export async function adjustStock(productId, data) {
-    return handleResponse(await fetch(
+    return handleResponse(await apiFetch(
         `${BASE_URL}/products/${productId}/adjust`,
         {
             method: "POST",
@@ -61,7 +63,7 @@ export async function adjustStock(productId, data) {
 }
 
 export async function recordWaste(productId, data) {
-    return handleResponse(await fetch(
+    return handleResponse(await apiFetch(
         `${BASE_URL}/products/${productId}/waste`,
         {
             method: "POST",

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useLanguage } from "./i18n";
+import { useAuth } from "./auth/AuthContext";
 
 import Layout from "./components/layout/Layout";
+import LoginPage from "./components/auth/LoginPage";
 import Dashboard from "./components/dashboard/Dashboard";
 import AdminDashboardPage from "./components/dashboard/AdminDashboardPage";
 import PricingPage from "./components/pricing/PricingPage";
@@ -11,9 +13,12 @@ import BillingPage from "./components/billing/BillingPage";
 import DevicesPage from "./components/devices/DevicesPage";
 import InventoryPage from "./components/inventory/InventoryPage";
 import ReportsPage from "./components/reports/ReportsPage";
+import ShiftPage from "./components/shifts/ShiftPage";
+import UsersPage from "./components/users/UsersPage";
 
 export default function App() {
     const { t } = useLanguage();
+    const { user, loading, hasRole } = useAuth();
 
     const [activePage, setActivePage] =
         useState("operations");
@@ -26,12 +31,31 @@ export default function App() {
     const [posSession, setPosSession] =
         useState(null);
 
+    if (loading) {
+        return <div className="auth-loading">Loading secure workspace…</div>;
+    }
+
+    if (!user) {
+        return <LoginPage />;
+    }
+
+    function canAccessPage(page) {
+        if (["operations", "pos", "billing", "shifts"].includes(page)) return true;
+        if (["dashboard", "products", "pricing", "inventory", "reports"].includes(page)) {
+            return hasRole("MANAGER", "ADMIN");
+        }
+        if (page === "devices" || page === "users" || page === "settings") {
+            return hasRole("ADMIN");
+        }
+        return false;
+    }
+
 
     /*
      * Normal sidebar navigation
      */
     function handleNavigate(page) {
-
+        if (!canAccessPage(page)) return;
         setActivePage(page);
     }
 
@@ -48,6 +72,10 @@ export default function App() {
 
 
     function renderPage() {
+
+        if (!canAccessPage(activePage)) {
+            return <Dashboard onAddOrder={handleAddOrder} />;
+        }
 
         switch (activePage) {
 
@@ -93,6 +121,12 @@ export default function App() {
             case "reports":
                 return <ReportsPage />;
 
+            case "shifts":
+                return <ShiftPage />;
+
+            case "users":
+                return <UsersPage />;
+
             case "settings":
                 return (
                     <div className="placeholder-page">
@@ -123,6 +157,8 @@ export default function App() {
             billing: "page.billing",
             inventory: "page.inventory",
             reports: "page.reports",
+            shifts: "page.shifts",
+            users: "page.users",
             settings: "page.settings",
         };
 
@@ -169,6 +205,12 @@ export default function App() {
 
             case "dashboard":
                 return "Admin Dashboard";
+
+            case "shifts":
+                return "Cashier Shifts";
+
+            case "users":
+                return "Users & Roles";
 
             default:
                 return "Operations";

@@ -1,7 +1,9 @@
 import { useLanguage } from "../../i18n";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function Header({ title }) {
   const { isArabic, t, toggleLanguage } = useLanguage();
+  const { user, logout } = useAuth();
 
   return (
     <header className="app-header">
@@ -23,7 +25,11 @@ export default function Header({ title }) {
         </button>
 
         <div className="header-user">
-          <span>{t("header.admin")}</span>
+          <span>
+            <strong>{user?.displayName || user?.username}</strong>
+            <small>{user?.role}</small>
+          </span>
+          <button type="button" className="logout-button" onClick={logout}>Sign out</button>
         </div>
       </div>
     </header>

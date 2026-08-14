@@ -9,6 +9,8 @@ import com.cafe.ps.service.CheckoutService;
 import com.cafe.ps.service.SessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,7 +18,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/sessions")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
 public class SessionController {
 
     private final SessionService service;
@@ -52,13 +55,13 @@ public class SessionController {
     public CheckoutResult checkout(
             @PathVariable Long id,
             @Valid @RequestBody CheckoutRequest request,
-            @RequestHeader(value = "X-Cashier", defaultValue = "Admin") String cashier
+            Authentication authentication
     ) {
         return checkoutService.checkout(
                 id,
                 request.paymentMethod(),
                 request.amountTendered(),
-                cashier
+                authentication.getName()
         );
     }
 

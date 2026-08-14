@@ -3,6 +3,7 @@ package com.cafe.ps.controller;
 import com.cafe.ps.dto.ReportSummary;
 import com.cafe.ps.service.ReportService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,12 +16,13 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/reports")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class ReportController {
 
     private final ReportService reportService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public ReportSummary report(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

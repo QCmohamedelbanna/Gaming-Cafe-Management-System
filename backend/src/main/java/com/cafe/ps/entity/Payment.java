@@ -25,6 +25,11 @@ public class Payment {
     @JsonIgnore
     private Bill bill;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shift_id")
+    @JsonIgnore
+    private Shift shift;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentMethod method;

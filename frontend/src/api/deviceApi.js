@@ -1,3 +1,5 @@
+import { apiFetch } from "./http";
+
 const BASE_URL = "http://localhost:8080/api/devices";
 
 async function handleResponse(response) {
@@ -19,11 +21,11 @@ async function handleResponse(response) {
 }
 
 export async function getDevices() {
-    return handleResponse(await fetch(BASE_URL, { cache: "no-store" }));
+    return handleResponse(await apiFetch(BASE_URL, { cache: "no-store" }));
 }
 
 export async function createDevice(data) {
-    return handleResponse(await fetch(BASE_URL, {
+    return handleResponse(await apiFetch(BASE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -31,7 +33,7 @@ export async function createDevice(data) {
 }
 
 export async function updateDevice(id, data) {
-    return handleResponse(await fetch(`${BASE_URL}/${id}`, {
+    return handleResponse(await apiFetch(`${BASE_URL}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -39,7 +41,7 @@ export async function updateDevice(id, data) {
 }
 
 export async function setDeviceActive(id, active) {
-    return handleResponse(await fetch(`${BASE_URL}/${id}/active`, {
+    return handleResponse(await apiFetch(`${BASE_URL}/${id}/active`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active }),
@@ -47,7 +49,7 @@ export async function setDeviceActive(id, active) {
 }
 
 export async function deleteDevice(id) {
-    return handleResponse(await fetch(`${BASE_URL}/${id}`, {
+    return handleResponse(await apiFetch(`${BASE_URL}/${id}`, {
         method: "DELETE",
     }));
 }

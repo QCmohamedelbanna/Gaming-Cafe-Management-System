@@ -1,3 +1,5 @@
+import { apiFetch } from "./http";
+
 const BASE_URL =
     "http://localhost:8080/api/products";
 
@@ -29,14 +31,14 @@ async function handleResponse(response) {
 export async function getProducts() {
 
     const response =
-        await fetch(BASE_URL, { cache: "no-store" });
+        await apiFetch(BASE_URL, { cache: "no-store" });
 
     return handleResponse(response);
 }
 
 export async function getAdminProducts() {
 
-    const response = await fetch(`${BASE_URL}/admin`);
+    const response = await apiFetch(`${BASE_URL}/admin`);
 
     return handleResponse(response);
 }
@@ -44,7 +46,7 @@ export async function getAdminProducts() {
 export async function createProduct(data) {
 
     const response =
-        await fetch(BASE_URL, {
+        await apiFetch(BASE_URL, {
             method: "POST",
 
             headers: {
@@ -60,7 +62,7 @@ export async function createProduct(data) {
 export async function updateProduct(id, data) {
 
     const response =
-        await fetch(
+        await apiFetch(
             `${BASE_URL}/${id}`,
             {
                 method: "PUT",
@@ -78,7 +80,7 @@ export async function updateProduct(id, data) {
 
 export async function setProductActive(id, active) {
 
-    const response = await fetch(
+    const response = await apiFetch(
         `${BASE_URL}/${id}/active`,
         {
             method: "PATCH",
@@ -95,7 +97,7 @@ export async function setProductActive(id, active) {
 export async function deleteProduct(id) {
 
     const response =
-        await fetch(
+        await apiFetch(
             `${BASE_URL}/${id}`,
             {
                 method: "DELETE",

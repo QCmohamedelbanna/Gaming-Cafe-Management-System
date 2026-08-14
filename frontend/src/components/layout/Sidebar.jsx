@@ -1,20 +1,23 @@
 import { useLanguage } from "../../i18n";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function Sidebar({activePage, onNavigate}) {
     const { t } = useLanguage();
+    const { hasRole } = useAuth();
     const items = [
         { key: "operations", label: t("nav.operations") },
         { key: "pos", label: t("nav.pos") },
 
-        // Admin pages later:
-        { key: "dashboard", label: t("nav.dashboard") },
-        { key: "devices", label: t("nav.devices") },
-        { key: "products", label: t("nav.products") },
+        { key: "dashboard", label: t("nav.dashboard"), roles: ["MANAGER", "ADMIN"] },
+        { key: "devices", label: t("nav.devices"), roles: ["ADMIN"] },
+        { key: "products", label: t("nav.products"), roles: ["MANAGER", "ADMIN"] },
         { key: "billing", label: t("nav.billing") },
-        { key: "inventory", label: t("nav.inventory") },
-        { key: "pricing", label: t("nav.pricing") },
-        { key: "reports", label: t("nav.reports") },
-        { key: "settings", label: t("nav.settings") },
+        { key: "inventory", label: t("nav.inventory"), roles: ["MANAGER", "ADMIN"] },
+        { key: "pricing", label: t("nav.pricing"), roles: ["MANAGER", "ADMIN"] },
+        { key: "reports", label: t("nav.reports"), roles: ["MANAGER", "ADMIN"] },
+        { key: "shifts", label: t("nav.shifts") },
+        { key: "users", label: t("nav.users"), roles: ["ADMIN"] },
+        { key: "settings", label: t("nav.settings"), roles: ["ADMIN"] },
     ];
 
     return (
@@ -29,7 +32,7 @@ export default function Sidebar({activePage, onNavigate}) {
             </div>
 
             <nav className="sidebar-nav">
-                {items.map((item) => (
+                {items.filter((item) => !item.roles || hasRole(...item.roles)).map((item) => (
                     <button
                         key={item.key}
                         className={`sidebar-item ${

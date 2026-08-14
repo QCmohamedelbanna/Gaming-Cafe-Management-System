@@ -1,5 +1,6 @@
+import { apiFetch } from "./http";
+
 const BASE_URL = "http://localhost:8080/api/bills";
-const CURRENT_CASHIER = "Admin";
 
 async function handleResponse(response) {
     const text = await response.text();
@@ -18,36 +19,35 @@ async function handleResponse(response) {
 }
 
 export async function getBill(id) {
-    return handleResponse(await fetch(`${BASE_URL}/${id}`));
+    return handleResponse(await apiFetch(`${BASE_URL}/${id}`));
 }
 
 export async function getPendingBills() {
-    return handleResponse(await fetch(`${BASE_URL}/pending`));
+    return handleResponse(await apiFetch(`${BASE_URL}/pending`));
 }
 
 export async function getBillAlerts() {
-    return handleResponse(await fetch(`${BASE_URL}/alerts`));
+    return handleResponse(await apiFetch(`${BASE_URL}/alerts`));
 }
 
 export async function payBill(id, data) {
-    return handleResponse(await fetch(`${BASE_URL}/${id}/pay`, {
+    return handleResponse(await apiFetch(`${BASE_URL}/${id}/pay`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "X-Cashier": CURRENT_CASHIER,
         },
         body: JSON.stringify(data),
     }));
 }
 
 export async function cancelBill(id) {
-    return handleResponse(await fetch(`${BASE_URL}/${id}/cancel`, {
+    return handleResponse(await apiFetch(`${BASE_URL}/${id}/cancel`, {
         method: "POST",
     }));
 }
 
 export async function refundBill(id, reason) {
-    return handleResponse(await fetch(`${BASE_URL}/${id}/refund`, {
+    return handleResponse(await apiFetch(`${BASE_URL}/${id}/refund`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
