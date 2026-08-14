@@ -19,7 +19,7 @@ async function handleResponse(response) {
 }
 
 export async function getDevices() {
-    return handleResponse(await fetch(BASE_URL));
+    return handleResponse(await fetch(BASE_URL, { cache: "no-store" }));
 }
 
 export async function createDevice(data) {

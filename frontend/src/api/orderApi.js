@@ -151,7 +151,8 @@ export async function completeOrder(orderId, payment) {
 
 export async function getOpenOrderForSession(sessionId) {
     const response = await fetch(
-        `${BASE_URL}/session/${sessionId}/open`
+        `${BASE_URL}/session/${sessionId}/open`,
+        { cache: "no-store" }
     );
 
     if (!response.ok) {

@@ -29,7 +29,7 @@ async function handleResponse(response) {
 export async function getProducts() {
 
     const response =
-        await fetch(BASE_URL);
+        await fetch(BASE_URL, { cache: "no-store" });
 
     return handleResponse(response);
 }

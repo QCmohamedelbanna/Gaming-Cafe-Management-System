@@ -11,7 +11,7 @@ async function handleResponse(response) {
 }
 
 export async function getActiveSessions() {
-  const response = await fetch(`${BASE_URL}/active`);
+  const response = await fetch(`${BASE_URL}/active`, { cache: "no-store" });
   return handleResponse(response);
 }
 

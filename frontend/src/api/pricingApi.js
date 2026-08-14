@@ -1,7 +1,7 @@
 const BASE_URL = "http://localhost:8080/api/pricing";
 
 export async function getPricing() {
-  const response = await fetch(BASE_URL);
+  const response = await fetch(BASE_URL, { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error("Failed to load pricing");

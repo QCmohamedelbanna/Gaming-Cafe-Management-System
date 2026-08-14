@@ -36,6 +36,7 @@ export default function Dashboard({ onAddOrder }) {
     const [pricing, setPricing] = useState([]);
 
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [starting, setStarting] = useState(false);
 
     const [selectedDevice, setSelectedDevice] = useState(null);
@@ -173,6 +174,18 @@ export default function Dashboard({ onAddOrder }) {
         } finally {
 
             setLoading(false);
+        }
+    }
+
+    async function handleRefresh() {
+        if (refreshing) return;
+
+        setRefreshing(true);
+
+        try {
+            await loadDashboard();
+        } finally {
+            setRefreshing(false);
         }
     }
 
@@ -442,10 +455,15 @@ export default function Dashboard({ onAddOrder }) {
                 </div>
 
                 <button
+                    type="button"
                     className="refresh-button"
-                    onClick={loadDashboard}
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    aria-busy={refreshing}
                 >
-                    {t("operations.refresh")}
+                    {refreshing
+                        ? t("admin.refreshing")
+                        : t("operations.refresh")}
                 </button>
 
             </div>
