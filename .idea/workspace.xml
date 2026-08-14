@@ -4,54 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e0e8d5e-aef5-4f93-9c63-6793149568e8" name="Changes" comment="update Main">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/ps_cafe.db" beforeDir="false" afterPath="$PROJECT_DIR$/backend/ps_cafe.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/config/SeedData.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/config/SeedData.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/BillController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/BillController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/DashboardController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/DashboardController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/OrderController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/OrderController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/SessionController.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/controller/SessionController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/dto/CheckoutResult.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/dto/CheckoutResult.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/dto/DashboardSummary.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/dto/DashboardSummary.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/dto/ProductRequest.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/dto/ProductRequest.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/CafeOrder$CafeOrderBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/CafeOrder$CafeOrderBuilder.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/CafeOrder.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/CafeOrder.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/OrderStatus.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/OrderStatus.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Payment$PaymentBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Payment$PaymentBuilder.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Payment.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Payment.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Product$ProductBuilder.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Product$ProductBuilder.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Product.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/entity/Product.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/BillRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/BillRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/CafeOrderRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/CafeOrderRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/GameSessionRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/GameSessionRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/ProductRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/repository/ProductRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/BillingService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/BillingService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/CheckoutService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/CheckoutService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/OrderService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/OrderService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/ProductService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/ProductService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/SessionService.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/classes/com/cafe/ps/service/SessionService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/target/test-classes/com/cafe/ps/service/CheckoutServiceIntegrationTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/backend/target/test-classes/com/cafe/ps/service/CheckoutServiceIntegrationTest.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/dist/assets/index-CQxUvEsW.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/dist/assets/index-DF1J43tv.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/dist/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/dist/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/_metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/_metadata.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/react-dom_client.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/react-dom_client.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/react.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/react.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/react_jsx-dev-runtime.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/react_jsx-dev-runtime.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/rolldown-runtime-BvCyGRYZ.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/node_modules/.vite/deps/rolldown-runtime-BvCyGRYZ.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/deviceApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/deviceApi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/orderApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/orderApi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/pricingApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/pricingApi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/productApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/productApi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/sessionApi.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/sessionApi.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/dashboard/Dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/dashboard/Dashboard.jsx" afterDir="false" />
-    </list>
+    <list default="true" id="2e0e8d5e-aef5-4f93-9c63-6793149568e8" name="Changes" comment="update Main" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -171,32 +124,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;Application.PlaystationCafeApplication.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Workspace/Gaming-Cafe-Management-System&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.jshint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.jshint&quot;: &quot;&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.general&quot;,
-    &quot;settings.editor.splitter.proportion&quot;: &quot;0.17272727&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\20101\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Application.PlaystationCafeApplication.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/Workspace/Gaming-Cafe-Management-System",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.jshint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.jshint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "project.propVCSSupport.CommitDialog",
+    "settings.editor.splitter.proportion": "0.17272727",
+    "ts.external.directory.path": "C:\\Users\\20101\\AppData\\Roaming\\npm\\node_modules\\typescript\\lib"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="com.cafe.ps.entity" />
@@ -265,7 +218,6 @@
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="Add initial project structure and components for gaming cafe management system" />
     <MESSAGE value="update Main" />
