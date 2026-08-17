@@ -16,7 +16,7 @@ import ReportsPage from "./components/reports/ReportsPage";
 import ShiftPage from "./components/shifts/ShiftPage";
 import UsersPage from "./components/users/UsersPage";
 import PermissionsPage from "./components/permissions/PermissionsPage";
-import RolesPage from "./components/rules/RulesPage";
+import RolesPage from "./components/roles/RolesPage.jsx";
 
 export default function App() {
     const { t } = useLanguage();

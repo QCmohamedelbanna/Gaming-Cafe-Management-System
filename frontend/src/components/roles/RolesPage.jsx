@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../i18n";
-import { createRule, deleteRule, getRules, updateRule } from "../../api/ruleApi";
+import { createRule, deleteRule, getRules, updateRule } from "../../api/roleApi.js";
 import { getPermissions } from "../../api/permissionApi";
 import DeleteRoleModal from "./DeleteRoleModal";
 

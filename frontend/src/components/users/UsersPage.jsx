@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "../../i18n";
 import { useAuth } from "../../auth/AuthContext";
 import { createUser, deleteUser, getUsers, setUserActive, updateUser } from "../../api/userApi";
-import { getRules } from "../../api/ruleApi";
+import { getRules } from "../../api/roleApi.js";
 
 const emptyForm = {
     username: "",
