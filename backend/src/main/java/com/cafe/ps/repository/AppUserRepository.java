@@ -16,4 +16,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     List<AppUser> findAllByOrderByUsernameAsc();
 
     long countByRoleAndActiveTrue(Role role);
+
+    long countByRuleId(Long ruleId);
 }

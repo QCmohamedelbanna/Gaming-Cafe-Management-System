@@ -21,7 +21,7 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @GetMapping("/products")
-    @PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_INVENTORY_VIEW')")
     public List<Product> products(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category
@@ -30,13 +30,13 @@ public class InventoryController {
     }
 
     @GetMapping("/categories")
-    @PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_INVENTORY_VIEW')")
     public List<String> categories() {
         return inventoryService.getCategories();
     }
 
     @GetMapping("/movements")
-    @PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_INVENTORY_VIEW')")
     public List<StockMovementResponse> movements(
             @RequestParam(required = false) Long productId
     ) {
@@ -44,7 +44,7 @@ public class InventoryController {
     }
 
     @PostMapping("/products/{productId}/purchase")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_INVENTORY_MANAGE')")
     public Product purchase(
             @PathVariable Long productId,
             @Valid @RequestBody StockMovementRequest request,
@@ -54,7 +54,7 @@ public class InventoryController {
     }
 
     @PostMapping("/products/{productId}/adjust")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_INVENTORY_MANAGE')")
     public Product adjust(
             @PathVariable Long productId,
             @Valid @RequestBody StockMovementRequest request,
@@ -64,7 +64,7 @@ public class InventoryController {
     }
 
     @PostMapping("/products/{productId}/waste")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_INVENTORY_MANAGE')")
     public Product waste(
             @PathVariable Long productId,
             @Valid @RequestBody StockMovementRequest request,

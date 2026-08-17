@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "../../i18n";
+import { useAuth } from "../../auth/AuthContext";
 
 import { getProducts } from "../../api/productApi";
 import {
@@ -30,6 +31,8 @@ export default function POSPage({
     onStartStandalone = null,
 }) {
     const { t, formatCurrency, formatNumber, language } = useLanguage();
+    const { hasPermission } = useAuth();
+    const canRefund = hasPermission("BILL_REFUND");
     const [products, setProducts] = useState([]);
     const [order, setOrder] = useState(null);
     const [heldOrders, setHeldOrders] = useState([]);
@@ -471,6 +474,7 @@ export default function POSPage({
                 <ReceiptModal
                     bill={receipt}
                     refunding={refunding}
+                    canRefund={canRefund}
                     onClose={() => setReceipt(null)}
                     onRefund={handleRefund}
                 />

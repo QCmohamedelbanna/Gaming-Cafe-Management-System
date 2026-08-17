@@ -20,19 +20,19 @@ public class ProductController {
     private final ProductService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_VIEW')")
     public List<Product> getProducts() {
         return service.getActiveProducts();
     }
 
     @GetMapping("/admin")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE')")
     public List<Product> getAllProducts() {
         return service.getAllProducts();
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE')")
     public Product create(
             @Valid @RequestBody ProductRequest request
     ) {
@@ -40,7 +40,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE')")
     public Product update(
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request
@@ -49,7 +49,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}/active")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE')")
     public Product setActive(
             @PathVariable Long id,
             @Valid @RequestBody ProductActiveRequest request
@@ -58,7 +58,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE') and hasAuthority('PERMISSION_DESTRUCTIVE_OPERATIONS')")
     public void delete(
             @PathVariable Long id
     ) {

@@ -1,9 +1,20 @@
+import { useState } from "react";
 import { useLanguage } from "../../i18n";
 import { useAuth } from "../../auth/AuthContext";
 
 export default function Header({ title }) {
   const { isArabic, t, toggleLanguage } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, currentShift, logout } = useAuth();
+  const [logoutError, setLogoutError] = useState("");
+
+  async function handleLogout() {
+    setLogoutError("");
+    try {
+      await logout();
+    } catch (error) {
+      setLogoutError(error.message || "Could not sign out");
+    }
+  }
 
   return (
     <header className="app-header">
@@ -28,8 +39,18 @@ export default function Header({ title }) {
           <span>
             <strong>{user?.displayName || user?.username}</strong>
             <small>{user?.role}</small>
+            {currentShift && <small className="logout-hint">Close the open shift before signing out</small>}
+            {logoutError && <small className="logout-error">{logoutError}</small>}
           </span>
-          <button type="button" className="logout-button" onClick={logout}>Sign out</button>
+          <button
+            type="button"
+            className="logout-button"
+            onClick={handleLogout}
+            disabled={Boolean(currentShift)}
+            title={currentShift ? "Close the open shift before signing out" : "Sign out"}
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </header>

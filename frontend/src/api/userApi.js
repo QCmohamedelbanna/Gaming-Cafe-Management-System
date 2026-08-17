@@ -17,3 +17,16 @@ export async function updateUser(id, data) {
         body: JSON.stringify(data),
     }));
 }
+
+export async function setUserActive(id, active) {
+    return readApiResponse(await apiFetch(`/users/${id}/active`, {
+        method: "PATCH",
+        body: JSON.stringify({ active }),
+    }));
+}
+
+export async function deleteUser(id) {
+    return readApiResponse(await apiFetch(`/users/${id}`, {
+        method: "DELETE",
+    }));
+}

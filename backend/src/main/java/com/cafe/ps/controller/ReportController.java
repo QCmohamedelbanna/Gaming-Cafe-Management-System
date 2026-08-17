@@ -22,7 +22,7 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_REPORTS_VIEW')")
     public ReportSummary report(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)

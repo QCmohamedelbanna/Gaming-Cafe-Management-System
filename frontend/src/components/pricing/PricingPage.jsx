@@ -88,12 +88,6 @@ export default function PricingPage() {
           <p>{t("pricing.descriptionShort")}</p>
         </div>
 
-        <button
-          className="refresh-button"
-          onClick={loadPricing}
-        >
-          {t("common.refresh")}
-        </button>
       </div>
 
       {message && (

@@ -23,11 +23,13 @@ function getAudioContext(contextRef) {
     }
 }
 
-function ring(contextRef) {
+function ring(contextRef, activeOscillatorsRef, ringingRef) {
     const context = getAudioContext(contextRef);
-    if (!context) return;
+    if (!context || !ringingRef.current) return;
 
     const play = () => {
+        if (!ringingRef.current) return;
+
         const oscillator = context.createOscillator();
         const gain = context.createGain();
         const startAt = context.currentTime;
@@ -42,6 +44,10 @@ function ring(contextRef) {
 
         oscillator.connect(gain);
         gain.connect(context.destination);
+        activeOscillatorsRef.current.add(oscillator);
+        oscillator.addEventListener("ended", () => {
+            activeOscillatorsRef.current.delete(oscillator);
+        }, { once: true });
         oscillator.start(startAt);
         oscillator.stop(startAt + 0.42);
     };
@@ -49,7 +55,30 @@ function ring(contextRef) {
     if (context.state === "running") {
         play();
     } else {
-        context.resume().then(play).catch(() => {});
+        context.resume().then(() => {
+            if (ringingRef.current) play();
+        }).catch(() => {});
+    }
+}
+
+function stopRinging(contextRef, activeOscillatorsRef) {
+    activeOscillatorsRef.current.forEach((oscillator) => {
+        try {
+            oscillator.stop();
+        } catch {
+            // The oscillator may already have completed its short beep.
+        }
+        try {
+            oscillator.disconnect();
+        } catch {
+            // Ignore nodes that have already been disconnected.
+        }
+    });
+    activeOscillatorsRef.current.clear();
+
+    const context = contextRef.current;
+    if (context?.state === "running") {
+        context.suspend().catch(() => {});
     }
 }
 
@@ -58,17 +87,30 @@ export default function BillExpiryAlert({ onNavigate }) {
     const [alerts, setAlerts] = useState([]);
     const audioContextRef = useRef(null);
     const alertSignatureRef = useRef("");
+    const dismissedAlertIdsRef = useRef(new Set());
+    const activeOscillatorsRef = useRef(new Set());
+    const ringingRef = useRef(false);
 
     const loadAlerts = useCallback(async () => {
         try {
             const nextAlerts = await getBillAlerts();
-            const signature = nextAlerts
+            const activeAlertIds = new Set(nextAlerts.map((alert) => alert.billId));
+            dismissedAlertIdsRef.current.forEach((billId) => {
+                if (!activeAlertIds.has(billId)) {
+                    dismissedAlertIdsRef.current.delete(billId);
+                }
+            });
+
+            const visibleAlerts = nextAlerts.filter(
+                (alert) => !dismissedAlertIdsRef.current.has(alert.billId)
+            );
+            const signature = visibleAlerts
                 .map((alert) => `${alert.billId}:${alert.notificationExpiresAt}`)
                 .join("|");
 
             if (signature !== alertSignatureRef.current) {
                 alertSignatureRef.current = signature;
-                setAlerts(nextAlerts);
+                setAlerts(visibleAlerts);
             }
         } catch {
             // A temporary polling failure should not interrupt the cashier UI.
@@ -94,16 +136,38 @@ export default function BillExpiryAlert({ onNavigate }) {
     }, []);
 
     useEffect(() => {
-        if (alerts.length === 0) return undefined;
+        if (alerts.length === 0) {
+            ringingRef.current = false;
+            stopRinging(audioContextRef, activeOscillatorsRef);
+            return undefined;
+        }
 
-        ring(audioContextRef);
+        ringingRef.current = true;
+        ring(audioContextRef, activeOscillatorsRef, ringingRef);
         const repeat = window.setInterval(
-            () => ring(audioContextRef),
+            () => ring(audioContextRef, activeOscillatorsRef, ringingRef),
             RING_REPEAT_MS
         );
 
-        return () => window.clearInterval(repeat);
+        return () => {
+            window.clearInterval(repeat);
+            ringingRef.current = false;
+            stopRinging(audioContextRef, activeOscillatorsRef);
+        };
     }, [alerts]);
+
+    function dismissAlerts() {
+        alerts.forEach((alert) => dismissedAlertIdsRef.current.add(alert.billId));
+        alertSignatureRef.current = "";
+        ringingRef.current = false;
+        stopRinging(audioContextRef, activeOscillatorsRef);
+        setAlerts([]);
+    }
+
+    function openBilling() {
+        dismissAlerts();
+        onNavigate("billing");
+    }
 
     if (alerts.length === 0) return null;
 
@@ -112,7 +176,15 @@ export default function BillExpiryAlert({ onNavigate }) {
             <div className="bill-expiry-alert-heading">
                 <span className="bill-expiry-alert-dot" />
                 <strong>{t("common.sessionEnded")}</strong>
-                <span>{t("billing.billCount", { count: formatNumber(alerts.length), suffix: language === "ar" ? "" : alerts.length === 1 ? "" : "s" })}</span>
+                <span className="bill-expiry-alert-count">{t("billing.billCount", { count: formatNumber(alerts.length), suffix: language === "ar" ? "" : alerts.length === 1 ? "" : "s" })}</span>
+                <button
+                    type="button"
+                    className="bill-expiry-alert-close"
+                    onClick={dismissAlerts}
+                    aria-label={t("common.close")}
+                >
+                    {t("common.close")}
+                </button>
             </div>
 
             <div className="bill-expiry-alert-list">
@@ -134,7 +206,7 @@ export default function BillExpiryAlert({ onNavigate }) {
             <button
                 type="button"
                 className="bill-expiry-alert-action"
-                onClick={() => onNavigate("billing")}
+                onClick={openBilling}
             >
                 {t("billing.openBilling")}
             </button>

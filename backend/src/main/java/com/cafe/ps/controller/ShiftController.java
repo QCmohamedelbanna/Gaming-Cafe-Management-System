@@ -4,7 +4,6 @@ import com.cafe.ps.dto.CloseShiftRequest;
 import com.cafe.ps.dto.OpenShiftRequest;
 import com.cafe.ps.dto.ShiftReportResponse;
 import com.cafe.ps.dto.ShiftResponse;
-import com.cafe.ps.entity.Role;
 import com.cafe.ps.service.ShiftService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ import java.util.List;
 @RequestMapping("/api/shifts")
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173"}, allowCredentials = "true")
-@PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+@PreAuthorize("hasAuthority('PERMISSION_SHIFT_MANAGE')")
 public class ShiftController {
 
     private final ShiftService shiftService;
@@ -53,7 +52,7 @@ public class ShiftController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_SHIFT_AUDIT')")
     public List<ShiftResponse> all() {
         return shiftService.all();
     }
@@ -63,15 +62,9 @@ public class ShiftController {
             @PathVariable Long id,
             Authentication authentication
     ) {
-        return shiftService.report(id, authentication.getName(), role(authentication));
+        boolean canAuditAll = authentication.getAuthorities().stream()
+                .anyMatch(granted -> "PERMISSION_SHIFT_AUDIT".equals(granted.getAuthority()));
+        return shiftService.report(id, authentication.getName(), canAuditAll);
     }
 
-    private static Role role(Authentication authentication) {
-        String authority = authentication.getAuthorities().stream()
-                .map(granted -> granted.getAuthority())
-                .filter(value -> value.startsWith("ROLE_"))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Authenticated user has no role"));
-        return Role.valueOf(authority.substring("ROLE_".length()));
-    }
 }

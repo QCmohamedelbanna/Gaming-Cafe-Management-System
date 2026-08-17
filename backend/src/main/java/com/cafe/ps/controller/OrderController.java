@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
-@PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+@PreAuthorize("hasAuthority('PERMISSION_POS_USE')")
 public class OrderController {
 
     private final OrderService orderService;
@@ -87,19 +87,15 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/discount")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_DISCOUNTS_MANAGE')")
     public CafeOrder applyDiscount(
             @PathVariable Long id,
             @Valid @RequestBody DiscountRequest request,
             Authentication authentication
     ) {
-        String userRole = authentication.getAuthorities().stream()
-                .map(granted -> granted.getAuthority())
-                .filter(value -> value.startsWith("ROLE_"))
-                .map(value -> value.substring("ROLE_".length()))
-                .findFirst()
-                .orElse("");
-        return orderService.applyDiscount(id, request, userRole);
+        boolean hasDiscountPermission = authentication.getAuthorities().stream()
+                .anyMatch(granted -> "PERMISSION_DISCOUNTS_MANAGE".equals(granted.getAuthority()));
+        return orderService.applyDiscount(id, request, hasDiscountPermission);
     }
 
     @DeleteMapping("/{id}/discount")
@@ -128,6 +124,7 @@ public class OrderController {
     }
 
     @PostMapping("/{id}/complete")
+    @PreAuthorize("hasAuthority('PERMISSION_CHECKOUT_USE')")
     public CheckoutResult complete(
             @PathVariable Long id,
             @RequestBody(required = false) CheckoutRequest request,

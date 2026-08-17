@@ -34,6 +34,10 @@ public class AppUser {
     @Builder.Default
     private Role role = Role.CASHIER;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "rule_id")
+    private AccessRule rule;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;

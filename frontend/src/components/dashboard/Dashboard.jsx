@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "../../i18n";
+import { useAuth } from "../../auth/AuthContext";
 
 import { getDevices } from "../../api/deviceApi";
 import { getPricing } from "../../api/pricingApi";
@@ -30,13 +31,22 @@ import ReceiptModal from "./ReceiptModal";
 
 export default function Dashboard({ onAddOrder }) {
     const { t } = useLanguage();
+    const { hasPermission } = useAuth();
+    const canRefund = hasPermission("BILL_REFUND");
+    const canViewDevices = hasPermission("DEVICES_VIEW");
+    const canViewPricing = hasPermission("PRICING_VIEW");
+    const canViewProducts = hasPermission("PRODUCTS_VIEW");
+    const missingViewPermissions = [
+        !canViewDevices ? t("permissions.item.DEVICES_VIEW.label") : null,
+        !canViewPricing ? t("permissions.item.PRICING_VIEW.label") : null,
+        !canViewProducts ? t("permissions.item.PRODUCTS_VIEW.label") : null,
+    ].filter(Boolean).join(", ");
 
     const [devices, setDevices] = useState([]);
     const [activeSessions, setActiveSessions] = useState([]);
     const [pricing, setPricing] = useState([]);
 
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
     const [starting, setStarting] = useState(false);
 
     const [selectedDevice, setSelectedDevice] = useState(null);
@@ -56,6 +66,11 @@ export default function Dashboard({ onAddOrder }) {
 
 
     async function loadSessionOrders(sessionsData) {
+        if (!hasPermission("POS_USE")) {
+            setSessionOrders({});
+            return;
+        }
+
         try {
             const orders = {};
 
@@ -147,10 +162,10 @@ export default function Dashboard({ onAddOrder }) {
                 pricingData,
                 productsData,
             ] = await Promise.all([
-                getDevices(),
+                canViewDevices ? getDevices() : Promise.resolve([]),
                 getActiveSessions(),
-                getPricing(),
-                getProducts(),
+                canViewPricing ? getPricing() : Promise.resolve([]),
+                canViewProducts ? getProducts() : Promise.resolve([]),
             ]);
 
             setDevices(devicesData);
@@ -176,21 +191,6 @@ export default function Dashboard({ onAddOrder }) {
             setLoading(false);
         }
     }
-
-    async function handleRefresh() {
-        if (refreshing) return;
-
-        setRefreshing(true);
-
-        try {
-            await loadDashboard();
-        } finally {
-            setRefreshing(false);
-        }
-    }
-
-
-
 
     // ================================
     // Refresh Active Sessions
@@ -454,18 +454,6 @@ export default function Dashboard({ onAddOrder }) {
 
                 </div>
 
-                <button
-                    type="button"
-                    className="refresh-button"
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    aria-busy={refreshing}
-                >
-                    {refreshing
-                        ? t("admin.refreshing")
-                        : t("operations.refresh")}
-                </button>
-
             </div>
 
 
@@ -475,6 +463,12 @@ export default function Dashboard({ onAddOrder }) {
                     {error}
                 </div>
 
+            )}
+
+            {missingViewPermissions && (
+                <div className="pricing-message">
+                    {t("operations.limitedAccess", { permissions: missingViewPermissions })}
+                </div>
             )}
 
 
@@ -559,6 +553,7 @@ export default function Dashboard({ onAddOrder }) {
                 <ReceiptModal
                     bill={receipt}
                     refunding={refunding}
+                    canRefund={canRefund}
                     onClose={() => setReceipt(null)}
                     onRefund={handleRefund}
                 />

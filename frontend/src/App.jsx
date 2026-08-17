@@ -15,10 +15,12 @@ import InventoryPage from "./components/inventory/InventoryPage";
 import ReportsPage from "./components/reports/ReportsPage";
 import ShiftPage from "./components/shifts/ShiftPage";
 import UsersPage from "./components/users/UsersPage";
+import PermissionsPage from "./components/permissions/PermissionsPage";
+import RolesPage from "./components/rules/RulesPage";
 
 export default function App() {
     const { t } = useLanguage();
-    const { user, loading, hasRole } = useAuth();
+    const { user, loading, hasPermission } = useAuth();
 
     const [activePage, setActivePage] =
         useState("operations");
@@ -40,14 +42,24 @@ export default function App() {
     }
 
     function canAccessPage(page) {
-        if (["operations", "pos", "billing", "shifts"].includes(page)) return true;
-        if (["dashboard", "products", "pricing", "inventory", "reports"].includes(page)) {
-            return hasRole("MANAGER", "ADMIN");
-        }
-        if (page === "devices" || page === "users" || page === "settings") {
-            return hasRole("ADMIN");
-        }
-        return false;
+        const permissionByPage = {
+            operations: "OPERATIONS_USE",
+            pos: "POS_USE",
+            billing: "CHECKOUT_USE",
+            shifts: "SHIFT_MANAGE",
+            dashboard: "DASHBOARD_VIEW",
+            products: "PRODUCTS_MANAGE",
+            pricing: "PRICING_MANAGE",
+            inventory: "INVENTORY_MANAGE",
+            reports: "REPORTS_VIEW",
+            devices: "DEVICES_MANAGE",
+            users: "USERS_MANAGE",
+            permissions: "PERMISSIONS_MANAGE",
+            rules: "PERMISSIONS_MANAGE",
+            settings: "SETTINGS_MANAGE",
+        };
+        const requiredPermission = permissionByPage[page];
+        return Boolean(requiredPermission && hasPermission(requiredPermission));
     }
 
 
@@ -127,6 +139,12 @@ export default function App() {
             case "users":
                 return <UsersPage />;
 
+            case "permissions":
+                return <PermissionsPage />;
+
+            case "rules":
+                return <RolesPage />;
+
             case "settings":
                 return (
                     <div className="placeholder-page">
@@ -159,6 +177,8 @@ export default function App() {
             reports: "page.reports",
             shifts: "page.shifts",
             users: "page.users",
+            permissions: "page.permissions",
+            rules: "page.rules",
             settings: "page.settings",
         };
 
@@ -210,7 +230,7 @@ export default function App() {
                 return "Cashier Shifts";
 
             case "users":
-                return "Users & Roles";
+                return "Users";
 
             default:
                 return "Operations";

@@ -20,13 +20,13 @@ public class PricingController {
     private final PricingService pricingService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_PRICING_VIEW')")
     public List<Pricing> getAllPricing() {
         return pricingService.getAll();
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_PRICING_MANAGE')")
     public Pricing updatePricing(
             @PathVariable Long id,
             @Valid @RequestBody UpdatePricingRequest request

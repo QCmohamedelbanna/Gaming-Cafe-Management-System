@@ -4,6 +4,7 @@ import { useLanguage } from "../../i18n";
 export default function ReceiptModal({
     bill,
     refunding = false,
+    canRefund = false,
     onClose,
     onRefund = null,
 }) {
@@ -11,7 +12,7 @@ export default function ReceiptModal({
     const formatMoney = formatCurrency;
     const [refundOpen, setRefundOpen] = useState(false);
     const [reason, setReason] = useState("");
-    const refundable = bill.status === "PAID" && Boolean(onRefund);
+    const refundable = bill.status === "PAID" && canRefund && Boolean(onRefund);
 
     useEffect(() => {
         function handleKeyDown(event) {

@@ -17,19 +17,19 @@ public class DeviceController {
     private final DeviceService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_DEVICES_VIEW')")
     public List<Device> all() {
         return service.getAll();
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_DEVICES_MANAGE')")
     public Device create(@Valid @RequestBody DeviceRequest request) {
         return service.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_DEVICES_MANAGE')")
     public Device update(
             @PathVariable Long id,
             @Valid @RequestBody DeviceRequest request
@@ -38,7 +38,7 @@ public class DeviceController {
     }
 
     @PatchMapping("/{id}/active")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_DEVICES_MANAGE')")
     public Device setActive(
             @PathVariable Long id,
             @Valid @RequestBody DeviceActiveRequest request
@@ -47,7 +47,7 @@ public class DeviceController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_DEVICES_MANAGE') and hasAuthority('PERMISSION_DESTRUCTIVE_OPERATIONS')")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }

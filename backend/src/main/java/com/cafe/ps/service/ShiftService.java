@@ -96,9 +96,14 @@ public class ShiftService {
 
     @Transactional(readOnly = true)
     public ShiftReportResponse report(Long id, String username, Role role) {
+        return report(id, username, role == Role.MANAGER || role == Role.ADMIN);
+    }
+
+    @Transactional(readOnly = true)
+    public ShiftReportResponse report(Long id, String username, boolean canAuditAll) {
         Shift shift = shiftRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Shift not found"));
-        if (role == Role.CASHIER && !shift.getUser().getUsername().equalsIgnoreCase(username)) {
+        if (!canAuditAll && !shift.getUser().getUsername().equalsIgnoreCase(username)) {
             throw new AccessDeniedException("Cashiers can only view their own shifts");
         }
 
@@ -124,6 +129,12 @@ public class ShiftService {
     @Transactional(readOnly = true)
     public Optional<Shift> openShiftFor(AppUser user) {
         return shiftRepository.findByUserIdAndStatus(user.getId(), ShiftStatus.OPEN);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasOpenShift(String username) {
+        AppUser user = userService.requireByUsername(username);
+        return openShiftFor(user).isPresent();
     }
 
     @Transactional(readOnly = true)

@@ -17,7 +17,7 @@ import com.cafe.ps.entity.PaymentMethod;
 @RequestMapping("/api/bills")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
-@PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+@PreAuthorize("hasAuthority('PERMISSION_CHECKOUT_USE')")
 public class BillController {
 
     private final BillingService billingService;
@@ -38,7 +38,7 @@ public class BillController {
     }
 
     @PostMapping("/{id}/refund")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_BILL_REFUND')")
     public CheckoutResult refund(
             @PathVariable Long id,
             @Valid @RequestBody RefundRequest request
@@ -61,7 +61,7 @@ public class BillController {
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasAuthority('PERMISSION_BILLING_MANAGE')")
     public CheckoutResult cancel(@PathVariable Long id) {
         return billingService.cancelBill(id);
     }

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
-@PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+@PreAuthorize("hasAuthority('PERMISSION_DASHBOARD_VIEW')")
 public class DashboardController {
     private final ReportService reportService;
 

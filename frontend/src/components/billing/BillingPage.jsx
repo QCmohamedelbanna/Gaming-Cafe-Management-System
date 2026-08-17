@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "../../i18n";
+import { useAuth } from "../../auth/AuthContext";
 import {
     cancelBill,
     getPendingBills,
@@ -12,6 +13,8 @@ import ReceiptModal from "../dashboard/ReceiptModal";
 
 export default function BillingPage() {
     const { t, formatCurrency } = useLanguage();
+    const { hasPermission } = useAuth();
+    const canRefund = hasPermission("BILL_REFUND");
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedBill, setSelectedBill] = useState(null);
@@ -94,9 +97,6 @@ export default function BillingPage() {
                     <h1>{t("billing.title")}</h1>
                     <p>{t("billing.descriptionShort")}</p>
                 </div>
-                <button type="button" className="refresh-button" onClick={loadBills}>
-                    {t("common.refresh")}
-                </button>
             </div>
 
             {message && <div className="pricing-message">{message}</div>}
@@ -188,6 +188,7 @@ export default function BillingPage() {
                 <ReceiptModal
                     bill={receipt}
                     refunding={refunding}
+                    canRefund={canRefund}
                     onClose={() => setReceipt(null)}
                     onRefund={handleRefund}
                 />

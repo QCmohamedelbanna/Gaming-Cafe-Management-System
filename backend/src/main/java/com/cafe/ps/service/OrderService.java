@@ -242,12 +242,21 @@ public class OrderService {
             DiscountRequest request,
             String userRole
     ) {
+        return applyDiscount(orderId, request, hasDiscountPermission(userRole));
+    }
+
+    @Transactional
+    public CafeOrder applyDiscount(
+            Long orderId,
+            DiscountRequest request,
+            boolean hasDiscountPermission
+    ) {
         CafeOrder order = getOpenOrder(orderId);
         BigDecimal subtotal = calculateSubtotal(order);
         BigDecimal value = money(request.value());
 
         if (value.compareTo(BigDecimal.ZERO) > 0
-                && !hasDiscountPermission(userRole)) {
+                && !hasDiscountPermission) {
             throw new IllegalStateException(
                     "Discounts require manager or administrator permission"
             );

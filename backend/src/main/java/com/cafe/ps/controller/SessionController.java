@@ -19,7 +19,7 @@ import java.util.List;
 @RequestMapping("/api/sessions")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
-@PreAuthorize("hasAnyRole('CASHIER', 'MANAGER', 'ADMIN')")
+@PreAuthorize("hasAuthority('PERMISSION_OPERATIONS_USE')")
 public class SessionController {
 
     private final SessionService service;
@@ -45,6 +45,7 @@ public class SessionController {
     }
 
     @PostMapping("/{id}/checkout/prepare")
+    @PreAuthorize("hasAuthority('PERMISSION_CHECKOUT_USE')")
     public CheckoutResult prepareCheckout(
             @PathVariable Long id
     ) {
@@ -52,6 +53,7 @@ public class SessionController {
     }
 
     @PostMapping("/{id}/checkout")
+    @PreAuthorize("hasAuthority('PERMISSION_CHECKOUT_USE')")
     public CheckoutResult checkout(
             @PathVariable Long id,
             @Valid @RequestBody CheckoutRequest request,

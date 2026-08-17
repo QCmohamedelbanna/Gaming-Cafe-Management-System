@@ -1,6 +1,8 @@
 package com.cafe.ps.config;
 import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.*;
+import com.cafe.ps.service.PermissionService;
+import com.cafe.ps.service.RuleService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
@@ -19,10 +21,14 @@ public class SeedData {
             PricingRepository pricing,
             ProductRepository products,
             AppUserRepository users,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            PermissionService permissionService,
+            RuleService ruleService
     ) {
         return args -> {
+            permissionService.seedDefaults();
             seedAdmin(users, passwordEncoder);
+            ruleService.seedDefaults();
             if (devices.count() == 0) {
                 for (int i = 1; i <= 4; i++) devices.save(Device.builder().name("PS4-"+i).type(DeviceType.PS4).status(DeviceStatus.AVAILABLE).active(true).build());
                 for (int i = 1; i <= 2; i++) devices.save(Device.builder().name("PS5-"+i).type(DeviceType.PS5).status(DeviceStatus.AVAILABLE).active(true).build());

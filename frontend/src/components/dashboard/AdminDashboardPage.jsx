@@ -7,13 +7,11 @@ export default function AdminDashboardPage() {
     const { t, formatCurrency, formatNumber, language } = useLanguage();
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState("");
 
     const loadSummary = useCallback(async (silent = false) => {
         try {
-            if (silent) setRefreshing(true);
-            else setLoading(true);
+            if (!silent) setLoading(true);
             setError("");
             setSummary(await getDashboardSummary());
         } catch (loadError) {
@@ -21,7 +19,6 @@ export default function AdminDashboardPage() {
             setError(loadError.message || t("admin.loadError"));
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     }, [t]);
 
@@ -75,14 +72,6 @@ export default function AdminDashboardPage() {
                     <h1>{t("admin.title")}</h1>
                     <p>{t("admin.description")}</p>
                 </div>
-                <button
-                    type="button"
-                    className="product-secondary-button"
-                    onClick={() => loadSummary(true)}
-                    disabled={refreshing}
-                >
-                    {refreshing ? t("admin.refreshing") : t("common.refresh")}
-                </button>
             </div>
 
             {error && <div className="product-error-message">{error}</div>}

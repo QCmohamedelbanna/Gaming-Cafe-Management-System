@@ -131,9 +131,6 @@ export default function DevicesPage() {
                 </div>
 
                 <div className="devices-header-actions">
-                    <button type="button" className="refresh-button" onClick={loadDevices}>
-                        {t("common.refresh")}
-                    </button>
                     <button
                         type="button"
                         className="product-add-button"

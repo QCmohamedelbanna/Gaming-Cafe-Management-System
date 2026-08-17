@@ -2,6 +2,7 @@ package com.cafe.ps.controller;
 
 import com.cafe.ps.dto.LoginRequest;
 import com.cafe.ps.dto.UserResponse;
+import com.cafe.ps.service.ShiftService;
 import com.cafe.ps.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +34,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
+    private final ShiftService shiftService;
     private final UserService userService;
 
     @GetMapping("/csrf")
@@ -69,6 +73,24 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Authentication failed"));
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(
+            Authentication authentication,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse
+    ) {
+        boolean signedIn = authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken);
+        if (signedIn && shiftService.hasOpenShift(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Close your open shift before signing out"));
+        }
+
+        new SecurityContextLogoutHandler().logout(httpRequest, httpResponse, authentication);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")

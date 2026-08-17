@@ -9,6 +9,7 @@ public record UpdateUserRequest(
         @NotBlank @Size(max = 100) String displayName,
         @NotNull Role role,
         @NotNull Boolean active,
-        @Size(min = 8, max = 100) String password
+        @Size(min = 8, max = 100) String password,
+        Long ruleId
 ) {
 }
