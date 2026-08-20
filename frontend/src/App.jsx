@@ -5,6 +5,7 @@ import { useAuth } from "./auth/AuthContext";
 import Layout from "./components/layout/Layout";
 import LoginPage from "./components/auth/LoginPage";
 import Dashboard from "./components/dashboard/Dashboard";
+import ReservationsPage from "./components/reservations/ReservationsPage";
 import AdminDashboardPage from "./components/dashboard/AdminDashboardPage";
 import PricingPage from "./components/pricing/PricingPage";
 import POSPage from "./components/pos/POSPage";
@@ -44,6 +45,7 @@ export default function App() {
     function canAccessPage(page) {
         const permissionByPage = {
             operations: "OPERATIONS_USE",
+            reservations: "RESERVATIONS_MANAGE",
             pos: "POS_USE",
             billing: "CHECKOUT_USE",
             shifts: "SHIFT_MANAGE",
@@ -100,6 +102,9 @@ export default function App() {
 
             case "dashboard":
                 return <AdminDashboardPage />;
+
+            case "reservations":
+                return <ReservationsPage />;
 
             case "pricing":
                 return <PricingPage />;
@@ -168,6 +173,7 @@ export default function App() {
     function getTitle() {
         const titleKeys = {
             operations: "page.operations",
+            reservations: "page.reservations",
             dashboard: "page.dashboard",
             pricing: "page.pricing",
             products: "page.products",

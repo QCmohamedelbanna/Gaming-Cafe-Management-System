@@ -27,6 +27,7 @@ import DeviceCard from "./DeviceCard";
 import StartSessionModal from "./StartSessionModal";
 import CheckoutModal from "./CheckoutModal";
 import ReceiptModal from "./ReceiptModal";
+import UpcomingReservationsPanel from "./UpcomingReservationsPanel";
 
 
 export default function Dashboard({ onAddOrder }) {
@@ -36,6 +37,7 @@ export default function Dashboard({ onAddOrder }) {
     const canViewDevices = hasPermission("DEVICES_VIEW");
     const canViewPricing = hasPermission("PRICING_VIEW");
     const canViewProducts = hasPermission("PRODUCTS_VIEW");
+    const canManageReservations = hasPermission("RESERVATIONS_MANAGE");
     const missingViewPermissions = [
         !canViewDevices ? t("permissions.item.DEVICES_VIEW.label") : null,
         !canViewPricing ? t("permissions.item.PRICING_VIEW.label") : null,
@@ -480,6 +482,8 @@ export default function Dashboard({ onAddOrder }) {
 
             )}
 
+
+            {canManageReservations && <UpcomingReservationsPanel />}
 
             <div className="device-grid">
 

@@ -1080,6 +1080,12 @@ body {
   color: #8996b3;
 }
 
+.upcoming-reservations-panel { margin-bottom: 18px; padding: 14px 16px; border: 1px solid #293247; border-radius: 14px; background: #111620; }
+.upcoming-reservations-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.upcoming-reservation-row { display: flex; align-items: center; gap: 14px; padding: 8px 10px; border-radius: 8px; background: #0b111c; }
+.upcoming-reservation-row strong { color: #ffffff; min-width: 60px; }
+.upcoming-reservation-row span { color: #9aa8c5; font-size: 13px; }
+
 .device-grid {
   display: grid;
   grid-template-columns:
@@ -2498,11 +2504,13 @@ body {
 .device-admin-active.inactive { color: #ff9fac; background: #321820; }
 .device-maintenance-note { display: block; max-width: 250px; overflow: hidden; color: #9aa8c5; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .device-row-actions { min-width: 300px; }
-.device-form-modal { max-width: 590px; }
-.device-form-modal > label, .device-form-grid label { display: block; margin: 18px 0 8px; color: #9aa8c5; font-size: 12px; font-weight: 700; }
-.device-form-modal > input, .device-form-modal select, .device-form-modal textarea { width: 100%; box-sizing: border-box; padding: 13px 14px; border: 1px solid #34405a; border-radius: 10px; outline: none; background: #0b111c; color: #ffffff; font: inherit; font-size: 14px; }
+.device-form-modal, .reservation-form-modal { max-width: 590px; }
+.device-form-modal > label, .device-form-grid label, .reservation-form-modal > label, .reservation-form-modal .product-form-grid label { display: block; margin: 18px 0 8px; color: #9aa8c5; font-size: 12px; font-weight: 700; }
+.device-form-modal > input, .device-form-modal select, .device-form-modal textarea,
+.reservation-form-modal > input, .reservation-form-modal select, .reservation-form-modal .product-form-grid input, .reservation-form-modal .product-form-grid select { width: 100%; box-sizing: border-box; padding: 13px 14px; border: 1px solid #34405a; border-radius: 10px; outline: none; background: #0b111c; color: #ffffff; font: inherit; font-size: 14px; }
 .device-form-modal textarea { resize: vertical; line-height: 1.45; }
-.device-form-modal input:focus, .device-form-modal select:focus, .device-form-modal textarea:focus { border-color: #7386ff; }
+.device-form-modal input:focus, .device-form-modal select:focus, .device-form-modal textarea:focus,
+.reservation-form-modal input:focus, .reservation-form-modal select:focus { border-color: #7386ff; }
 .device-form-modal textarea:disabled { color: #66728c; background: #101621; cursor: not-allowed; }
 .device-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .device-form-grid label { margin-bottom: 8px; }

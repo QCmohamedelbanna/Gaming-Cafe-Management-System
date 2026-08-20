@@ -6,6 +6,7 @@ export default function Sidebar({activePage, onNavigate, collapsed, onToggle}) {
     const { hasPermission } = useAuth();
     const items = [
         { key: "operations", label: t("nav.operations"), permission: "OPERATIONS_USE" },
+        { key: "reservations", label: t("nav.reservations"), permission: "RESERVATIONS_MANAGE" },
         { key: "pos", label: t("nav.pos"), permission: "POS_USE" },
         { key: "dashboard", label: t("nav.dashboard"), permission: "DASHBOARD_VIEW" },
         { key: "devices", label: t("nav.devices"), permission: "DEVICES_MANAGE" },
