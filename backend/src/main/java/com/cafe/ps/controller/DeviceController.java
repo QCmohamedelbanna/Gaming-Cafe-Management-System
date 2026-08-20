@@ -1,7 +1,7 @@
 package com.cafe.ps.controller;
 import com.cafe.ps.dto.DeviceActiveRequest;
 import com.cafe.ps.dto.DeviceRequest;
-import com.cafe.ps.entity.Device;
+import com.cafe.ps.dto.DeviceResponse;
 import com.cafe.ps.service.DeviceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,38 +12,37 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/devices")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class DeviceController {
     private final DeviceService service;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PERMISSION_DEVICES_VIEW')")
-    public List<Device> all() {
-        return service.getAll();
+    public List<DeviceResponse> all() {
+        return service.getAll().stream().map(DeviceResponse::from).toList();
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('PERMISSION_DEVICES_MANAGE')")
-    public Device create(@Valid @RequestBody DeviceRequest request) {
-        return service.create(request);
+    public DeviceResponse create(@Valid @RequestBody DeviceRequest request) {
+        return DeviceResponse.from(service.create(request));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('PERMISSION_DEVICES_MANAGE')")
-    public Device update(
+    public DeviceResponse update(
             @PathVariable Long id,
             @Valid @RequestBody DeviceRequest request
     ) {
-        return service.update(id, request);
+        return DeviceResponse.from(service.update(id, request));
     }
 
     @PatchMapping("/{id}/active")
     @PreAuthorize("hasAuthority('PERMISSION_DEVICES_MANAGE')")
-    public Device setActive(
+    public DeviceResponse setActive(
             @PathVariable Long id,
             @Valid @RequestBody DeviceActiveRequest request
     ) {
-        return service.setActive(id, request.active());
+        return DeviceResponse.from(service.setActive(id, request.active()));
     }
 
     @DeleteMapping("/{id}")

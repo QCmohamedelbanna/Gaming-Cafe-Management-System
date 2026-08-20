@@ -1,6 +1,6 @@
 import { apiFetch } from "./http";
 
-const BASE_URL = "http://localhost:8080/api/pricing";
+const BASE_URL = "/pricing";
 
 export async function getPricing() {
   const response = await apiFetch(BASE_URL, { cache: "no-store" });

@@ -1,12 +1,12 @@
 package com.cafe.ps.controller;
 
 import com.cafe.ps.dto.AddOrderItemRequest;
+import com.cafe.ps.dto.CafeOrderResponse;
 import com.cafe.ps.dto.CheckoutRequest;
 import com.cafe.ps.dto.CheckoutResult;
 import com.cafe.ps.dto.CreateOrderRequest;
 import com.cafe.ps.dto.DiscountRequest;
 import com.cafe.ps.dto.UpdateOrderItemQuantityRequest;
-import com.cafe.ps.entity.CafeOrder;
 import com.cafe.ps.entity.PaymentMethod;
 import com.cafe.ps.service.BillingService;
 import com.cafe.ps.service.OrderService;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @PreAuthorize("hasAuthority('PERMISSION_POS_USE')")
 public class OrderController {
 
@@ -27,100 +26,101 @@ public class OrderController {
     private final BillingService billingService;
 
     @PostMapping
-    public CafeOrder create(
+    public CafeOrderResponse create(
             @RequestBody CreateOrderRequest request
     ) {
-        return orderService.createOrder(
+        return CafeOrderResponse.from(orderService.createOrder(
                 request.gameSessionId()
-        );
+        ));
     }
 
     @GetMapping("/{id}")
-    public CafeOrder get(
+    public CafeOrderResponse get(
             @PathVariable Long id
     ) {
-        return orderService.get(id);
+        return CafeOrderResponse.from(orderService.get(id));
     }
 
     @GetMapping("/session/{sessionId}/open")
-    public CafeOrder getOpenOrderForSession(
+    public CafeOrderResponse getOpenOrderForSession(
             @PathVariable Long sessionId
     ) {
-        return orderService.getOpenOrderForSession(sessionId);
+        var order = orderService.getOpenOrderForSession(sessionId);
+        return order == null ? null : CafeOrderResponse.from(order);
     }
 
     @PostMapping("/{id}/items")
-    public CafeOrder addItem(
+    public CafeOrderResponse addItem(
             @PathVariable Long id,
             @Valid
             @RequestBody AddOrderItemRequest request
     ) {
-        return orderService.addItem(
+        return CafeOrderResponse.from(orderService.addItem(
                 id,
                 request.productId(),
                 request.quantity()
-        );
+        ));
     }
 
     @DeleteMapping("/{orderId}/items/{itemId}")
-    public CafeOrder removeItem(
+    public CafeOrderResponse removeItem(
             @PathVariable Long orderId,
             @PathVariable Long itemId
     ) {
-        return orderService.removeItem(
+        return CafeOrderResponse.from(orderService.removeItem(
                 orderId,
                 itemId
-        );
+        ));
     }
 
     @PatchMapping("/{orderId}/items/{itemId}/quantity")
-    public CafeOrder updateItemQuantity(
+    public CafeOrderResponse updateItemQuantity(
             @PathVariable Long orderId,
             @PathVariable Long itemId,
             @Valid @RequestBody UpdateOrderItemQuantityRequest request
     ) {
-        return orderService.updateItemQuantity(
+        return CafeOrderResponse.from(orderService.updateItemQuantity(
                 orderId,
                 itemId,
                 request.quantity()
-        );
+        ));
     }
 
     @PatchMapping("/{id}/discount")
     @PreAuthorize("hasAuthority('PERMISSION_DISCOUNTS_MANAGE')")
-    public CafeOrder applyDiscount(
+    public CafeOrderResponse applyDiscount(
             @PathVariable Long id,
             @Valid @RequestBody DiscountRequest request,
             Authentication authentication
     ) {
         boolean hasDiscountPermission = authentication.getAuthorities().stream()
                 .anyMatch(granted -> "PERMISSION_DISCOUNTS_MANAGE".equals(granted.getAuthority()));
-        return orderService.applyDiscount(id, request, hasDiscountPermission);
+        return CafeOrderResponse.from(orderService.applyDiscount(id, request, hasDiscountPermission));
     }
 
     @DeleteMapping("/{id}/discount")
-    public CafeOrder clearDiscount(@PathVariable Long id) {
-        return orderService.clearDiscount(id);
+    public CafeOrderResponse clearDiscount(@PathVariable Long id) {
+        return CafeOrderResponse.from(orderService.clearDiscount(id));
     }
 
     @PostMapping("/{id}/hold")
-    public CafeOrder hold(@PathVariable Long id) {
-        return orderService.holdOrder(id);
+    public CafeOrderResponse hold(@PathVariable Long id) {
+        return CafeOrderResponse.from(orderService.holdOrder(id));
     }
 
     @PostMapping("/{id}/resume")
-    public CafeOrder resume(@PathVariable Long id) {
-        return orderService.resumeOrder(id);
+    public CafeOrderResponse resume(@PathVariable Long id) {
+        return CafeOrderResponse.from(orderService.resumeOrder(id));
     }
 
     @PostMapping("/{id}/cancel")
-    public CafeOrder cancel(@PathVariable Long id) {
-        return orderService.cancelOrder(id);
+    public CafeOrderResponse cancel(@PathVariable Long id) {
+        return CafeOrderResponse.from(orderService.cancelOrder(id));
     }
 
     @GetMapping("/held")
-    public java.util.List<CafeOrder> held() {
-        return orderService.getHeldOrders();
+    public java.util.List<CafeOrderResponse> held() {
+        return orderService.getHeldOrders().stream().map(CafeOrderResponse::from).toList();
     }
 
     @PostMapping("/{id}/complete")

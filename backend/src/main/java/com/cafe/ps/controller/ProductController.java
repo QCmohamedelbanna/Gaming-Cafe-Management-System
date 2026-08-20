@@ -2,7 +2,7 @@ package com.cafe.ps.controller;
 
 import com.cafe.ps.dto.ProductRequest;
 import com.cafe.ps.dto.ProductActiveRequest;
-import com.cafe.ps.entity.Product;
+import com.cafe.ps.dto.ProductResponse;
 import com.cafe.ps.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,47 +14,46 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class ProductController {
 
     private final ProductService service;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_VIEW')")
-    public List<Product> getProducts() {
-        return service.getActiveProducts();
+    public List<ProductResponse> getProducts() {
+        return service.getActiveProducts().stream().map(ProductResponse::from).toList();
     }
 
     @GetMapping("/admin")
     @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE')")
-    public List<Product> getAllProducts() {
-        return service.getAllProducts();
+    public List<ProductResponse> getAllProducts() {
+        return service.getAllProducts().stream().map(ProductResponse::from).toList();
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE')")
-    public Product create(
+    public ProductResponse create(
             @Valid @RequestBody ProductRequest request
     ) {
-        return service.create(request);
+        return ProductResponse.from(service.create(request));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE')")
-    public Product update(
+    public ProductResponse update(
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request
     ) {
-        return service.update(id, request);
+        return ProductResponse.from(service.update(id, request));
     }
 
     @PatchMapping("/{id}/active")
     @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE')")
-    public Product setActive(
+    public ProductResponse setActive(
             @PathVariable Long id,
             @Valid @RequestBody ProductActiveRequest request
     ) {
-        return service.setActive(id, request.active());
+        return ProductResponse.from(service.setActive(id, request.active()));
     }
 
     @DeleteMapping("/{id}")

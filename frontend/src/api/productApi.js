@@ -1,7 +1,6 @@
 import { apiFetch } from "./http";
 
-const BASE_URL =
-    "http://localhost:8080/api/products";
+const BASE_URL = "/products";
 
 async function handleResponse(response) {
 

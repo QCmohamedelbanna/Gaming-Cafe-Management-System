@@ -7,6 +7,11 @@ frontend/node_modules/
 *.db
 *.db-journal
 
+# Environment overrides (never commit real secrets/URLs)
+.env
+.env.local
+.env.*.local
+
 # IDE
 .idea/
 

@@ -16,7 +16,6 @@ import com.cafe.ps.entity.PaymentMethod;
 @RestController
 @RequestMapping("/api/bills")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @PreAuthorize("hasAuthority('PERMISSION_CHECKOUT_USE')")
 public class BillController {
 

@@ -1,7 +1,7 @@
 package com.cafe.ps.controller;
 
+import com.cafe.ps.dto.PricingResponse;
 import com.cafe.ps.dto.UpdatePricingRequest;
-import com.cafe.ps.entity.Pricing;
 import com.cafe.ps.service.PricingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/pricing")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 
 public class PricingController {
 
@@ -21,21 +20,21 @@ public class PricingController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('PERMISSION_PRICING_VIEW')")
-    public List<Pricing> getAllPricing() {
-        return pricingService.getAll();
+    public List<PricingResponse> getAllPricing() {
+        return pricingService.getAll().stream().map(PricingResponse::from).toList();
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('PERMISSION_PRICING_MANAGE')")
-    public Pricing updatePricing(
+    public PricingResponse updatePricing(
             @PathVariable Long id,
             @Valid @RequestBody UpdatePricingRequest request
     ) {
-        return pricingService.updatePrice(
+        return PricingResponse.from(pricingService.updatePrice(
                 id,
                 request.price(),
                 request.matchDurationMinutes(),
                 request.warningBeforeExpiryMinutes()
-        );
+        ));
     }
 }
