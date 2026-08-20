@@ -95,7 +95,9 @@ public class OrderController {
     ) {
         boolean hasDiscountPermission = authentication.getAuthorities().stream()
                 .anyMatch(granted -> "PERMISSION_DISCOUNTS_MANAGE".equals(granted.getAuthority()));
-        return CafeOrderResponse.from(orderService.applyDiscount(id, request, hasDiscountPermission));
+        return CafeOrderResponse.from(orderService.applyDiscount(
+                id, request, hasDiscountPermission, authentication.getName()
+        ));
     }
 
     @DeleteMapping("/{id}/discount")

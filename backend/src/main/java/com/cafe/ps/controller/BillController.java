@@ -40,9 +40,10 @@ public class BillController {
     @PreAuthorize("hasAuthority('PERMISSION_BILL_REFUND')")
     public CheckoutResult refund(
             @PathVariable Long id,
-            @Valid @RequestBody RefundRequest request
+            @Valid @RequestBody RefundRequest request,
+            Authentication authentication
     ) {
-        return billingService.refund(id, request.reason());
+        return billingService.refund(id, request.reason(), authentication.getName());
     }
 
     @PostMapping("/{id}/pay")
@@ -61,7 +62,7 @@ public class BillController {
 
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAuthority('PERMISSION_BILLING_MANAGE')")
-    public CheckoutResult cancel(@PathVariable Long id) {
-        return billingService.cancelBill(id);
+    public CheckoutResult cancel(@PathVariable Long id, Authentication authentication) {
+        return billingService.cancelBill(id, authentication.getName());
     }
 }

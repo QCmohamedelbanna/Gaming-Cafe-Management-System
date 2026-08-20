@@ -1,5 +1,6 @@
 package com.cafe.ps.service;
 
+import com.cafe.ps.audit.AuditLog;
 import com.cafe.ps.dto.DiscountRequest;
 import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.*;
@@ -242,7 +243,7 @@ public class OrderService {
             DiscountRequest request,
             String userRole
     ) {
-        return applyDiscount(orderId, request, hasDiscountPermission(userRole));
+        return applyDiscount(orderId, request, hasDiscountPermission(userRole), userRole);
     }
 
     @Transactional
@@ -250,6 +251,16 @@ public class OrderService {
             Long orderId,
             DiscountRequest request,
             boolean hasDiscountPermission
+    ) {
+        return applyDiscount(orderId, request, hasDiscountPermission, "unknown");
+    }
+
+    @Transactional
+    public CafeOrder applyDiscount(
+            Long orderId,
+            DiscountRequest request,
+            boolean hasDiscountPermission,
+            String actor
     ) {
         CafeOrder order = getOpenOrder(orderId);
         BigDecimal subtotal = calculateSubtotal(order);
@@ -286,7 +297,11 @@ public class OrderService {
                         : request.reason().trim()
         );
         recalculateTotal(order);
-        return orderRepository.save(order);
+        CafeOrder saved = orderRepository.save(order);
+        if (discount.compareTo(BigDecimal.ZERO) > 0) {
+            AuditLog.record("DISCOUNT_APPLY", actor, "order:" + orderId, "SUCCESS: " + discount);
+        }
+        return saved;
     }
 
     @Transactional

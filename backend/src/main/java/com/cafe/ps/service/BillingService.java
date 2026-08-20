@@ -1,5 +1,6 @@
 package com.cafe.ps.service;
 
+import com.cafe.ps.audit.AuditLog;
 import com.cafe.ps.dto.CheckoutLine;
 import com.cafe.ps.dto.CheckoutResult;
 import com.cafe.ps.entity.*;
@@ -242,6 +243,11 @@ public class BillingService {
 
     @Transactional
     public CheckoutResult cancelBill(Long billId) {
+        return cancelBill(billId, "Admin");
+    }
+
+    @Transactional
+    public CheckoutResult cancelBill(Long billId, String actor) {
         Bill bill = billRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found"));
 
@@ -255,11 +261,18 @@ public class BillingService {
             bill.getOrder().setStatus(OrderStatus.CANCELLED);
         }
 
-        return toResult(billRepository.save(bill));
+        CheckoutResult result = toResult(billRepository.save(bill));
+        AuditLog.record("BILL_CANCEL", actor, "bill:" + bill.getBillNumber(), "SUCCESS");
+        return result;
     }
 
     @Transactional
     public CheckoutResult refund(Long billId, String reason) {
+        return refund(billId, reason, "Admin");
+    }
+
+    @Transactional
+    public CheckoutResult refund(Long billId, String reason, String actor) {
         Bill bill = billRepository.findById(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found"));
 
@@ -278,7 +291,9 @@ public class BillingService {
                 payment.setStatus(PaymentStatus.REFUNDED)
         );
 
-        return toResult(billRepository.save(bill));
+        CheckoutResult result = toResult(billRepository.save(bill));
+        AuditLog.record("REFUND", actor, "bill:" + bill.getBillNumber(), "SUCCESS: " + bill.getRefundReason());
+        return result;
     }
 
     private CafeOrder findOpenOrder(Long sessionId) {
@@ -465,7 +480,14 @@ public class BillingService {
         bill.setStatus(BillStatus.PAID);
         bill.setPaidAt(payment.getPaidAt());
 
-        return toResult(billRepository.save(bill));
+        CheckoutResult result = toResult(billRepository.save(bill));
+        AuditLog.record(
+                "CHECKOUT",
+                cashier,
+                "bill:" + bill.getBillNumber(),
+                "SUCCESS: " + method + " " + total
+        );
+        return result;
     }
 
     private String normalizeCashier(String cashier) {

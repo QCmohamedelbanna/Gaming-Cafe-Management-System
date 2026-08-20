@@ -7,6 +7,7 @@ import com.cafe.ps.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,8 +60,9 @@ public class ProductController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('PERMISSION_PRODUCTS_MANAGE') and hasAuthority('PERMISSION_DESTRUCTIVE_OPERATIONS')")
     public void delete(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
-        service.delete(id);
+        service.delete(id, authentication.getName());
     }
 }

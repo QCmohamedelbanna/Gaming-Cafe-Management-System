@@ -1,5 +1,6 @@
 package com.cafe.ps.service;
 
+import com.cafe.ps.audit.AuditLog;
 import com.cafe.ps.dto.ProductRequest;
 import com.cafe.ps.entity.Product;
 import com.cafe.ps.entity.OrderStatus;
@@ -113,6 +114,11 @@ public class ProductService {
 
     @Transactional
     public void delete(Long id) {
+        delete(id, "unknown");
+    }
+
+    @Transactional
+    public void delete(Long id, String actor) {
 
         Product product = repository.findById(id)
                 .orElseThrow(() ->
@@ -133,6 +139,7 @@ public class ProductService {
         product.setActive(false);
         product.setDeleted(true);
         repository.save(product);
+        AuditLog.record("PRODUCT_DELETE", actor, "product:" + product.getName(), "SUCCESS");
     }
 
     private void ensureSkuAvailable(String sku, Long id) {

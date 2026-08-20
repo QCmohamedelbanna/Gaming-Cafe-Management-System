@@ -1,5 +1,6 @@
 package com.cafe.ps.controller;
 
+import com.cafe.ps.audit.AuditLog;
 import com.cafe.ps.dto.LoginRequest;
 import com.cafe.ps.dto.UserResponse;
 import com.cafe.ps.service.ShiftService;
@@ -60,15 +61,19 @@ public class AuthController {
             SecurityContextHolder.setContext(context);
             securityContextRepository.saveContext(context, httpRequest, httpResponse);
             userService.recordLogin(authentication.getName());
+            AuditLog.record("LOGIN", authentication.getName(), "session", "SUCCESS");
 
             return ResponseEntity.ok(userService.currentUser(authentication.getName()));
         } catch (DisabledException ex) {
+            AuditLog.record("LOGIN", request.username(), "session", "FAILURE: account disabled");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "This account is disabled"));
         } catch (BadCredentialsException | org.springframework.security.core.userdetails.UsernameNotFoundException ex) {
+            AuditLog.record("LOGIN", request.username(), "session", "FAILURE: invalid credentials");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Invalid username or password"));
         } catch (AuthenticationException ex) {
+            AuditLog.record("LOGIN", request.username(), "session", "FAILURE");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Authentication failed"));
         }
@@ -88,6 +93,9 @@ public class AuthController {
                     .body(Map.of("message", "Close your open shift before signing out"));
         }
 
+        if (signedIn) {
+            AuditLog.record("LOGOUT", authentication.getName(), "session", "SUCCESS");
+        }
         new SecurityContextLogoutHandler().logout(httpRequest, httpResponse, authentication);
         return ResponseEntity.noContent().build();
     }

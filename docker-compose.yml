@@ -11,5 +11,43 @@ services:
       - "3306:3306"
     volumes:
       - ps_cafe_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ps-cafe-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://mysql:3306/ps_cafe?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USER: ps_user
+      DB_PASSWORD: ps_password
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ps_cafe_logs:/app/logs
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080/api
+    container_name: ps-cafe-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   ps_cafe_mysql:
+  ps_cafe_logs:
