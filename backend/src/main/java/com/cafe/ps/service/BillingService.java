@@ -48,7 +48,10 @@ public class BillingService {
             BigDecimal amountTendered,
             String cashier
     ) {
-        GameSession session = sessionRepository.findById(sessionId)
+        // Locks the session row for the whole checkout so a second concurrent
+        // checkout attempt on the same session blocks here instead of racing
+        // this one to finalize/pay it twice.
+        GameSession session = sessionRepository.findByIdForUpdate(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
 
         if (session.getStatus() == SessionStatus.ACTIVE) {
@@ -230,7 +233,9 @@ public class BillingService {
             BigDecimal amountTendered,
             String cashier
     ) {
-        Bill bill = billRepository.findById(billId)
+        // Locks the bill row so a second concurrent payment attempt on the
+        // same bill blocks here instead of racing this one to pay it twice.
+        Bill bill = billRepository.findByIdForUpdate(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found"));
         return settleBill(bill, method, amountTendered, cashier);
     }

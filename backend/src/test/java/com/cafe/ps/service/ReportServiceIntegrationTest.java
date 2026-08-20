@@ -1,5 +1,6 @@
 package com.cafe.ps.service;
 
+import com.cafe.ps.AbstractMySQLIntegrationTest;
 import com.cafe.ps.dto.DashboardSummary;
 import com.cafe.ps.dto.PaymentMethodTotal;
 import com.cafe.ps.dto.ProductSalesReport;
@@ -43,16 +44,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
-                "spring.datasource.url=jdbc:sqlite:file:report-tests?mode=memory&cache=shared",
-                "spring.datasource.driver-class-name=org.sqlite.JDBC",
-                "spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect",
-                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.jpa.hibernate.ddl-auto=validate",
                 "spring.jpa.open-in-view=false",
-                "spring.task.scheduling.enabled=false",
-                "spring.datasource.hikari.maximum-pool-size=1"
+                "spring.task.scheduling.enabled=false"
         }
 )
-class ReportServiceIntegrationTest {
+class ReportServiceIntegrationTest extends AbstractMySQLIntegrationTest {
 
     @Autowired
     private ReportService reportService;

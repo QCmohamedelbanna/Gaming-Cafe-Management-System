@@ -1,5 +1,6 @@
 package com.cafe.ps.service;
 
+import com.cafe.ps.AbstractMySQLIntegrationTest;
 import com.cafe.ps.dto.CheckoutResult;
 import com.cafe.ps.entity.Bill;
 import com.cafe.ps.entity.BillStatus;
@@ -38,16 +39,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
-                "spring.datasource.url=jdbc:sqlite:file:checkout-tests?mode=memory&cache=shared",
-                "spring.datasource.driver-class-name=org.sqlite.JDBC",
-                "spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect",
-                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.jpa.hibernate.ddl-auto=validate",
                 "spring.jpa.open-in-view=false",
-                "spring.task.scheduling.enabled=false",
-                "spring.datasource.hikari.maximum-pool-size=1"
+                "spring.task.scheduling.enabled=false"
         }
 )
-class CheckoutServiceIntegrationTest {
+class CheckoutServiceIntegrationTest extends AbstractMySQLIntegrationTest {
 
     private static final BigDecimal HOURLY_RATE = new BigDecimal("50.00");
     private static final LocalDateTime START = LocalDateTime.of(2026, 1, 1, 12, 0);
@@ -172,6 +169,46 @@ class CheckoutServiceIntegrationTest {
                 .hasMessage("Amount tendered is less than the bill total");
 
         assertUnchangedAfterFailedCheckout(session.getId(), order.getId(), device.getId());
+    }
+
+    @Test
+    void insufficientStockDuringCheckoutRollsBackTheWholeTransaction() {
+        Device device = saveDevice("TEST-ROLLBACK", DeviceType.PS4);
+        GameSession session = saveHourlySession(device, null, 60, START);
+        Product product = productRepository.save(Product.builder()
+                .name("Rollback Cola-" + UUID.randomUUID())
+                .price(money("20.00"))
+                .sellingPrice(money("20.00"))
+                .trackStock(true)
+                .currentStock(new BigDecimal("1"))
+                .active(true)
+                .deleted(false)
+                .build());
+        CafeOrder order = CafeOrder.builder()
+                .gameSession(session)
+                .createdAt(START)
+                .status(OrderStatus.OPEN)
+                .totalAmount(money("0.00"))
+                .build();
+        order.addItem(OrderItem.builder()
+                .product(product)
+                .quantity(2)
+                .unitPriceSnapshot(money("20.00"))
+                .lineTotal(money("0.00"))
+                .build());
+        order = orderRepository.save(order);
+
+        assertThatThrownBy(() -> checkoutService.checkout(
+                session.getId(),
+                PaymentMethod.CASH,
+                money("90.00")
+        ))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Insufficient stock");
+
+        assertUnchangedAfterFailedCheckout(session.getId(), order.getId(), device.getId());
+        assertThat(productRepository.findById(product.getId()).orElseThrow().getCurrentStock())
+                .isEqualByComparingTo("1");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.cafe.ps.service;
 
+import com.cafe.ps.AbstractMySQLIntegrationTest;
 import com.cafe.ps.dto.DeviceRequest;
 import com.cafe.ps.entity.BillingUnit;
 import com.cafe.ps.entity.Device;
@@ -24,16 +25,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
-                "spring.datasource.url=jdbc:sqlite:file:device-tests?mode=memory&cache=shared",
-                "spring.datasource.driver-class-name=org.sqlite.JDBC",
-                "spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect",
-                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.jpa.hibernate.ddl-auto=validate",
                 "spring.jpa.open-in-view=false",
-                "spring.task.scheduling.enabled=false",
-                "spring.datasource.hikari.maximum-pool-size=1"
+                "spring.task.scheduling.enabled=false"
         }
 )
-class DeviceServiceIntegrationTest {
+class DeviceServiceIntegrationTest extends AbstractMySQLIntegrationTest {
 
     private static final LocalDateTime START = LocalDateTime.of(2026, 1, 1, 12, 0);
 

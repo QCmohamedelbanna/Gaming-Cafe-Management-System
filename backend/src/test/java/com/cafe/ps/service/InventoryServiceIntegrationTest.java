@@ -1,5 +1,6 @@
 package com.cafe.ps.service;
 
+import com.cafe.ps.AbstractMySQLIntegrationTest;
 import com.cafe.ps.dto.StockMovementRequest;
 import com.cafe.ps.dto.DiscountRequest;
 import com.cafe.ps.entity.BillStatus;
@@ -38,17 +39,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
-                "spring.datasource.url=jdbc:sqlite:file:inventory-tests?mode=memory&cache=shared",
-                "spring.datasource.driver-class-name=org.sqlite.JDBC",
-                "spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect",
-                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.jpa.hibernate.ddl-auto=validate",
                 "spring.jpa.open-in-view=false",
                 "spring.task.scheduling.enabled=false",
-                "spring.datasource.hikari.maximum-pool-size=1",
                 "inventory.prevent-negative=true"
         }
 )
-class InventoryServiceIntegrationTest {
+class InventoryServiceIntegrationTest extends AbstractMySQLIntegrationTest {
 
     @Autowired
     private InventoryService inventoryService;
@@ -198,6 +195,27 @@ class InventoryServiceIntegrationTest {
                         StockMovementType.PURCHASE,
                         StockMovementType.SALE,
                         StockMovementType.RETURN
+                );
+    }
+
+    @Test
+    void recordSaleWithTheSameBillReferenceOnlyDeductsStockOnce() {
+        Product product = saveTrackedProduct("Idempotent Cola", "5.00", "1.50");
+        inventoryService.purchase(product.getId(), new StockMovementRequest(
+                new BigDecimal("5"), null, "OPENING", "admin"
+        ));
+        CafeOrder order = saveStandaloneOrder(product, 2);
+
+        inventoryService.recordSale(order, "BILL-IDEMPOTENT-1");
+        inventoryService.recordSale(order, "BILL-IDEMPOTENT-1");
+
+        assertThat(productRepository.findById(product.getId()).orElseThrow().getCurrentStock())
+                .isEqualByComparingTo("3.000");
+        assertThat(movementRepository.findAll())
+                .extracting("type")
+                .containsExactlyInAnyOrder(
+                        StockMovementType.PURCHASE,
+                        StockMovementType.SALE
                 );
     }
 

@@ -1,5 +1,6 @@
 package com.cafe.ps.controller;
 
+import com.cafe.ps.AbstractMySQLIntegrationTest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,17 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         properties = {
-                "spring.datasource.url=jdbc:sqlite:file:auth-tests?mode=memory&cache=shared",
-                "spring.datasource.driver-class-name=org.sqlite.JDBC",
-                "spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect",
-                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.jpa.hibernate.ddl-auto=validate",
                 "spring.jpa.open-in-view=false",
-                "spring.task.scheduling.enabled=false",
-                "spring.datasource.hikari.maximum-pool-size=1"
+                "spring.task.scheduling.enabled=false"
         }
 )
 @AutoConfigureMockMvc
-class AuthControllerIntegrationTest {
+class AuthControllerIntegrationTest extends AbstractMySQLIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
