@@ -9,6 +9,12 @@ public enum Permission {
             "OPERATIONS",
             Set.of(Role.CASHIER, Role.MANAGER, Role.ADMIN)
     ),
+    RESERVATIONS_MANAGE(
+            "Reservations",
+            "Create, check in, and cancel customer reservations.",
+            "OPERATIONS",
+            Set.of(Role.CASHIER, Role.MANAGER, Role.ADMIN)
+    ),
     POS_USE(
             "Point of sale",
             "Create and manage cafe orders at the POS.",
