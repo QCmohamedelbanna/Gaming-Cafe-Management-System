@@ -34,8 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         properties = {
                 "spring.jpa.hibernate.ddl-auto=validate",
                 "spring.jpa.open-in-view=false",
-                "spring.task.scheduling.enabled=false",
-                "reservations.no-show-grace-minutes=20"
+                "spring.task.scheduling.enabled=false"
         }
 )
 class ReservationServiceIntegrationTest extends AbstractMySQLIntegrationTest {

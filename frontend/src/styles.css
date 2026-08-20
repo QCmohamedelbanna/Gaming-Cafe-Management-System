@@ -2504,13 +2504,17 @@ body {
 .device-admin-active.inactive { color: #ff9fac; background: #321820; }
 .device-maintenance-note { display: block; max-width: 250px; overflow: hidden; color: #9aa8c5; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .device-row-actions { min-width: 300px; }
-.device-form-modal, .reservation-form-modal { max-width: 590px; }
-.device-form-modal > label, .device-form-grid label, .reservation-form-modal > label, .reservation-form-modal .product-form-grid label { display: block; margin: 18px 0 8px; color: #9aa8c5; font-size: 12px; font-weight: 700; }
+.device-form-modal, .reservation-form-modal, .settings-form { max-width: 590px; }
+.device-form-modal > label, .device-form-grid label, .reservation-form-modal > label, .reservation-form-modal .product-form-grid label,
+.settings-form > label, .settings-form .product-form-grid label { display: block; margin: 18px 0 8px; color: #9aa8c5; font-size: 12px; font-weight: 700; }
 .device-form-modal > input, .device-form-modal select, .device-form-modal textarea,
-.reservation-form-modal > input, .reservation-form-modal select, .reservation-form-modal .product-form-grid input, .reservation-form-modal .product-form-grid select { width: 100%; box-sizing: border-box; padding: 13px 14px; border: 1px solid #34405a; border-radius: 10px; outline: none; background: #0b111c; color: #ffffff; font: inherit; font-size: 14px; }
+.reservation-form-modal > input, .reservation-form-modal select, .reservation-form-modal .product-form-grid input, .reservation-form-modal .product-form-grid select,
+.settings-form .product-form-grid input { width: 100%; box-sizing: border-box; padding: 13px 14px; border: 1px solid #34405a; border-radius: 10px; outline: none; background: #0b111c; color: #ffffff; font: inherit; font-size: 14px; }
 .device-form-modal textarea { resize: vertical; line-height: 1.45; }
 .device-form-modal input:focus, .device-form-modal select:focus, .device-form-modal textarea:focus,
-.reservation-form-modal input:focus, .reservation-form-modal select:focus { border-color: #7386ff; }
+.reservation-form-modal input:focus, .reservation-form-modal select:focus,
+.settings-form input:focus { border-color: #7386ff; }
+.settings-role-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
 .device-form-modal textarea:disabled { color: #66728c; background: #101621; cursor: not-allowed; }
 .device-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .device-form-grid label { margin-bottom: 8px; }

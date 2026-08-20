@@ -4,7 +4,6 @@ import com.cafe.ps.audit.AuditLog;
 import com.cafe.ps.dto.DiscountRequest;
 import com.cafe.ps.entity.*;
 import com.cafe.ps.repository.*;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -14,9 +13,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,12 +21,7 @@ public class OrderService {
     private final CafeOrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final GameSessionRepository sessionRepository;
-
-    @Value("${inventory.prevent-negative:true}")
-    private boolean preventNegativeStock;
-
-    @Value("${pos.discount.allowed-roles:ADMIN,MANAGER}")
-    private String allowedDiscountRoles;
+    private final SettingsService settingsService;
 
     @Transactional
     public CafeOrder createOrder(Long gameSessionId) {
@@ -162,7 +153,7 @@ public class OrderService {
     }
 
     private void ensureStockAvailable(Product product, int requestedQuantity) {
-        if (!preventNegativeStock
+        if (!Boolean.TRUE.equals(settingsService.get().getPreventNegativeStock())
                 || !Boolean.TRUE.equals(product.getTrackStock())) {
             return;
         }
@@ -418,12 +409,12 @@ public class OrderService {
 
     private boolean hasDiscountPermission(String userRole) {
         if (userRole == null || userRole.isBlank()) return false;
-        Set<String> allowed = Arrays.stream(allowedDiscountRoles.split(","))
-                .map(String::trim)
-                .filter(role -> !role.isBlank())
-                .map(String::toUpperCase)
-                .collect(Collectors.toSet());
-        return allowed.contains(userRole.trim().toUpperCase());
+        try {
+            Role role = Role.valueOf(userRole.trim().toUpperCase());
+            return settingsService.get().getDiscountAllowedRoles().contains(role);
+        } catch (IllegalArgumentException notARole) {
+            return false;
+        }
     }
 
     private void cancelEmptyStandaloneOrder(CafeOrder order) {

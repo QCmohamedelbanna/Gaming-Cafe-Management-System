@@ -6,6 +6,7 @@ import Layout from "./components/layout/Layout";
 import LoginPage from "./components/auth/LoginPage";
 import Dashboard from "./components/dashboard/Dashboard";
 import ReservationsPage from "./components/reservations/ReservationsPage";
+import SettingsPage from "./components/settings/SettingsPage";
 import AdminDashboardPage from "./components/dashboard/AdminDashboardPage";
 import PricingPage from "./components/pricing/PricingPage";
 import POSPage from "./components/pos/POSPage";
@@ -151,12 +152,7 @@ export default function App() {
                 return <RolesPage />;
 
             case "settings":
-                return (
-                    <div className="placeholder-page">
-                        <h2>{t("page.settings")}</h2>
-                        <p>{t("settings.comingSoon")}</p>
-                    </div>
-                );
+                return <SettingsPage />;
 
             default:
                 return (

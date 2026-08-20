@@ -27,7 +27,6 @@ import com.cafe.ps.repository.GameSessionRepository;
 import com.cafe.ps.repository.ProductRepository;
 import com.cafe.ps.repository.StockMovementRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,9 +56,7 @@ public class ReportService {
     private final GameSessionRepository sessionRepository;
     private final ProductRepository productRepository;
     private final StockMovementRepository movementRepository;
-
-    @Value("${dashboard.ending-soon-minutes:30}")
-    private int endingSoonMinutes;
+    private final SettingsService settingsService;
 
     @Transactional(readOnly = true)
     public DashboardSummary dashboardSummary() {
@@ -179,7 +176,9 @@ public class ReportService {
 
     private List<SessionEndingSoon> endingSoon(List<GameSession> sessions) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime horizon = now.plusMinutes(Math.max(1, endingSoonMinutes));
+        LocalDateTime horizon = now.plusMinutes(
+                Math.max(1, settingsService.get().getDashboardEndingSoonMinutes())
+        );
 
         return sessions.stream()
                 .map(session -> {

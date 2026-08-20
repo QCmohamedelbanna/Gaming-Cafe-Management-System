@@ -26,9 +26,7 @@ public class ReservationService {
     private final DeviceRepository deviceRepository;
     private final CustomerService customerService;
     private final SessionService sessionService;
-
-    @Value("${reservations.no-show-grace-minutes:20}")
-    private int noShowGraceMinutes;
+    private final SettingsService settingsService;
 
     @Value("${spring.task.scheduling.enabled:true}")
     private boolean schedulingEnabled;
@@ -120,7 +118,8 @@ public class ReservationService {
     public void markNoShows() {
         if (!schedulingEnabled) return;
 
-        LocalDateTime threshold = LocalDateTime.now().minusMinutes(noShowGraceMinutes);
+        LocalDateTime threshold = LocalDateTime.now()
+                .minusMinutes(settingsService.get().getReservationsNoShowGraceMinutes());
         List<Reservation> overdue = reservationRepository.findByStatusAndStartTimeBefore(
                 ReservationStatus.UPCOMING,
                 threshold

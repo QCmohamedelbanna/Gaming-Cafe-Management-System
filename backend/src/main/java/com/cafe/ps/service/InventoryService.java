@@ -10,7 +10,6 @@ import com.cafe.ps.entity.StockMovementType;
 import com.cafe.ps.repository.ProductRepository;
 import com.cafe.ps.repository.StockMovementRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,9 +28,7 @@ public class InventoryService {
 
     private final ProductRepository productRepository;
     private final StockMovementRepository movementRepository;
-
-    @Value("${inventory.prevent-negative:true}")
-    private boolean preventNegativeStock;
+    private final SettingsService settingsService;
 
     @Transactional(readOnly = true)
     public List<Product> getProducts(String search, String category) {
@@ -211,7 +208,7 @@ public class InventoryService {
         BigDecimal before = stock(product.getCurrentStock());
         BigDecimal after = stock(before.add(quantity));
 
-        if (preventNegativeStock
+        if (Boolean.TRUE.equals(settingsService.get().getPreventNegativeStock())
                 && Boolean.TRUE.equals(product.getTrackStock())
                 && after.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalStateException(

@@ -332,6 +332,11 @@ const extraEn = {
     "dashboard.upcomingReservations": "Upcoming reservations",
     "form.customerName": "Customer name", "form.customerNamePlaceholder": "Full name",
     "form.customerPhone": "Phone number", "form.customerPhonePlaceholder": "01xxxxxxxxx",
+    "settings.pageLabel": "ADMINISTRATION", "settings.title": "Settings", "settings.description": "Business rules used across inventory, discounts, the dashboard, and reservations.",
+    "settings.loading": "Loading settings...", "settings.loadError": "Could not load settings.", "settings.saved": "Settings saved.", "settings.saveError": "Could not save settings.",
+    "settings.preventNegativeStock": "Prevent negative stock", "settings.preventNegativeStockHelp": "Block sales and stock movements that would push a tracked product's stock below zero.",
+    "settings.discountAllowedRoles": "Roles allowed to apply discounts", "settings.noDiscountRoles": "At least one role must be allowed to apply discounts.",
+    "settings.dashboardEndingSoonMinutes": "Dashboard \"ending soon\" threshold (minutes)", "settings.reservationsNoShowGraceMinutes": "Reservation no-show grace period (minutes)",
 };
 
 const extraAr = {
@@ -526,6 +531,11 @@ const extraAr = {
     "dashboard.upcomingReservations": "الحجوزات القادمة",
     "form.customerName": "اسم العميل", "form.customerNamePlaceholder": "الاسم الكامل",
     "form.customerPhone": "رقم الهاتف", "form.customerPhonePlaceholder": "01xxxxxxxxx",
+    "settings.pageLabel": "الإدارة", "settings.title": "الإعدادات", "settings.description": "قواعد العمل المستخدمة في المخزون والخصومات ولوحة التحكم والحجوزات.",
+    "settings.loading": "جارٍ تحميل الإعدادات...", "settings.loadError": "تعذر تحميل الإعدادات.", "settings.saved": "تم حفظ الإعدادات.", "settings.saveError": "تعذر حفظ الإعدادات.",
+    "settings.preventNegativeStock": "منع المخزون السالب", "settings.preventNegativeStockHelp": "منع عمليات البيع وحركات المخزون التي تجعل رصيد منتج متابَع أقل من صفر.",
+    "settings.discountAllowedRoles": "الأدوار المسموح لها بتطبيق الخصومات", "settings.noDiscountRoles": "يجب السماح لدور واحد على الأقل بتطبيق الخصومات.",
+    "settings.dashboardEndingSoonMinutes": "حد \"تنتهي قريباً\" في لوحة التحكم (دقائق)", "settings.reservationsNoShowGraceMinutes": "مهلة عدم حضور الحجز (دقائق)",
 };
 
 const dictionaries = {
