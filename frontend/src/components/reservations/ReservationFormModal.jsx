@@ -3,6 +3,7 @@ import { useLanguage } from "../../i18n";
 import { searchCustomers } from "../../api/customerApi";
 
 const DURATION_OPTIONS = [30, 60, 90, 120];
+const OPEN_TIME_OPTION = "OPEN_TIME";
 
 export default function ReservationFormModal({ devices, saving, error, onClose, onSave }) {
     const { t } = useLanguage();
@@ -47,7 +48,9 @@ export default function ReservationFormModal({ devices, saving, error, onClose, 
             deviceId: Number(deviceId),
             sessionType,
             startTime,
-            durationMinutes: Number(durationMinutes),
+            durationMinutes: durationMinutes === OPEN_TIME_OPTION
+                ? null
+                : Number(durationMinutes),
             notes: notes.trim() || null,
         });
     }
@@ -158,6 +161,7 @@ export default function ReservationFormModal({ devices, saving, error, onClose, 
                                     {minutes} {t("reservations.minutes")}
                                 </option>
                             ))}
+                            <option value={OPEN_TIME_OPTION}>{t("modal.openTime")}</option>
                         </select>
                     </div>
                 </div>

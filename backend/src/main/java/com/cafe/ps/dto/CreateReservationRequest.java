@@ -11,7 +11,7 @@ public record CreateReservationRequest(
         @NotNull Long deviceId,
         @NotNull SessionType sessionType,
         @NotNull @Future LocalDateTime startTime,
-        @NotNull @Min(15) Integer durationMinutes,
+        @Min(15) Integer durationMinutes,
         @Size(max = 300) String notes
 ) {
 }

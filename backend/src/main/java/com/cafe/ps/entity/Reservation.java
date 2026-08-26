@@ -35,7 +35,7 @@ public class Reservation {
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
-    @Column(name = "duration_minutes", nullable = false)
+    @Column(name = "duration_minutes")
     private Integer durationMinutes;
 
     @Enumerated(EnumType.STRING)

@@ -132,17 +132,21 @@ public class ReservationService {
     private void assertNoOverlap(
             Long deviceId,
             LocalDateTime startTime,
-            int durationMinutes
+            Integer durationMinutes
     ) {
-        LocalDateTime proposedEnd = startTime.plusMinutes(durationMinutes);
+        LocalDateTime proposedEnd = durationMinutes == null
+                ? null
+                : startTime.plusMinutes(durationMinutes);
 
         boolean overlaps = reservationRepository
                 .findByDeviceIdAndStatus(deviceId, ReservationStatus.UPCOMING)
                 .stream()
                 .anyMatch(existing -> {
-                    LocalDateTime existingEnd = existing.getStartTime()
-                            .plusMinutes(existing.getDurationMinutes());
-                    return startTime.isBefore(existingEnd) && existing.getStartTime().isBefore(proposedEnd);
+                    LocalDateTime existingEnd = existing.getDurationMinutes() == null
+                            ? null
+                            : existing.getStartTime().plusMinutes(existing.getDurationMinutes());
+                    return (existingEnd == null || startTime.isBefore(existingEnd))
+                            && (proposedEnd == null || existing.getStartTime().isBefore(proposedEnd));
                 });
 
         if (overlaps) {

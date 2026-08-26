@@ -62,6 +62,22 @@ describe("ReservationFormModal", () => {
         });
     });
 
+    it("submits an open-ended duration when Open time is selected", async () => {
+        const user = userEvent.setup();
+        const onSave = vi.fn();
+        renderForm({ onSave });
+
+        await user.type(screen.getByLabelText("Phone number"), "01000000005");
+        await user.type(screen.getByLabelText("Customer name"), "Omar");
+        await user.type(screen.getByLabelText("Start time"), "2027-01-01T18:00");
+        await user.selectOptions(screen.getByLabelText("Duration"), "OPEN_TIME");
+        await user.click(screen.getByRole("button", { name: "New reservation" }));
+
+        expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+            durationMinutes: null,
+        }));
+    });
+
     it("looks up an existing customer by phone and fills in their name", async () => {
         const user = userEvent.setup();
         customerApi.searchCustomers.mockResolvedValue([

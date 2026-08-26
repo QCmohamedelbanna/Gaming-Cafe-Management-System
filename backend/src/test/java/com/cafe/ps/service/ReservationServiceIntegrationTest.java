@@ -122,6 +122,23 @@ class ReservationServiceIntegrationTest extends AbstractMySQLIntegrationTest {
     }
 
     @Test
+    void openTimeReservationHasNoFixedEndAndBlocksLaterReservations() {
+        Device device = saveDevice(DeviceType.PS4);
+        LocalDateTime start = LocalDateTime.now().plusHours(2);
+
+        Reservation openTime = reservationService.create(
+                request("Ahmed", "0100000014", device.getId(), start, null)
+        );
+
+        assertThat(openTime.getDurationMinutes()).isNull();
+        assertThatThrownBy(() -> reservationService.create(request(
+                "Sara", "0100000015", device.getId(), start.plusHours(1), 60
+        )))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("overlaps");
+    }
+
+    @Test
     void reservationInThePastIsRejected() {
         Device device = saveDevice(DeviceType.PS4);
 
@@ -240,7 +257,7 @@ class ReservationServiceIntegrationTest extends AbstractMySQLIntegrationTest {
             String phone,
             Long deviceId,
             LocalDateTime startTime,
-            int durationMinutes
+            Integer durationMinutes
     ) {
         return new CreateReservationRequest(
                 name, phone, deviceId, SessionType.SINGLE, startTime, durationMinutes, null
