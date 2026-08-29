@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "./i18n";
 import { useAuth } from "./auth/AuthContext";
 
@@ -20,12 +20,49 @@ import UsersPage from "./components/users/UsersPage";
 import PermissionsPage from "./components/permissions/PermissionsPage";
 import RolesPage from "./components/roles/RolesPage.jsx";
 
+const PAGE_PATHS = {
+    operations: "/operations",
+    reservations: "/reservations",
+    pos: "/pos",
+    dashboard: "/dashboard",
+    products: "/products",
+    inventory: "/inventory",
+    pricing: "/pricing",
+    reports: "/reports",
+    devices: "/devices",
+    users: "/users",
+    settings: "/settings",
+    billing: "/billing",
+    shifts: "/shifts",
+    permissions: "/permissions",
+    rules: "/rules",
+};
+
+const PAGE_BY_PATH = Object.fromEntries(
+    Object.entries(PAGE_PATHS).map(([page, path]) => [path, page])
+);
+
+function pageFromPath(pathname) {
+    const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+    return PAGE_BY_PATH[normalizedPath] || "operations";
+}
+
 export default function App() {
     const { t } = useLanguage();
     const { user, loading, hasPermission } = useAuth();
 
-    const [activePage, setActivePage] =
-        useState("operations");
+    const [activePage, setActivePage] = useState(() =>
+        pageFromPath(window.location.pathname)
+    );
+
+    useEffect(() => {
+        const handlePopState = () => {
+            setActivePage(pageFromPath(window.location.pathname));
+        };
+
+        window.addEventListener("popstate", handlePopState);
+        return () => window.removeEventListener("popstate", handlePopState);
+    }, []);
 
     /*
      * Session currently attached to POS.
@@ -71,6 +108,11 @@ export default function App() {
      */
     function handleNavigate(page) {
         if (!canAccessPage(page)) return;
+
+        const path = PAGE_PATHS[page] || "/";
+        if (window.location.pathname !== path) {
+            window.history.pushState({}, "", path);
+        }
         setActivePage(page);
     }
 

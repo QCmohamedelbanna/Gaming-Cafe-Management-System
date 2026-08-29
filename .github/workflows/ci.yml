@@ -20,13 +20,27 @@ jobs:
           java-version: "17"
           cache: maven
 
-      # Testcontainers (used by the integration tests under
-      # backend/src/test) needs a Docker daemon; ubuntu-latest runners
-      # provide one out of the box, so no extra service container setup
-      # is required here.
+      - name: Prepare dedicated MySQL test database
+        shell: bash
+        run: |
+          sudo systemctl start mysql
+          test_db_password="$(openssl rand -hex 32)"
+          sudo mysql --protocol=socket --user=root <<SQL
+          CREATE DATABASE IF NOT EXISTS ps_cafe_test;
+          CREATE USER IF NOT EXISTS 'ps_cafe_ci'@'127.0.0.1' IDENTIFIED BY '${test_db_password}';
+          ALTER USER 'ps_cafe_ci'@'127.0.0.1' IDENTIFIED BY '${test_db_password}';
+          GRANT ALL PRIVILEGES ON ps_cafe_test.* TO 'ps_cafe_ci'@'127.0.0.1';
+          FLUSH PRIVILEGES;
+          SQL
+          {
+            echo "TEST_DB_URL=jdbc:mysql://127.0.0.1:3306/ps_cafe_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+            echo "TEST_DB_USER=ps_cafe_ci"
+            echo "TEST_DB_PASSWORD=$test_db_password"
+          } >> "$GITHUB_ENV"
+
       - name: Run backend tests
         working-directory: backend
-        run: mvn -B test
+        run: mvn -B -Pmysql-integration test
 
   frontend:
     name: Frontend build & tests
@@ -34,10 +48,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node 20
+      - name: Set up Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 

@@ -1,41 +1,57 @@
 #!/usr/bin/env bash
-# Restores a MySQL database from a backup produced by db-backup.sh.
-#
-# Usage: ./scripts/db-restore.sh path/to/backup.sql.gz
-#
-# WARNING: this overwrites every table currently in the target database.
-# Reads the same DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD env vars as
-# db-backup.sh (see that script for defaults).
+# Restores a SQLite backup after the application has been stopped.
+# Usage: ./scripts/db-restore.sh path/to/gaming-cafe-backup.db
 set -euo pipefail
 
-if [ "${1:-}" = "" ]; then
-    echo "Usage: $0 path/to/backup.sql.gz" >&2
-    exit 1
+if [[ "${1:-}" == "" ]]; then
+  echo "Usage: $0 path/to/gaming-cafe-backup.db" >&2
+  exit 1
+fi
+backup_file="$1"
+database_path="${GAMING_CAFE_DB_PATH:-}"
+if [[ -z "$database_path" ]]; then
+  database_path="${PROGRAMDATA:-${HOME:?HOME is required}}/GamingCafe/data/gaming-cafe.db"
 fi
 
-BACKUP_FILE="$1"
-if [ ! -f "$BACKUP_FILE" ]; then
-    echo "Backup file not found: $BACKUP_FILE" >&2
-    exit 1
+if [[ ! -f "$backup_file" || ! -f "$database_path" ]]; then
+  echo "Both the backup and target SQLite database must exist." >&2
+  exit 1
+fi
+command -v sqlite3 >/dev/null 2>&1 || {
+  echo "sqlite3 is required on PATH for this maintenance script." >&2
+  exit 1
+}
+
+if [[ -f "${database_path%/*}/../gaming-cafe.lock" ]]; then
+  echo "Stop Gaming Cafe before restoring the database." >&2
+  exit 1
 fi
 
-DB_HOST="${DB_HOST:-127.0.0.1}"
-DB_PORT="${DB_PORT:-3306}"
-DB_NAME="${DB_NAME:-ps_cafe}"
-DB_USER="${DB_USER:-ps_user}"
-DB_PASSWORD="${DB_PASSWORD:-ps_password}"
-
-echo "About to overwrite ${DB_NAME}@${DB_HOST}:${DB_PORT} with ${BACKUP_FILE}"
-read -r -p "Type the database name (${DB_NAME}) to confirm: " CONFIRM
-if [ "$CONFIRM" != "$DB_NAME" ]; then
-    echo "Confirmation did not match. Aborting." >&2
-    exit 1
+integrity="$(sqlite3 "$backup_file" "PRAGMA integrity_check;")"
+if [[ "$integrity" != "ok" ]]; then
+  echo "The backup failed SQLite integrity validation." >&2
+  exit 1
 fi
 
-gunzip -c "$BACKUP_FILE" | MYSQL_PWD="$DB_PASSWORD" mysql \
-    --host="$DB_HOST" \
-    --port="$DB_PORT" \
-    --user="$DB_USER" \
-    "$DB_NAME"
+read -r -p "Type RESTORE to replace the target database: " confirmation
+if [[ "$confirmation" != "RESTORE" ]]; then
+  echo "Restore cancelled." >&2
+  exit 1
+fi
 
-echo "Restore complete."
+backup_dir="${GAMING_CAFE_BACKUP_DIR:-$(dirname "$database_path")/../backup}"
+mkdir -p "$backup_dir"
+umask 077
+timestamp="$(date +%Y-%m-%d-%H%M%S)"
+pre_restore="$backup_dir/before-restore-$timestamp.db"
+temporary="$pre_restore.tmp"
+sqlite3 "$database_path" ".timeout 10000" ".backup '$temporary'"
+if [[ ! -s "$temporary" ]]; then
+  rm -f -- "$temporary"
+  echo "Could not create the pre-restore safety backup; nothing was restored." >&2
+  exit 1
+fi
+mv -- "$temporary" "$pre_restore"
+
+sqlite3 "$database_path" ".restore '$backup_file'"
+echo "Restore complete. Pre-restore safety backup: $pre_restore"

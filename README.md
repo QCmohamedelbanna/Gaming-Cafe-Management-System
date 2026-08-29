@@ -1,28 +1,173 @@
-# Gaming-Cafe-Management-System
+# Gaming Cafe Management System
 
-## Local development
+Gaming Cafe is a local-network desktop application for PlayStation sessions, reservations, POS orders, inventory, billing, shifts, reports, users, and pricing.
 
-The backend runs against MySQL. Start it with `docker compose up mysql`, then run the backend from `backend` with `mvn spring-boot:run` (uses the `dev` profile by default — see `application-dev.properties`), and the frontend from `frontend` with `npm run dev`. Copy `frontend/.env.example` to `frontend/.env` if you need to point the UI at a non-default API URL.
+## Architecture
 
-Phase 6 seeds an administrator on a new database:
+- Spring Boot 3.3.2 / Java 17 target: REST API, authentication, business rules, SQLite access, scheduled work, and the desktop launcher.
+- React + Vite: development server only; Maven builds the production bundle and embeds it in the Spring Boot application.
+- SQLite: development data stays in `backend/ps_cafe.db`; the installed application stores data below `%ProgramData%\GamingCafe`.
+- One origin in production: `http://localhost:8080` (or the host's LAN address on the shop network).
 
-- Username: `admin`
-- Password: `admin123`
+The packaged client has no dependency on Node.js, npm, Maven, or a globally installed Java runtime. The Windows package contains its own Java runtime.
 
-In production (the `prod` profile), the admin username/password, database connection, and CORS allowed origins are all required environment variables (`ADMIN_USERNAME`, `ADMIN_PASSWORD`, `DB_URL`, `DB_USER`, `DB_PASSWORD`, `CORS_ALLOWED_ORIGINS`) with no built-in default — see `application-prod.properties`. Administrators can create manager and cashier accounts from **Users**. Cashiers must open a shift before taking payments; closing a shift records expected cash, actual cash, and the difference.
+## Development
 
-## Running the full stack with Docker
+Build-machine prerequisites:
 
-`docker compose up --build` builds and starts MySQL, the backend, and the frontend together (backend on `:8080`, frontend on `:5173`, MySQL on `:3306`). See `docker-compose.yml` for the default (dev-only) credentials baked in there — override them for anything beyond local use.
+- JDK 17 or newer, with `java` and `jpackage` available.
+- Maven 3.9 or newer.
+- Node.js 20.19 or newer and npm for direct frontend development. Maven also provisions the pinned Node/npm toolchain for release builds.
+- A dedicated MySQL database is required only for the existing backend integration tests (`TEST_DB_URL`, `TEST_DB_USER`, and `TEST_DB_PASSWORD`). The application itself uses SQLite.
 
-## Database backup and restore
+Optional local configuration can be copied from `.env.example` to `.env`. Do not commit that file or real credentials.
 
-`scripts/db-backup.sh` (`.ps1` on Windows) dumps the database to a timestamped, gzip-compressed file under `backups/`; `scripts/db-restore.sh` / `.ps1` restores from one. Both read `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_USER`/`DB_PASSWORD` from the environment, defaulting to the `docker-compose.yml` credentials.
+Start the backend from `backend/`:
 
-## Database migrations
+```text
+mvn spring-boot:run
+```
 
-Schema changes go through Flyway (`backend/src/main/resources/db/migration`) — `spring.jpa.hibernate.ddl-auto` is `validate`, so the app will refuse to start against a schema that doesn't match its entities. Add a new `V<n>__description.sql` file rather than editing an already-applied one.
+The Maven Spring Boot run goal activates the `dev` profile. It uses `backend/ps_cafe.db`, binds to `127.0.0.1:8080`, and keeps console logging enabled.
 
-## Tests and CI
+Start the Vite frontend separately from `frontend/`:
 
-Backend integration tests use Testcontainers to run against a real MySQL container (Docker required — see `backend/src/test/java/com/cafe/ps/AbstractMySQLIntegrationTest.java`); run them with `mvn test`. Frontend tests run with `npm test` (Vitest). Both run in CI on every push/PR — see `.github/workflows/ci.yml`.
+```text
+npm install
+npm run dev
+```
+
+Vite serves port 5173 and proxies `/api` to port 8080. Frontend API modules use relative `/api/...` paths, so the same code is used in development and production.
+
+Run frontend tests and a standalone frontend build from `frontend/`:
+
+```text
+npm test
+npm run build
+```
+
+The standalone production bundle is written to `frontend/dist/`. It is not required to run the packaged application.
+
+The default Maven lifecycle runs unit tests and excludes the MySQL-only integration suite (tagged `mysql`) so a release build does not require a database server. Run that suite explicitly when its environment variables point to a disposable test database:
+
+```text
+cd backend
+mvn -Pmysql-integration test
+```
+
+## Production build
+
+From the repository root, run:
+
+```text
+scripts\build-production.bat
+```
+
+This runs `mvn clean package`, which runs unit tests while excluding the MySQL-only integration suite, copies the frontend into an isolated `backend/target/frontend-build` directory, runs a production-only `npm ci --omit=dev` and `npm run build`, embeds the generated files into the jar, and stages runtime dependency jars. The isolated workspace prevents a live Vite process from locking `frontend/node_modules` during a release build.
+
+The executable Spring Boot jar is:
+
+```text
+backend\target\gaming-cafe.jar
+```
+
+It can be run on a build/developer machine with:
+
+```text
+cd backend
+java -jar target\gaming-cafe.jar
+```
+
+The jar defaults to the `prod` profile and serves both the React UI and `/api/**` on port 8080. On a new empty database, direct `java -jar` execution requires `ADMIN_USERNAME` and `ADMIN_PASSWORD`; the installed launcher generates a strong first-run password and displays it once instead. Override `SERVER_PORT`, `SERVER_ADDRESS`, `GAMING_CAFE_DATA_DIR`, `GAMING_CAFE_DB_PATH`, `GAMING_CAFE_LOG_DIR`, and `GAMING_CAFE_BACKUP_DIR` only for controlled tests or deployments.
+
+## Windows app image and installer
+
+`scripts\build-production.bat` also calls `scripts\package-windows.bat`. The packaging script:
+
+1. Stages the thin application jar and runtime dependency jars.
+2. Uses `jpackage` to create a bundled-Java app image.
+3. Creates a no-console Windows launcher whose main class starts Spring, checks the port, waits for `/api/system/status`, and opens the default browser only after the server is ready.
+4. Creates Start Menu and desktop shortcuts and a normal Add/Remove Programs entry.
+
+The installer artifact is:
+
+```text
+backend\target\installer\GamingCafeSetup.exe
+```
+
+The build machine needs WiX Toolset 3.14.1 (or another compatible WiX 3 release) with `candle.exe` and `light.exe` on `PATH` for the `.exe` installer. Without WiX, create and inspect the bundled app image with:
+
+```text
+set GAMING_CAFE_APP_IMAGE_ONLY=1
+scripts\package-windows.bat
+```
+
+The app image is written to:
+
+```text
+backend\target\installer\Gaming Cafe\
+```
+
+The Java runtime is generated by `jpackage` and is included below that app image. The installer does not include source, `.git`, IDE metadata, `node_modules`, or Maven/frontend build caches.
+
+## Installed layout and data safety
+
+The intended per-machine installation is:
+
+```text
+C:\Program Files\GamingCafe\
+    Gaming Cafe.exe
+    app\
+    runtime\
+
+C:\ProgramData\GamingCafe\
+    data\gaming-cafe.db
+    logs\gaming-cafe.log
+    logs\launcher.log
+    logs\audit.log
+    backup\
+```
+
+`ApplicationPathsEnvironmentPostProcessor` resolves these paths centrally and creates missing directories before datasource/logging initialization. The database is never stored in Program Files and is not overwritten during an application upgrade. The single-instance lock file is held under the same ProgramData directory while the application is running.
+
+Flyway uses the non-destructive SQLite baseline and compatibility migration as the production schema authority. Production disables Hibernate schema mutation (`ddl-auto=none`); development retains `ddl-auto=update` for the existing workflow. Future production schema changes must be added as reviewed Flyway migrations. No destructive `clean`, `create`, or `create-drop` action is enabled for production. A development database is not copied into a new installation automatically; perform any intentional one-time migration or restore only after taking a backup.
+
+## Launcher, port, and logging behavior
+
+- First launch acquires the application lock, checks port 8080, starts Spring in the same hidden process, waits for the public identity endpoint, then opens `http://localhost:8080`.
+- On a new installation with no existing users, the launcher creates the administrator from explicitly supplied `ADMIN_*` values or generates a cryptographically random one-time password. The generated username/password is shown in a first-run dialog after the server is ready and is never written to logs. Store it securely and change it after signing in.
+- A second launch detects the existing lock and opens the browser without starting another backend.
+- If another application owns port 8080, the launcher stops and records a useful error instead of selecting a random port.
+- Direct `java -jar` launches also acquire the same lock through `SingleInstanceGuard`.
+- Production logs rotate under `%ProgramData%\GamingCafe\logs` and are outside Program Files. Startup, datasource, permission, port, and filesystem errors are recorded there.
+
+To enable optional start-at-login without changing the application, open `shell:startup` in Windows Explorer and copy the installed `Gaming Cafe` shortcut into that folder. Remove that shortcut to disable it. The installer does not force auto-start.
+
+## SQLite backup foundation
+
+An authenticated `POST /api/system/backup` endpoint calls SQLite's online backup API and atomically creates a timestamped file such as `gaming-cafe-2026-08-26-163000.db` under `%ProgramData%\GamingCafe\backup`. It does not copy the live database byte-for-byte during an active write. The endpoint is protected by the settings-management permission.
+
+The Java service is the supported runtime backup foundation. The legacy MySQL shell scripts are not part of the client runtime; use the endpoint or a separately planned SQLite maintenance tool for operational backups.
+
+## Versioning and upgrades
+
+The authoritative application version is the project version in `backend/pom.xml` (currently `1.0.0`). It is injected into Spring Boot build info and the runtime status endpoint. Keep `frontend/package.json` and the root entry in `frontend/package-lock.json` at the same version for release metadata.
+
+For version `1.0.1`:
+
+1. Change the project `<version>` in `backend/pom.xml` to `1.0.1`.
+2. From `frontend/`, run `npm version 1.0.1 --no-git-tag-version` or update `package.json` and the lockfile root together.
+3. Run `scripts\build-production.bat`.
+
+The fixed jpackage upgrade UUID allows Windows to recognize a later installer as an upgrade. `%ProgramData%\GamingCafe\data` is not part of the application image, so database records, bills, payments, users, inventory, sessions, and settings remain in place.
+
+## Client prerequisites
+
+The client needs a supported 64-bit Windows installation, permission to install the application, a default browser, and local access to the installed ProgramData directory. It does not need CMD, PowerShell, IntelliJ, Maven, npm, Node.js, `JAVA_HOME`, a JDK, source code, or internet access after installation. Other shop computers can use `http://<host-pc-name-or-ip>:8080` on the local network when Windows Firewall permits inbound port 8080.
+
+## Known limitations
+
+- This workspace has JDK/jpackage but not WiX, so the app image is verifiable here while the final `.exe` installer requires WiX on the build machine.
+- The existing backend integration suite remains MySQL-specific and requires a separate test database; it is not used by the SQLite client runtime.
+- The desktop UI is browser-based. Frontend JavaScript is necessarily distributed as a browser bundle; sensitive validation, authorization, persistence, and financial logic remain in Spring Boot.
+- The backup endpoint is a local safe-backup foundation, not cloud backup, encryption, retention policy, or an automated restore drill.

@@ -55,7 +55,7 @@ describe("resolveApiUrl", () => {
     });
 
     it("prefixes a relative path with the configured API base URL", () => {
-        expect(resolveApiUrl("/products")).toBe("http://localhost:8080/api/products");
-        expect(resolveApiUrl("products")).toBe("http://localhost:8080/api/products");
+        expect(resolveApiUrl("/products")).toBe("/api/products");
+        expect(resolveApiUrl("products")).toBe("/api/products");
     });
 });

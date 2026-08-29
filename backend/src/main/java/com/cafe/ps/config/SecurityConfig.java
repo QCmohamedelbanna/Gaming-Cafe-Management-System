@@ -29,6 +29,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
@@ -37,8 +39,8 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${app.cors.allowed-origins}")
-    private List<String> corsAllowedOrigins;
+    @Value("${app.cors.allowed-origins:}")
+    private String corsAllowedOrigins;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -95,7 +97,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/csrf", "/api/auth/logout").permitAll()
+                        .requestMatchers("/api/system/status").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
+                        .requestMatchers(FrontendRoutes.securityPermitPatterns()).permitAll()
                         .anyRequest().authenticated())
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -109,14 +114,27 @@ public class SecurityConfig {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
+        List<String> allowedOrigins = Arrays.stream(corsAllowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .collect(Collectors.toList());
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(corsAllowedOrigins);
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "X-XSRF-TOKEN"));
+        configuration.setAllowedHeaders(List.of(
+                "Accept", "Content-Type", "X-Requested-With", "X-XSRF-TOKEN"
+        ));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        // Same-origin production requests do not need CORS at all. Leaving
+        // the source unregistered prevents an empty allow-list from rejecting
+        // browser requests that happen to carry an Origin header. Development
+        // and explicitly configured external frontends still get strict CORS.
+        if (!allowedOrigins.isEmpty()) {
+            source.registerCorsConfiguration("/**", configuration);
+        }
         return source;
     }
 

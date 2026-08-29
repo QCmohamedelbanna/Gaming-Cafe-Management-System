@@ -2,35 +2,45 @@ package com.cafe.ps;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MySQLContainer;
+import org.junit.jupiter.api.Tag;
+
+import java.util.UUID;
 
 /**
- * Shared MySQL 8.4 container for integration tests, matching the database
- * used in production (see docker-compose.yml). Started once as a singleton
- * and left running for the JVM's lifetime (Testcontainers' Ryuk sidecar
- * removes it afterwards) so every test class shares one container instead
- * of paying its ~10s startup cost per class. Flyway applies the same
- * db/migration scripts used in production against it, and ddl-auto=validate
- * (set on each subclass) exercises the exact schema-validation path prod
- * runs under. Requires a Docker daemon reachable from the test JVM.
+ * Shared MySQL configuration for integration tests.
+ *
+ * Tests intentionally require a dedicated local/CI database through
+ * TEST_DB_URL, TEST_DB_USER, and TEST_DB_PASSWORD. They never fall back to
+ * the application's development database, because the suite mutates data.
+ * Flyway applies the production migrations and ddl-auto=validate exercises
+ * the same schema-validation path used by the application.
  */
+@Tag("mysql")
 public abstract class AbstractMySQLIntegrationTest {
 
-    protected static final MySQLContainer<?> MYSQL =
-            new MySQLContainer<>("mysql:8.4")
-                    .withDatabaseName("ps_cafe_test")
-                    .withUsername("ps_user")
-                    .withPassword("ps_password");
-
-    static {
-        MYSQL.start();
-    }
+    protected static final String TEST_ADMIN_USERNAME = "integration-admin";
+    protected static final String TEST_ADMIN_PASSWORD = UUID.randomUUID().toString();
 
     @DynamicPropertySource
     static void datasourceProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
-        registry.add("spring.datasource.username", MYSQL::getUsername);
-        registry.add("spring.datasource.password", MYSQL::getPassword);
-        registry.add("spring.datasource.driver-class-name", MYSQL::getDriverClassName);
+        registry.add("spring.datasource.url", () -> requiredEnvironmentVariable("TEST_DB_URL"));
+        registry.add("spring.datasource.username", () -> requiredEnvironmentVariable("TEST_DB_USER"));
+        registry.add("spring.datasource.password", () -> requiredEnvironmentVariable("TEST_DB_PASSWORD"));
+        registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.MySQLDialect");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+        registry.add("app.default-admin-username", () -> TEST_ADMIN_USERNAME);
+        registry.add("app.default-admin-password", () -> TEST_ADMIN_PASSWORD);
+    }
+
+    private static String requiredEnvironmentVariable(String name) {
+        String value = System.getenv(name);
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(
+                    "Integration tests require environment variable " + name
+                            + " pointing to a dedicated MySQL test database."
+            );
+        }
+        return value;
     }
 }

@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+// Production is same-origin. Vite's development proxy handles the same
+// relative path while the frontend is served from port 5173.
+const configuredApiBaseUrl = import.meta.env.VITE_API_URL?.trim();
+const API_BASE_URL = configuredApiBaseUrl || "/api";
 
 const unsafeMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 

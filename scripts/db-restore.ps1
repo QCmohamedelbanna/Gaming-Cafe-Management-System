@@ -1,59 +1,96 @@
 <#
 .SYNOPSIS
-    Restores a MySQL database from a backup produced by db-backup.ps1.
+    Restores a SQLite database from a safe .db backup.
 
 .PARAMETER BackupFile
-    Path to a .sql.gz backup file.
+    SQLite backup file created by db-backup.ps1 or the application API.
+
+.PARAMETER DatabasePath
+    Target SQLite database. Defaults to GAMING_CAFE_DB_PATH or the installed
+    ProgramData database.
 
 .NOTES
-    WARNING: this overwrites every table currently in the target database.
-    Reads the same DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD environment
-    variables as db-backup.ps1 (see that script for defaults). Requires
-    mysql (the CLI client) on PATH.
+    Stop Gaming Cafe before restoring. The script creates a pre-restore backup
+    with SQLite's online backup API and never overwrites it automatically.
+    Requires sqlite3.exe on PATH.
 #>
 param(
     [Parameter(Mandatory = $true)]
-    [string]$BackupFile
+    [string]$BackupFile,
+    [string]$DatabasePath = ""
 )
 
 $ErrorActionPreference = "Stop"
 
-if (-not (Test-Path $BackupFile)) {
-    Write-Error "Backup file not found: $BackupFile"
-    exit 1
+function Get-DefaultDataDirectory {
+    $programData = [Environment]::GetEnvironmentVariable("ProgramData")
+    if ([string]::IsNullOrWhiteSpace($programData)) {
+        $programData = [Environment]::GetEnvironmentVariable("PROGRAMDATA")
+    }
+    if ([string]::IsNullOrWhiteSpace($programData)) {
+        $programData = [Environment]::GetFolderPath([Environment+SpecialFolder]::CommonApplicationData)
+    }
+    return Join-Path $programData "GamingCafe"
 }
 
-$DbHost = if ($env:DB_HOST) { $env:DB_HOST } else { "127.0.0.1" }
-$DbPort = if ($env:DB_PORT) { $env:DB_PORT } else { "3306" }
-$DbName = if ($env:DB_NAME) { $env:DB_NAME } else { "ps_cafe" }
-$DbUser = if ($env:DB_USER) { $env:DB_USER } else { "ps_user" }
-$DbPassword = if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { "ps_password" }
-
-Write-Host "About to overwrite $DbName@${DbHost}:${DbPort} with $BackupFile"
-$confirm = Read-Host "Type the database name ($DbName) to confirm"
-if ($confirm -ne $DbName) {
-    Write-Error "Confirmation did not match. Aborting."
-    exit 1
+$dataDirectory = Get-DefaultDataDirectory
+if ([string]::IsNullOrWhiteSpace($DatabasePath)) {
+    $DatabasePath = [Environment]::GetEnvironmentVariable("GAMING_CAFE_DB_PATH")
+}
+if ([string]::IsNullOrWhiteSpace($DatabasePath)) {
+    $DatabasePath = Join-Path $dataDirectory "data\gaming-cafe.db"
 }
 
-$SqlFile = [System.IO.Path]::GetTempFileName()
-$sourceStream = [System.IO.File]::OpenRead($BackupFile)
-$gzipStream = New-Object System.IO.Compression.GZipStream($sourceStream, [System.IO.Compression.CompressionMode]::Decompress)
-$targetStream = [System.IO.File]::Create($SqlFile)
-try {
-    $gzipStream.CopyTo($targetStream)
-} finally {
-    $targetStream.Dispose()
-    $gzipStream.Dispose()
-    $sourceStream.Dispose()
+if (-not (Test-Path -LiteralPath $BackupFile -PathType Leaf)) {
+    throw "Backup file not found: $BackupFile"
+}
+if (-not (Test-Path -LiteralPath $DatabasePath -PathType Leaf)) {
+    throw "Target SQLite database was not found: $DatabasePath"
+}
+$sqlite = Get-Command sqlite3.exe -ErrorAction Stop
+
+$lockFile = Join-Path $dataDirectory "gaming-cafe.lock"
+if (Test-Path -LiteralPath $lockFile) {
+    try {
+        $lockStream = [System.IO.File]::Open(
+                $lockFile,
+                [System.IO.FileMode]::Open,
+                [System.IO.FileAccess]::ReadWrite,
+                [System.IO.FileShare]::None
+        )
+        $lockStream.Dispose()
+    } catch {
+        throw "Gaming Cafe appears to be running. Stop it before restoring the database."
+    }
 }
 
-$env:MYSQL_PWD = $DbPassword
-try {
-    Get-Content $SqlFile -Raw | & mysql --host=$DbHost --port=$DbPort --user=$DbUser $DbName
-} finally {
-    Remove-Item Env:\MYSQL_PWD
-    Remove-Item $SqlFile -ErrorAction SilentlyContinue
+$integrity = (& $sqlite.Source $BackupFile "PRAGMA integrity_check;") | Out-String
+if ($LASTEXITCODE -ne 0 -or $integrity.Trim() -ne "ok") {
+    throw "The backup failed SQLite integrity validation: $BackupFile"
 }
 
-Write-Host "Restore complete."
+$confirmation = Read-Host "Type RESTORE to replace the target database"
+if ($confirmation -cne "RESTORE") {
+    throw "Restore cancelled."
+}
+
+$backupDirectory = Join-Path $dataDirectory "backup"
+New-Item -ItemType Directory -Force -Path $backupDirectory | Out-Null
+$timestamp = Get-Date -Format "yyyy-MM-dd-HHmmss"
+$preRestore = Join-Path $backupDirectory "before-restore-$timestamp.db"
+$preRestoreTemp = "$preRestore.tmp"
+$escapedPreRestoreTemp = $preRestoreTemp.Replace("'", "''")
+$escapedBackup = (Resolve-Path -LiteralPath $BackupFile).Path.Replace("'", "''")
+
+& $sqlite.Source $DatabasePath ".timeout 10000" ".backup '$escapedPreRestoreTemp'"
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $preRestoreTemp -PathType Leaf)) {
+    Remove-Item -LiteralPath $preRestoreTemp -Force -ErrorAction SilentlyContinue
+    throw "Could not create the pre-restore safety backup. Nothing was restored."
+}
+Move-Item -LiteralPath $preRestoreTemp -Destination $preRestore
+
+& $sqlite.Source $DatabasePath ".restore '$escapedBackup'"
+if ($LASTEXITCODE -ne 0) {
+    throw "SQLite restore failed. The pre-restore backup is available at $preRestore"
+}
+Write-Host "Restore complete. Pre-restore safety backup: $preRestore"

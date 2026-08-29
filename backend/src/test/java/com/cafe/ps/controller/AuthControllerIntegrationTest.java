@@ -62,7 +62,7 @@ class AuthControllerIntegrationTest extends AbstractMySQLIntegrationTest {
                         .cookie(csrfCookie)
                         .header("X-XSRF-TOKEN", csrfCookie.getValue())
                         .contentType(APPLICATION_JSON)
-                        .content("{\"username\":\"admin\",\"password\":\"admin123\"}"))
+                        .content("{\"username\":\"" + TEST_ADMIN_USERNAME + "\",\"password\":\"" + TEST_ADMIN_PASSWORD + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("admin"))
                 .andExpect(jsonPath("$.role").value("ADMIN"))
@@ -258,7 +258,7 @@ class AuthControllerIntegrationTest extends AbstractMySQLIntegrationTest {
                         .cookie(csrfCookie)
                         .header("X-XSRF-TOKEN", csrfCookie.getValue())
                         .contentType(APPLICATION_JSON)
-                        .content("{\"username\":\"admin\",\"password\":\"admin123\"}"))
+                        .content("{\"username\":\"" + TEST_ADMIN_USERNAME + "\",\"password\":\"" + TEST_ADMIN_PASSWORD + "\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
     }

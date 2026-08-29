@@ -1,38 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- Human-readable console output for local development. -->
-    <springProfile name="dev">
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder>
-                <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-    </springProfile>
+    <springProperty scope="context" name="appLogDir"
+                    source="app.log-dir" defaultValue="logs"/>
 
-    <!-- Structured JSON console output for production, so log shippers
-         (CloudWatch, Loki, ELK, etc.) can parse fields without a custom
-         grok pattern. -->
-    <springProfile name="prod">
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-                <customFields>{"app":"playstation-cafe-backend"}</customFields>
-            </encoder>
-        </appender>
-    </springProfile>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-    <!-- Dedicated audit trail: one JSON line per sensitive action (login,
-         checkout, refund, cancel, product delete, discount). Always JSON,
-         regardless of profile, and kept out of the app's regular log noise
-         via additivity=false. Rotated daily, kept for a year. -->
+    <!-- Runtime logs live under ProgramData in the installed application and
+         rotate independently of the application installation directory. -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${appLogDir}/gaming-cafe.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${appLogDir}/gaming-cafe-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>200MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Sensitive actions remain a separate, daily-rotated audit trail. -->
     <appender name="AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/audit.log</file>
+        <file>${appLogDir}/audit.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/audit-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <fileNamePattern>${appLogDir}/audit-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>365</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"app":"playstation-cafe-backend","stream":"audit"}</customFields>
+            <customFields>{"app":"gaming-cafe","stream":"audit"}</customFields>
         </encoder>
     </appender>
 
@@ -40,8 +42,26 @@
         <appender-ref ref="AUDIT"/>
     </logger>
 
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-    </root>
+    <!-- Development keeps the console for the existing workflow and also
+         writes a local rolling file. The installed profile is file-only so
+         javaw/jpackage never exposes a terminal. -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
 
 </configuration>

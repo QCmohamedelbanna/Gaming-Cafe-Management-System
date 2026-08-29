@@ -2,6 +2,9 @@
 backend/target/
 frontend/dist/
 frontend/node_modules/
+.mvn-node/
+frontend/.mvn-node/
+target/
 
 # Local database
 *.db
@@ -11,6 +14,18 @@ frontend/node_modules/
 .env
 .env.local
 .env.*.local
+
+# Runtime logs, database backups, and private key material
+backend/logs/
+logs/
+backend/backup/
+backup/
+**/gaming-cafe.lock
+backups/
+*.sql.gz
+*.pem
+*.key
+*.p12
 
 # IDE
 .idea/

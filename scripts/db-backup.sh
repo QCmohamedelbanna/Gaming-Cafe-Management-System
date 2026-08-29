@@ -1,39 +1,40 @@
 #!/usr/bin/env bash
-# Dumps the MySQL database to a timestamped, gzip-compressed SQL file.
-#
-# Usage: ./scripts/db-backup.sh [output-directory]
-#
-# Reads connection details from the environment, defaulting to the values
-# provisioned by the root docker-compose.yml so a local `docker compose up
-# mysql` needs no extra configuration:
-#   DB_HOST      default: 127.0.0.1
-#   DB_PORT      default: 3306
-#   DB_NAME      default: ps_cafe
-#   DB_USER      default: ps_user
-#   DB_PASSWORD  default: ps_password
+# Creates a consistent SQLite backup through sqlite3's online backup API.
+# The installed Windows client uses the Java backup service and does not need
+# this script or sqlite3 on the client machine.
 set -euo pipefail
 
-DB_HOST="${DB_HOST:-127.0.0.1}"
-DB_PORT="${DB_PORT:-3306}"
-DB_NAME="${DB_NAME:-ps_cafe}"
-DB_USER="${DB_USER:-ps_user}"
-DB_PASSWORD="${DB_PASSWORD:-ps_password}"
+database_path="${GAMING_CAFE_DB_PATH:-}"
+if [[ -z "$database_path" ]]; then
+  database_path="${PROGRAMDATA:-${HOME:?HOME is required}}/GamingCafe/data/gaming-cafe.db"
+fi
 
-OUT_DIR="${1:-backups}"
-mkdir -p "$OUT_DIR"
+backup_dir="${GAMING_CAFE_BACKUP_DIR:-}"
+if [[ -z "$backup_dir" ]]; then
+  backup_dir="$(dirname "$database_path")/../backup"
+fi
 
-TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-OUT_FILE="$OUT_DIR/${DB_NAME}-${TIMESTAMP}.sql.gz"
+if [[ ! -f "$database_path" ]]; then
+  echo "SQLite database not found: $database_path" >&2
+  exit 1
+fi
+command -v sqlite3 >/dev/null 2>&1 || {
+  echo "sqlite3 is required on PATH for this maintenance script." >&2
+  exit 1
+}
 
-echo "Backing up ${DB_NAME}@${DB_HOST}:${DB_PORT} -> ${OUT_FILE}"
+mkdir -p "$backup_dir"
+umask 077
+timestamp="$(date +%Y-%m-%d-%H%M%S)"
+destination="$backup_dir/gaming-cafe-$timestamp.db"
+temporary="$backup_dir/.gaming-cafe-$timestamp.db.tmp"
 
-MYSQL_PWD="$DB_PASSWORD" mysqldump \
-    --host="$DB_HOST" \
-    --port="$DB_PORT" \
-    --user="$DB_USER" \
-    --single-transaction \
-    --routines \
-    --triggers \
-    "$DB_NAME" | gzip > "$OUT_FILE"
-
-echo "Done: $OUT_FILE ($(du -h "$OUT_FILE" | cut -f1))"
+echo "Creating SQLite backup: $database_path -> $destination"
+sqlite3 "$database_path" ".timeout 10000" ".backup '$temporary'"
+if [[ ! -s "$temporary" ]]; then
+  rm -f -- "$temporary"
+  echo "sqlite3 online backup produced no usable file" >&2
+  exit 1
+fi
+mv -- "$temporary" "$destination"
+echo "Backup complete: $destination"

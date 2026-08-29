@@ -1,63 +1,72 @@
 <#
 .SYNOPSIS
-    Dumps the MySQL database to a timestamped, gzip-compressed SQL file.
+    Creates a consistent SQLite backup using SQLite's online backup API.
+
+.PARAMETER DatabasePath
+    SQLite database to back up. Defaults to GAMING_CAFE_DB_PATH or the
+    installed ProgramData database.
 
 .PARAMETER OutDir
-    Directory to write the backup into. Defaults to .\backups.
+    Directory for timestamped .db backups. Defaults to the configured backup
+    directory under ProgramData.
 
 .NOTES
-    Reads connection details from environment variables, defaulting to the
-    values provisioned by the root docker-compose.yml:
-      DB_HOST      default: 127.0.0.1
-      DB_PORT      default: 3306
-      DB_NAME      default: ps_cafe
-      DB_USER      default: ps_user
-      DB_PASSWORD  default: ps_password
-
-    Requires mysqldump on PATH (ships with MySQL Server / MySQL Workbench)
-    and 7-Zip's `7z` or PowerShell's own gzip via .NET for compression;
-    this script uses .NET's GZipStream so no extra tools are required.
+    Requires sqlite3.exe on PATH. The installed application uses the Java
+    DatabaseBackupService instead, so a client does not need sqlite3.exe.
 #>
 param(
-    [string]$OutDir = "backups"
+    [string]$DatabasePath = "",
+    [string]$OutDir = ""
 )
 
 $ErrorActionPreference = "Stop"
 
-$DbHost = if ($env:DB_HOST) { $env:DB_HOST } else { "127.0.0.1" }
-$DbPort = if ($env:DB_PORT) { $env:DB_PORT } else { "3306" }
-$DbName = if ($env:DB_NAME) { $env:DB_NAME } else { "ps_cafe" }
-$DbUser = if ($env:DB_USER) { $env:DB_USER } else { "ps_user" }
-$DbPassword = if ($env:DB_PASSWORD) { $env:DB_PASSWORD } else { "ps_password" }
+function Get-DefaultDataDirectory {
+    $programData = [Environment]::GetEnvironmentVariable("ProgramData")
+    if ([string]::IsNullOrWhiteSpace($programData)) {
+        $programData = [Environment]::GetEnvironmentVariable("PROGRAMDATA")
+    }
+    if ([string]::IsNullOrWhiteSpace($programData)) {
+        $programData = [Environment]::GetFolderPath([Environment+SpecialFolder]::CommonApplicationData)
+    }
+    return Join-Path $programData "GamingCafe"
+}
 
+$dataDirectory = Get-DefaultDataDirectory
+if ([string]::IsNullOrWhiteSpace($DatabasePath)) {
+    $DatabasePath = [Environment]::GetEnvironmentVariable("GAMING_CAFE_DB_PATH")
+}
+if ([string]::IsNullOrWhiteSpace($DatabasePath)) {
+    $DatabasePath = Join-Path $dataDirectory "data\gaming-cafe.db"
+}
+if ([string]::IsNullOrWhiteSpace($OutDir)) {
+    $OutDir = [Environment]::GetEnvironmentVariable("GAMING_CAFE_BACKUP_DIR")
+}
+if ([string]::IsNullOrWhiteSpace($OutDir)) {
+    $OutDir = Join-Path $dataDirectory "backup"
+}
+
+if (-not (Test-Path -LiteralPath $DatabasePath -PathType Leaf)) {
+    throw "SQLite database was not found: $DatabasePath"
+}
+$sqlite = Get-Command sqlite3.exe -ErrorAction Stop
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
-$Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$SqlFile = Join-Path $OutDir "$DbName-$Timestamp.sql"
-$GzFile = "$SqlFile.gz"
+$timestamp = Get-Date -Format "yyyy-MM-dd-HHmmss"
+$destination = Join-Path $OutDir "gaming-cafe-$timestamp.db"
+$temporary = Join-Path $OutDir ".gaming-cafe-$timestamp.db.tmp"
+Remove-Item -LiteralPath $temporary -Force -ErrorAction SilentlyContinue
+$escapedTemporary = $temporary.Replace("'", "''")
 
-Write-Host "Backing up $DbName@${DbHost}:${DbPort} -> $GzFile"
-
-$env:MYSQL_PWD = $DbPassword
-try {
-    & mysqldump --host=$DbHost --port=$DbPort --user=$DbUser `
-        --single-transaction --routines --triggers $DbName `
-        | Out-File -FilePath $SqlFile -Encoding utf8
-} finally {
-    Remove-Item Env:\MYSQL_PWD
+Write-Host "Creating SQLite backup: $DatabasePath -> $destination"
+& $sqlite.Source $DatabasePath ".timeout 10000" ".backup '$escapedTemporary'"
+if ($LASTEXITCODE -ne 0) {
+    Remove-Item -LiteralPath $temporary -Force -ErrorAction SilentlyContinue
+    throw "sqlite3 online backup failed with exit code $LASTEXITCODE"
 }
-
-$sourceStream = [System.IO.File]::OpenRead($SqlFile)
-$targetStream = [System.IO.File]::Create($GzFile)
-$gzipStream = New-Object System.IO.Compression.GZipStream($targetStream, [System.IO.Compression.CompressionMode]::Compress)
-try {
-    $sourceStream.CopyTo($gzipStream)
-} finally {
-    $gzipStream.Dispose()
-    $targetStream.Dispose()
-    $sourceStream.Dispose()
+if (-not (Test-Path -LiteralPath $temporary -PathType Leaf) -or (Get-Item -LiteralPath $temporary).Length -eq 0) {
+    Remove-Item -LiteralPath $temporary -Force -ErrorAction SilentlyContinue
+    throw "sqlite3 online backup produced no usable file"
 }
-Remove-Item $SqlFile
-
-$sizeKb = [math]::Round((Get-Item $GzFile).Length / 1KB, 1)
-Write-Host "Done: $GzFile (${sizeKb} KB)"
+Move-Item -LiteralPath $temporary -Destination $destination
+Write-Host "Backup complete: $destination"
