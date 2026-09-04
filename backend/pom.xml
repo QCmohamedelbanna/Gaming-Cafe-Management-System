@@ -27,6 +27,7 @@
              mysql-integration profile with a dedicated test database to
              execute them. -->
         <skip.integration.tests>false</skip.integration.tests>
+        <excluded.test.groups>mysql</excluded.test.groups>
     </properties>
 
     <dependencies>
@@ -223,7 +224,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.integration.tests}</skipTests>
-                    <excludedGroups>mysql</excludedGroups>
+                    <excludedGroups>${excluded.test.groups}</excludedGroups>
                 </configuration>
             </plugin>
 
@@ -261,18 +262,8 @@
             <id>mysql-integration</id>
             <properties>
                 <skip.integration.tests>false</skip.integration.tests>
+                <excluded.test.groups></excluded.test.groups>
             </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludedGroups></excludedGroups>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     </profiles>
 </project>
