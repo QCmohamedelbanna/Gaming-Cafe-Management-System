@@ -58,7 +58,7 @@ public class ReportService {
     private final StockMovementRepository movementRepository;
     private final SettingsService settingsService;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public DashboardSummary dashboardSummary() {
         LocalDate today = LocalDate.now();
         LocalDateTime from = today.atStartOfDay();
