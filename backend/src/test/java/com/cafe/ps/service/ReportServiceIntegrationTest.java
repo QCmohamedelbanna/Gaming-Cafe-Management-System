@@ -92,7 +92,7 @@ class ReportServiceIntegrationTest extends AbstractMySQLIntegrationTest {
 
     @Test
     void reportIncludesGamingCafeRevenuePaymentMethodsAndProfitability() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDate.now().atTime(12, 0);
         Device device = saveDevice("REPORT-PS5", DeviceType.PS5, DeviceStatus.AVAILABLE);
         Product product = saveProduct("Report Cola", "10.00", "4.00", false, "Drinks");
         GameSession session = saveCompletedSession(device, now.minusHours(2), "50.00");
@@ -127,7 +127,8 @@ class ReportServiceIntegrationTest extends AbstractMySQLIntegrationTest {
                 "Admin"
         );
 
-        ReportSummary report = reportService.report(LocalDate.now(), LocalDate.now());
+        LocalDate reportDate = now.minusHours(1).toLocalDate();
+        ReportSummary report = reportService.report(reportDate, reportDate);
 
         assertThat(report.gamingRevenue()).isEqualByComparingTo("50.00");
         assertThat(report.cafeRevenue()).isEqualByComparingTo("30.00");
