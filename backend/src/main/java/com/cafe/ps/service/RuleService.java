@@ -212,6 +212,7 @@ public class RuleService {
 
     private void replacePermissions(AccessRule rule, Set<Permission> permissions) {
         rulePermissionRepository.deleteByRule(rule);
+        rulePermissionRepository.flush();
         if (permissions == null || permissions.isEmpty()) return;
         rulePermissionRepository.saveAll(permissions.stream()
                 .map(permission -> RulePermission.builder()
@@ -223,6 +224,7 @@ public class RuleService {
 
     private void syncRolePermissions(Role role, Set<Permission> permissions) {
         rolePermissionRepository.deleteByRole(role);
+        rolePermissionRepository.flush();
         rolePermissionRepository.saveAll(permissions.stream()
                 .map(permission -> RolePermission.builder()
                         .role(role)

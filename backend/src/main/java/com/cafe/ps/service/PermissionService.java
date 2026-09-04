@@ -57,6 +57,7 @@ public class PermissionService {
         }
 
         rolePermissionRepository.deleteByRole(role);
+        rolePermissionRepository.flush();
         rolePermissionRepository.saveAll(requested.stream()
                 .map(permission -> RolePermission.builder()
                         .role(role)

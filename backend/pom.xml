@@ -18,7 +18,7 @@
     <properties>
         <java.version>17</java.version>
         <frontend-maven-plugin.version>1.15.0</frontend-maven-plugin.version>
-        <node.version>v20.19.0</node.version>
+        <node.version>v22.22.2</node.version>
         <npm.version>10.8.2</npm.version>
         <frontend.build.directory>${project.build.directory}/frontend-build</frontend.build.directory>
         <frontend.node.install.directory>${project.basedir}/../frontend/.mvn-node</frontend.node.install.directory>
@@ -27,6 +27,7 @@
              mysql-integration profile with a dedicated test database to
              execute them. -->
         <skip.integration.tests>false</skip.integration.tests>
+        <excluded.test.groups>mysql</excluded.test.groups>
     </properties>
 
     <dependencies>
@@ -223,7 +224,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <skipTests>${skip.integration.tests}</skipTests>
-                    <excludedGroups>mysql</excludedGroups>
+                    <excludedGroups>${excluded.test.groups}</excludedGroups>
                 </configuration>
             </plugin>
 
@@ -261,18 +262,8 @@
             <id>mysql-integration</id>
             <properties>
                 <skip.integration.tests>false</skip.integration.tests>
+                <excluded.test.groups></excluded.test.groups>
             </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludedGroups></excludedGroups>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     </profiles>
 </project>

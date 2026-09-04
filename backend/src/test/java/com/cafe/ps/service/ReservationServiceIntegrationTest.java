@@ -13,8 +13,12 @@ import com.cafe.ps.entity.ReservationStatus;
 import com.cafe.ps.entity.SessionStatus;
 import com.cafe.ps.entity.SessionType;
 import com.cafe.ps.repository.CustomerRepository;
+import com.cafe.ps.repository.BillRepository;
+import com.cafe.ps.repository.CafeOrderRepository;
 import com.cafe.ps.repository.DeviceRepository;
 import com.cafe.ps.repository.GameSessionRepository;
+import com.cafe.ps.repository.OrderItemRepository;
+import com.cafe.ps.repository.PaymentRepository;
 import com.cafe.ps.repository.PricingRepository;
 import com.cafe.ps.repository.ReservationRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +50,18 @@ class ReservationServiceIntegrationTest extends AbstractMySQLIntegrationTest {
     private ReservationRepository reservationRepository;
 
     @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private BillRepository billRepository;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private CafeOrderRepository orderRepository;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
@@ -60,6 +76,10 @@ class ReservationServiceIntegrationTest extends AbstractMySQLIntegrationTest {
     @BeforeEach
     void cleanDatabase() {
         reservationRepository.deleteAll();
+        paymentRepository.deleteAll();
+        billRepository.deleteAll();
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
         sessionRepository.deleteAll();
         customerRepository.deleteAll();
         pricingRepository.deleteAll();

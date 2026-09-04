@@ -126,7 +126,8 @@ class InventoryServiceIntegrationTest extends AbstractMySQLIntegrationTest {
                         StockMovementType.ADJUSTMENT
                 );
         assertThat(movementRepository.findAll())
-                .extracting("quantity")
+                .extracting("quantity", BigDecimal.class)
+                .usingElementComparator(BigDecimal::compareTo)
                 .containsExactlyInAnyOrder(
                         new BigDecimal("12"),
                         new BigDecimal("-2")
@@ -200,7 +201,7 @@ class InventoryServiceIntegrationTest extends AbstractMySQLIntegrationTest {
     @Test
     void recordSaleWithTheSameBillReferenceOnlyDeductsStockOnce() {
         Product product = saveTrackedProduct("Idempotent Cola", "5.00", "1.50");
-        inventoryService.purchase(product.getId(), new StockMovementRequest(
+        product = inventoryService.purchase(product.getId(), new StockMovementRequest(
                 new BigDecimal("5"), null, "OPENING", "admin"
         ));
         CafeOrder order = saveStandaloneOrder(product, 2);
