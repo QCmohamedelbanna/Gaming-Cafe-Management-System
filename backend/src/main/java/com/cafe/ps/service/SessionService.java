@@ -116,8 +116,13 @@ public class SessionService {
 
     @Scheduled(fixedDelay = 3000)
     @Transactional
-    public void maintainActiveSessions() {
+    public void scheduledMaintenance() {
         if (!schedulingEnabled) return;
+        maintainActiveSessions();
+    }
+
+    @Transactional
+    public void maintainActiveSessions() {
         LocalDateTime now = LocalDateTime.now();
         sessionRepository.findAll().stream().filter(s -> s.getStatus() == SessionStatus.ACTIVE).forEach(s -> {
             if (s.getSessionType() == SessionType.MATCH

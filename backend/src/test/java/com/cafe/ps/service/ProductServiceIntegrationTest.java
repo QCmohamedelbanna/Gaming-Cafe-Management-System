@@ -86,10 +86,10 @@ class ProductServiceIntegrationTest extends AbstractMySQLIntegrationTest {
 
     @Test
     void creatingAProductWithADuplicateNameIsRejected() {
-        saveProduct("Duplicate Cola");
+        Product existing = saveProduct("Duplicate Cola");
 
         ProductRequest request = new ProductRequest(
-                "Duplicate Cola", new BigDecimal("5.00"), null, null,
+                existing.getName(), new BigDecimal("5.00"), null, null,
                 null, null, null, null, null
         );
 

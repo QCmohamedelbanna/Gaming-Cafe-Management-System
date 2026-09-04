@@ -115,9 +115,13 @@ public class ReservationService {
 
     @Scheduled(fixedDelay = 60_000)
     @Transactional
-    public void markNoShows() {
+    public void scheduledNoShowSweep() {
         if (!schedulingEnabled) return;
+        markNoShows();
+    }
 
+    @Transactional
+    public void markNoShows() {
         LocalDateTime threshold = LocalDateTime.now()
                 .minusMinutes(settingsService.get().getReservationsNoShowGraceMinutes());
         List<Reservation> overdue = reservationRepository.findByStatusAndStartTimeBefore(
