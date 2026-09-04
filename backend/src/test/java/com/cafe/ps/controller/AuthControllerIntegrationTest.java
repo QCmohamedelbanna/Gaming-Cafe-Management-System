@@ -64,7 +64,7 @@ class AuthControllerIntegrationTest extends AbstractMySQLIntegrationTest {
                         .contentType(APPLICATION_JSON)
                         .content("{\"username\":\"" + TEST_ADMIN_USERNAME + "\",\"password\":\"" + TEST_ADMIN_PASSWORD + "\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("admin"))
+                .andExpect(jsonPath("$.username").value(TEST_ADMIN_USERNAME))
                 .andExpect(jsonPath("$.role").value("ADMIN"))
                 .andExpect(jsonPath("$.permissions").isArray())
                 .andExpect(jsonPath("$.permissions").value(org.hamcrest.Matchers.hasItem("PERMISSIONS_MANAGE")))
