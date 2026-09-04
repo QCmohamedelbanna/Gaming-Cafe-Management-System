@@ -3,6 +3,7 @@ package com.cafe.ps;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.junit.jupiter.api.Tag;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.UUID;
 
@@ -16,6 +17,7 @@ import java.util.UUID;
  * the same schema-validation path used by the application.
  */
 @Tag("mysql")
+@ActiveProfiles("test")
 public abstract class AbstractMySQLIntegrationTest {
 
     protected static final String TEST_ADMIN_USERNAME = "integration-admin";
