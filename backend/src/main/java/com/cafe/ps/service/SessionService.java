@@ -124,7 +124,13 @@ public class SessionService {
     @Transactional
     public void maintainActiveSessions() {
         LocalDateTime now = LocalDateTime.now();
-        sessionRepository.findAll().stream().filter(s -> s.getStatus() == SessionStatus.ACTIVE).forEach(s -> {
+        // Read only identifiers first. Each candidate is then reloaded with a
+        // write lock before expiry is decided, so a scheduler transaction does
+        // not act on a stale entity that was read before a cashier committed.
+        sessionRepository.findIdsByStatus(SessionStatus.ACTIVE).forEach(sessionId -> {
+            GameSession s = sessionRepository.findByIdForUpdate(sessionId).orElse(null);
+            if (s == null || s.getStatus() != SessionStatus.ACTIVE) return;
+
             if (s.getSessionType() == SessionType.MATCH
                     || s.getBillingUnit() == BillingUnit.MATCH) {
                 if (s.getCurrentMatchExpiresAt() != null
@@ -172,7 +178,8 @@ public class SessionService {
     }
 
     private GameSession getActive(Long sessionId) {
-        GameSession session = sessionRepository.findById(sessionId).orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        GameSession session = sessionRepository.findByIdForUpdate(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         if (session.getStatus() != SessionStatus.ACTIVE) throw new IllegalStateException("Session is not active");
         return session;
     }

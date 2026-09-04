@@ -8,6 +8,9 @@ import com.cafe.ps.repository.BillRepository;
 import com.cafe.ps.repository.CafeOrderRepository;
 import com.cafe.ps.repository.GameSessionRepository;
 import com.cafe.ps.repository.AppUserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,9 @@ public class BillingService {
     private final InventoryService inventoryService;
     private final AppUserRepository userRepository;
     private final ShiftService shiftService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Transactional
     public CheckoutResult checkoutSession(
@@ -69,7 +75,10 @@ public class BillingService {
                             .add(calculateOrderAmount(order))
             );
 
-            Bill bill = finalizeSession(sessionId, endTime, false);
+            // The session is already locked by this transaction. Keep the
+            // finalization decision on that same locked entity instead of
+            // self-invoking another transactional method.
+            Bill bill = finalizeSessionLocked(session, endTime, false);
             return settleBill(bill, method, amountTendered, cashier);
         }
         if (session.getStatus() != SessionStatus.COMPLETED) {
@@ -165,9 +174,21 @@ public class BillingService {
             LocalDateTime endTime,
             boolean automaticExpiry
     ) {
-        GameSession session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        GameSession session = lockSession(sessionId);
+        return finalizeSessionLocked(session, endTime, automaticExpiry);
+    }
 
+    /**
+     * Finalizes a session while the caller owns the pessimistic write lock on
+     * its game_sessions row. Every ACTIVE/COMPLETED decision must go through
+     * this method after acquiring that lock.
+     */
+    private Bill finalizeSessionLocked(
+            GameSession session,
+            LocalDateTime endTime,
+            boolean automaticExpiry
+    ) {
+        Long sessionId = session.getId();
         Bill existing = billRepository.findBySessionId(sessionId).orElse(null);
         if (session.getStatus() == SessionStatus.ACTIVE) {
             completeSession(session, endTime);
@@ -188,6 +209,11 @@ public class BillingService {
                 )
                 .orElse(null);
         return ensureBill(session, order, null, automaticExpiry, endTime);
+    }
+
+    private GameSession lockSession(Long sessionId) {
+        return sessionRepository.findByIdForUpdate(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
     }
 
     @Transactional(readOnly = true)
@@ -238,7 +264,7 @@ public class BillingService {
         // same bill blocks here instead of racing this one to pay it twice.
         Bill bill = billRepository.findByIdForUpdate(billId)
                 .orElseThrow(() -> new IllegalArgumentException("Bill not found"));
-        return settleBill(bill, method, amountTendered, cashier);
+        return settleLockedBill(bill, method, amountTendered, cashier);
     }
 
     @Transactional
@@ -440,6 +466,19 @@ public class BillingService {
             BigDecimal amountTendered,
             String cashier
     ) {
+        // checkoutSession can arrive here with a bill found after the session
+        // lock, while payBill locks the bill at its entry point. Locking here
+        // as well keeps all settlement callers serialized on the bill row.
+        bill = lockBill(bill);
+        return settleLockedBill(bill, method, amountTendered, cashier);
+    }
+
+    private CheckoutResult settleLockedBill(
+            Bill bill,
+            PaymentMethod method,
+            BigDecimal amountTendered,
+            String cashier
+    ) {
         if (bill.getStatus() == BillStatus.REFUNDED
                 || bill.getStatus() == BillStatus.CANCELLED) {
             throw new IllegalStateException("Bill is not payable");
@@ -488,6 +527,20 @@ public class BillingService {
                 "SUCCESS: " + method + " " + total
         );
         return result;
+    }
+
+    private Bill lockBill(Bill bill) {
+        if (bill == null || bill.getId() == null) {
+            throw new IllegalStateException("Bill must be persisted before payment");
+        }
+        Bill locked = billRepository.findByIdForUpdate(bill.getId())
+                .orElseThrow(() -> new IllegalStateException("Bill not found"));
+        // A completed-session checkout may have first read this bill with a
+        // normal SELECT while another payment transaction was committing.
+        // Refresh the managed instance after acquiring the lock so the PAID
+        // guard uses the row version that was actually locked.
+        entityManager.refresh(locked, LockModeType.PESSIMISTIC_WRITE);
+        return locked;
     }
 
     private String normalizeCashier(String cashier) {

@@ -14,11 +14,15 @@ public interface GameSessionRepository extends JpaRepository<GameSession, Long> 
     List<GameSession> findByStatus(SessionStatus status);
 
     /**
-     * Locks the session row for the duration of the checkout transaction so
-     * two concurrent checkout attempts on the same session serialize instead
-     * of both reading ACTIVE and racing to finalize/pay it twice.
+     * Locks the session row for the duration of the owning transaction so
+     * checkout, scheduled expiry, and manual finalization serialize before
+     * deciding whether the session is still ACTIVE.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from GameSession s where s.id = :id")
     Optional<GameSession> findByIdForUpdate(@Param("id") Long id);
+
+    /** Returns candidate ids without putting stale session entities in the persistence context. */
+    @Query("select s.id from GameSession s where s.status = :status")
+    List<Long> findIdsByStatus(@Param("status") SessionStatus status);
 }
