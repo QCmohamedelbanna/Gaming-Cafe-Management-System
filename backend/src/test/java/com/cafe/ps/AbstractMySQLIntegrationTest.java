@@ -30,7 +30,7 @@ public abstract class AbstractMySQLIntegrationTest {
         registry.add("spring.datasource.password", () -> requiredEnvironmentVariable("TEST_DB_PASSWORD"));
         registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.MySQLDialect");
-        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration/mysql");
         registry.add("app.default-admin-username", () -> TEST_ADMIN_USERNAME);
         registry.add("app.default-admin-password", () -> TEST_ADMIN_PASSWORD);
     }
