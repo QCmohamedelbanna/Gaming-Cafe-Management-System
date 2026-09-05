@@ -21,12 +21,24 @@ public class SessionService {
     private final PricingService pricingService;
     private final BillingService billingService;
     private final ReportService reportService;
+    private final DeviceControlLifecycleService deviceControlLifecycleService;
 
     @Value("${spring.task.scheduling.enabled:true}")
     private boolean schedulingEnabled;
 
     @Transactional
     public GameSession start(Long deviceId, SessionType sessionType, Integer plannedMinutes, Integer matchCount) {
+        return start(deviceId, sessionType, plannedMinutes, matchCount, "system");
+    }
+
+    @Transactional
+    public GameSession start(
+            Long deviceId,
+            SessionType sessionType,
+            Integer plannedMinutes,
+            Integer matchCount,
+            String actor
+    ) {
         Device device = deviceRepository.findById(deviceId).orElseThrow(() -> new IllegalArgumentException("Device not found"));
         assertDeviceAvailable(device);
 
@@ -57,12 +69,19 @@ public class SessionService {
 
         device.setStatus(DeviceStatus.PLAYING);
         deviceRepository.save(device);
-        return sessionRepository.save(builder.build());
+        GameSession session = sessionRepository.save(builder.build());
+        deviceControlLifecycleService.powerOnAfterCommit(device.getId(), actor);
+        return session;
     }
 
     @Transactional
     public GameSession stop(Long sessionId) {
-        billingService.finalizeSession(sessionId, LocalDateTime.now());
+        return stop(sessionId, "system");
+    }
+
+    @Transactional
+    public GameSession stop(Long sessionId, String actor) {
+        billingService.finalizeSession(sessionId, LocalDateTime.now(), false, actor);
         return sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
     }

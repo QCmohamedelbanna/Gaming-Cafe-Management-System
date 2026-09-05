@@ -3,6 +3,10 @@ package com.cafe.ps.service;
 import com.cafe.ps.dto.DeviceRequest;
 import com.cafe.ps.entity.Device;
 import com.cafe.ps.entity.DeviceStatus;
+import com.cafe.ps.entity.DeviceControlProvider;
+import com.cafe.ps.entity.DevicePowerState;
+import com.cafe.ps.entity.DeviceShutdownPolicy;
+import com.cafe.ps.dto.DeviceControlConfigurationRequest;
 import com.cafe.ps.repository.DeviceRepository;
 import com.cafe.ps.repository.GameSessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -86,6 +90,50 @@ public class DeviceService {
         deviceRepository.save(device);
     }
 
+    @Transactional
+    public Device configureControl(Long id, DeviceControlConfigurationRequest request) {
+        Device device = getDevice(id);
+        assertNoActiveSession(device);
+
+        DeviceControlProvider provider = request.provider() == null
+                ? DeviceControlProvider.NONE
+                : request.provider();
+        boolean enabled = Boolean.TRUE.equals(request.enabled())
+                && provider != DeviceControlProvider.NONE;
+        String controllerDeviceId = normalizedOptional(request.controllerDeviceId());
+        String controllerPowerCode = normalizedOptional(request.controllerPowerCode());
+
+        if (provider == DeviceControlProvider.TUYA && controllerDeviceId == null) {
+            throw new IllegalArgumentException("A Tuya controller device ID is required");
+        }
+        if (enabled && provider == DeviceControlProvider.TUYA) {
+            if (controllerPowerCode == null) {
+                throw new IllegalArgumentException(
+                        "A Tuya power command code is required; inspect the device functions first"
+                );
+            }
+        }
+
+        DeviceShutdownPolicy shutdownPolicy = request.shutdownPolicy() == null
+                ? (enabled ? DeviceShutdownPolicy.DIRECT_POWER : DeviceShutdownPolicy.NONE)
+                : request.shutdownPolicy();
+        if (shutdownPolicy == DeviceShutdownPolicy.SAFE_SHUTDOWN_THEN_POWER) {
+            throw new IllegalArgumentException(
+                    "Safe console shutdown is not implemented; use DIRECT_POWER only for the phone-charger PoC"
+            );
+        }
+
+        device.setControlProvider(provider);
+        device.setControllerDeviceId(provider == DeviceControlProvider.TUYA ? controllerDeviceId : null);
+        device.setControllerPowerCode(provider == DeviceControlProvider.TUYA ? controllerPowerCode : null);
+        device.setPowerControlEnabled(enabled);
+        device.setShutdownPolicy(enabled ? shutdownPolicy : DeviceShutdownPolicy.NONE);
+        device.setPhysicalPowerStatus(DevicePowerState.UNKNOWN);
+        device.setLastControlAt(null);
+        device.setLastControlError(null);
+        return deviceRepository.save(device);
+    }
+
     private Device getDevice(Long id) {
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Device not found"));
@@ -155,5 +203,23 @@ public class DeviceService {
             // Devices that existed before soft deletion was introduced remain visible.
             device.setDeleted(false);
         }
+        if (device.getControlProvider() == null) {
+            device.setControlProvider(DeviceControlProvider.NONE);
+        }
+        if (device.getPowerControlEnabled() == null) {
+            device.setPowerControlEnabled(false);
+        }
+        if (device.getPhysicalPowerStatus() == null) {
+            device.setPhysicalPowerStatus(DevicePowerState.UNKNOWN);
+        }
+        if (device.getShutdownPolicy() == null) {
+            device.setShutdownPolicy(DeviceShutdownPolicy.NONE);
+        }
+    }
+
+    private String normalizedOptional(String value) {
+        if (value == null) return null;
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

@@ -26,21 +26,24 @@ public class SessionController {
 
     @PostMapping
     public GameSessionResponse start(
-            @Valid @RequestBody StartSessionRequest req
+            @Valid @RequestBody StartSessionRequest req,
+            Authentication authentication
     ) {
         return GameSessionResponse.from(service.start(
                 req.deviceId(),
                 req.sessionType(),
                 req.plannedMinutes(),
-                req.matchCount()
+                req.matchCount(),
+                authentication.getName()
         ));
     }
 
     @PostMapping("/{id}/stop")
     public GameSessionResponse stop(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
-        return GameSessionResponse.from(service.stop(id));
+        return GameSessionResponse.from(service.stop(id, authentication.getName()));
     }
 
     @PostMapping("/{id}/checkout/prepare")

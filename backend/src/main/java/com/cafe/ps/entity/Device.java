@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "devices")
@@ -53,4 +54,37 @@ public class Device {
 
     @Column(length = 500)
     private String maintenanceNote;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "control_provider", nullable = false, length = 32)
+    @Builder.Default
+    private DeviceControlProvider controlProvider = DeviceControlProvider.NONE;
+
+    /** Provider-owned device identifier. It is not a credential. */
+    @Column(name = "controller_device_id", length = 255)
+    private String controllerDeviceId;
+
+    /** Provider-specific power instruction code discovered from the device. */
+    @Column(name = "controller_power_code", length = 100)
+    private String controllerPowerCode;
+
+    @Column(name = "power_control_enabled", nullable = false)
+    @Builder.Default
+    private Boolean powerControlEnabled = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "physical_power_status", nullable = false, length = 32)
+    @Builder.Default
+    private DevicePowerState physicalPowerStatus = DevicePowerState.UNKNOWN;
+
+    @Column(name = "last_control_at")
+    private LocalDateTime lastControlAt;
+
+    @Column(name = "last_control_error", length = 500)
+    private String lastControlError;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "shutdown_policy", nullable = false, length = 40)
+    @Builder.Default
+    private DeviceShutdownPolicy shutdownPolicy = DeviceShutdownPolicy.NONE;
 }

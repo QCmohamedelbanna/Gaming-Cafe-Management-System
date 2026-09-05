@@ -4,6 +4,9 @@ import {
     createDevice,
     deleteDevice,
     getDevices,
+    getDevicePower,
+    powerOnDevice,
+    powerOffDevice,
     setDeviceActive,
     updateDevice,
 } from "../../api/deviceApi";
@@ -23,6 +26,7 @@ export default function DevicesPage() {
     const [devices, setDevices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [busyId, setBusyId] = useState(null);
+    const [powerBusyId, setPowerBusyId] = useState(null);
     const [formDevice, setFormDevice] = useState(undefined);
     const [saving, setSaving] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -121,6 +125,37 @@ export default function DevicesPage() {
         }
     }
 
+    async function handlePower(device, command) {
+        try {
+            setPowerBusyId(device.id);
+            setMessage("");
+            setError("");
+            const result = command === "on"
+                ? await powerOnDevice(device.id)
+                : command === "off"
+                    ? await powerOffDevice(device.id)
+                    : await getDevicePower(device.id);
+            setDevices((current) => current.map((item) => item.id === device.id
+                ? {
+                    ...item,
+                    physicalPowerStatus: result.physicalState,
+                    lastControlAt: result.timestamp,
+                    lastControlError: result.success ? null : result.message,
+                }
+                : item));
+            if (result.success) {
+                showSuccess(`${device.name}: ${result.physicalState}`);
+            } else {
+                setError(result.message || t("devices.powerError"));
+            }
+        } catch (powerError) {
+            console.error(powerError);
+            setError(powerError.message || t("devices.powerError"));
+        } finally {
+            setPowerBusyId(null);
+        }
+    }
+
     return (
         <div className="devices-management-page">
             <div className="devices-management-header">
@@ -166,6 +201,7 @@ export default function DevicesPage() {
                                 <th>{t("devices.status")}</th>
                                 <th>{t("devices.availability")}</th>
                                 <th>{t("devices.maintenanceNote")}</th>
+                                <th>{t("devices.physicalPower")}</th>
                                 <th><span className="sr-only">{t("common.actions")}</span></th>
                             </tr>
                         </thead>
@@ -173,6 +209,7 @@ export default function DevicesPage() {
                             {devices.map((device) => {
                                 const inUse = isActiveSession(device);
                                 const busy = busyId === device.id;
+                                const powerBusy = powerBusyId === device.id;
                                 const active = device.active !== false;
 
                                 return (
@@ -201,7 +238,39 @@ export default function DevicesPage() {
                                             </span>
                                         </td>
                                         <td>
+                                            {device.powerControlEnabled ? (
+                                                <span className={`device-admin-active ${String(device.physicalPowerStatus || "UNKNOWN").toLowerCase()}`}>
+                                                    {device.physicalPowerStatus || "UNKNOWN"}
+                                                </span>
+                                            ) : "—"}
+                                        </td>
+                                        <td>
                                             <div className="product-row-actions device-row-actions">
+                                                {device.powerControlEnabled && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            disabled={powerBusy}
+                                                            onClick={() => handlePower(device, "on")}
+                                                        >
+                                                            {t("devices.powerOn")}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            disabled={powerBusy}
+                                                            onClick={() => handlePower(device, "off")}
+                                                        >
+                                                            {t("devices.powerOff")}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            disabled={powerBusy}
+                                                            onClick={() => handlePower(device, "status")}
+                                                        >
+                                                            {t("devices.powerRefresh")}
+                                                        </button>
+                                                    </>
+                                                )}
                                                 <button
                                                     type="button"
                                                     disabled={busy || inUse}

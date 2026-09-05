@@ -26,6 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
+
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         properties = {
@@ -242,6 +244,40 @@ class AuthControllerIntegrationTest extends AbstractMySQLIntegrationTest {
                         .cookie(csrfCookie)
                         .header("X-XSRF-TOKEN", csrfCookie.getValue()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void cashierCannotManuallyControlDevicePower() throws Exception {
+        Cookie csrfCookie = csrfCookie();
+        MockHttpSession adminSession = (MockHttpSession) login(csrfCookie)
+                .getRequest().getSession(false);
+        assertThat(adminSession).isNotNull();
+
+        String username = "power-cashier-" + UUID.randomUUID();
+        mockMvc.perform(post("/api/users")
+                        .session(adminSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"username\":\"" + username
+                                + "\",\"displayName\":\"Power Cashier\",\"password\":\"password123\",\"role\":\"CASHIER\"}"))
+                .andExpect(status().isOk());
+
+        MvcResult cashierLogin = mockMvc.perform(post("/api/auth/login")
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue())
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"username\":\"" + username + "\",\"password\":\"password123\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        MockHttpSession cashierSession = (MockHttpSession) cashierLogin.getRequest().getSession(false);
+        assertThat(cashierSession).isNotNull();
+
+        mockMvc.perform(post("/api/devices/1/power/on")
+                        .session(cashierSession)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfCookie.getValue()))
+                .andExpect(status().isForbidden());
     }
 
     private Cookie csrfCookie() throws Exception {

@@ -27,6 +27,17 @@ function getElapsedSeconds(startTime, now) {
     );
 }
 
+function PhysicalPower({ device, t }) {
+    if (!device.powerControlEnabled) return null;
+    const state = device.physicalPowerStatus || "UNKNOWN";
+    return (
+        <div className={`device-physical-power device-physical-power-${String(state).toLowerCase()}`}>
+            {t("device.physicalPower")}: <strong>{state}</strong>
+            {device.lastControlError && <small>{device.lastControlError}</small>}
+        </div>
+    );
+}
+
 export default function DeviceCard({
                                        device,
                                        session,
@@ -91,6 +102,8 @@ export default function DeviceCard({
                         {statusLabel}
                     </span>
                 </div>
+
+                <PhysicalPower device={device} t={t} />
 
                 <h2 className="device-name">
                     {device.name}
@@ -263,6 +276,8 @@ export default function DeviceCard({
                     {session.sessionType === "SINGLE" ? t("modal.single") : session.sessionType === "MULTI" ? t("modal.multi") : t("modal.match")}
                 </span>
             </div>
+
+            <PhysicalPower device={device} t={t} />
 
             {!isMatch &&
                 session.plannedMinutes == null && (

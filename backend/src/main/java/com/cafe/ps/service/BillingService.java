@@ -35,6 +35,7 @@ public class BillingService {
     private final InventoryService inventoryService;
     private final AppUserRepository userRepository;
     private final ShiftService shiftService;
+    private final DeviceControlLifecycleService deviceControlLifecycleService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -78,7 +79,7 @@ public class BillingService {
             // The session is already locked by this transaction. Keep the
             // finalization decision on that same locked entity instead of
             // self-invoking another transactional method.
-            Bill bill = finalizeSessionLocked(session, endTime, false);
+            Bill bill = finalizeSessionLocked(session, endTime, false, cashier);
             return settleBill(bill, method, amountTendered, cashier);
         }
         if (session.getStatus() != SessionStatus.COMPLETED) {
@@ -175,7 +176,23 @@ public class BillingService {
             boolean automaticExpiry
     ) {
         GameSession session = lockSession(sessionId);
-        return finalizeSessionLocked(session, endTime, automaticExpiry);
+        return finalizeSessionLocked(
+                session,
+                endTime,
+                automaticExpiry,
+                automaticExpiry ? "scheduler" : "system"
+        );
+    }
+
+    @Transactional
+    public Bill finalizeSession(
+            Long sessionId,
+            LocalDateTime endTime,
+            boolean automaticExpiry,
+            String actor
+    ) {
+        GameSession session = lockSession(sessionId);
+        return finalizeSessionLocked(session, endTime, automaticExpiry, actor);
     }
 
     /**
@@ -188,6 +205,20 @@ public class BillingService {
             LocalDateTime endTime,
             boolean automaticExpiry
     ) {
+        return finalizeSessionLocked(
+                session,
+                endTime,
+                automaticExpiry,
+                automaticExpiry ? "scheduler" : "system"
+        );
+    }
+
+    private Bill finalizeSessionLocked(
+            GameSession session,
+            LocalDateTime endTime,
+            boolean automaticExpiry,
+            String actor
+    ) {
         Long sessionId = session.getId();
         Bill existing = billRepository.findBySessionId(sessionId).orElse(null);
         if (session.getStatus() == SessionStatus.ACTIVE) {
@@ -197,7 +228,15 @@ public class BillingService {
             if (order == null && existing != null) {
                 order = existing.getOrder();
             }
-            return ensureBill(session, order, existing, automaticExpiry, endTime);
+            Bill bill = ensureBill(session, order, existing, automaticExpiry, endTime);
+            // Only the locked ACTIVE -> COMPLETED transition can register an
+            // OFF operation. Later finalization attempts return the existing
+            // bill and do not repeat the hardware command.
+            deviceControlLifecycleService.powerOffAfterCommit(
+                    session.getDevice().getId(),
+                    actor
+            );
+            return bill;
         }
 
         if (existing != null) return existing;
