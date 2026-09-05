@@ -1,10 +1,14 @@
 package com.cafe.ps.service;
 
 import com.cafe.ps.AbstractMySQLIntegrationTest;
+import com.cafe.ps.dto.DeviceControlConfigurationRequest;
 import com.cafe.ps.dto.DeviceRequest;
 import com.cafe.ps.entity.BillingUnit;
 import com.cafe.ps.entity.Device;
 import com.cafe.ps.entity.DeviceStatus;
+import com.cafe.ps.entity.DeviceControlProvider;
+import com.cafe.ps.entity.DevicePowerState;
+import com.cafe.ps.entity.DeviceShutdownPolicy;
 import com.cafe.ps.entity.DeviceType;
 import com.cafe.ps.entity.GameSession;
 import com.cafe.ps.entity.SessionStatus;
@@ -170,6 +174,43 @@ class DeviceServiceIntegrationTest extends AbstractMySQLIntegrationTest {
         )))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Device status must be AVAILABLE, MAINTENANCE, or OFFLINE");
+    }
+
+    @Test
+    void configuresTuyaPhoneChargerControlWithTheVerifiedPowerCode() {
+        Device device = saveDevice("TUYA-POC", DeviceType.PS4, DeviceStatus.AVAILABLE);
+
+        Device configured = deviceService.configureControl(device.getId(),
+                new DeviceControlConfigurationRequest(
+                        DeviceControlProvider.TUYA,
+                        "tuya-device-id",
+                        "switch_1",
+                        true,
+                        DeviceShutdownPolicy.DIRECT_POWER
+                ));
+
+        assertThat(configured.getControlProvider()).isEqualTo(DeviceControlProvider.TUYA);
+        assertThat(configured.getControllerDeviceId()).isEqualTo("tuya-device-id");
+        assertThat(configured.getControllerPowerCode()).isEqualTo("switch_1");
+        assertThat(configured.getPowerControlEnabled()).isTrue();
+        assertThat(configured.getShutdownPolicy()).isEqualTo(DeviceShutdownPolicy.DIRECT_POWER);
+        assertThat(configured.getPhysicalPowerStatus()).isEqualTo(DevicePowerState.UNKNOWN);
+    }
+
+    @Test
+    void rejectsSafeShutdownUntilARealConsoleShutdownMechanismExists() {
+        Device device = saveDevice("TUYA-SAFE-POLICY", DeviceType.PS4, DeviceStatus.AVAILABLE);
+
+        assertThatThrownBy(() -> deviceService.configureControl(device.getId(),
+                new DeviceControlConfigurationRequest(
+                        DeviceControlProvider.TUYA,
+                        "tuya-device-id",
+                        "switch_1",
+                        true,
+                        DeviceShutdownPolicy.SAFE_SHUTDOWN_THEN_POWER
+                )))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Safe console shutdown is not implemented");
     }
 
     private Device saveDevice(String name, DeviceType type, DeviceStatus status) {

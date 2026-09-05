@@ -176,6 +176,10 @@ export default function Dashboard({ onAddOrder }) {
             setProducts(productsData);
 
             await loadSessionOrders(sessionsData);
+            return {
+                devices: devicesData,
+                sessions: sessionsData,
+            };
         } catch (error) {
 
             console.error(
@@ -202,10 +206,13 @@ export default function Dashboard({ onAddOrder }) {
 
         try {
 
-            const sessions =
-                await getActiveSessions();
+            const [sessions, devicesData] = await Promise.all([
+                getActiveSessions(),
+                canViewDevices ? getDevices() : Promise.resolve([]),
+            ]);
 
             setActiveSessions(sessions);
+            if (canViewDevices) setDevices(devicesData);
             await loadSessionOrders(sessions);
 
         } catch (error) {
@@ -266,11 +273,14 @@ export default function Dashboard({ onAddOrder }) {
 
             setSelectedDevice(null);
 
-            await loadDashboard();
-
-            setMessage(
-                t("operations.sessionStarted")
+            const dashboard = await loadDashboard();
+            const updatedDevice = dashboard?.devices?.find(
+                (device) => device.id === data.deviceId
             );
+
+            setMessage(updatedDevice?.lastControlError
+                ? t("operations.sessionStartedHardwareWarning")
+                : t("operations.sessionStarted"));
 
         } catch (error) {
 
@@ -312,13 +322,20 @@ export default function Dashboard({ onAddOrder }) {
 
             const finalBill = await prepareCheckout(session.id);
 
+            const dashboard = await loadDashboard();
+            const updatedDevice = dashboard?.devices?.find(
+                (device) => device.id === session.device?.id
+            );
+
             setCheckout({
                 session,
                 order,
                 bill: finalBill,
             });
 
-            await loadDashboard();
+            if (updatedDevice?.lastControlError) {
+                setMessage(t("operations.sessionCompletedHardwareWarning"));
+            }
         } catch (error) {
             console.error("Checkout preparation error:", error);
             setError(
@@ -337,16 +354,21 @@ export default function Dashboard({ onAddOrder }) {
 
             const result = await payBill(billId, payment);
 
+            const deviceId = checkout?.session?.device?.id;
+            const dashboard = await loadDashboard();
+            const updatedDevice = dashboard?.devices?.find(
+                (device) => device.id === deviceId
+            );
+
             setCheckout(null);
             setReceipt(result);
-            await loadDashboard();
 
-            setMessage(
-                t("operations.billCompleted", {
+            setMessage(updatedDevice?.lastControlError
+                ? t("operations.sessionCompletedHardwareWarning")
+                : t("operations.billCompleted", {
                     bill: result.billNumber,
                     total: Number(result.totalAmount || 0).toFixed(2),
-                })
-            );
+                }));
 
         } catch (error) {
             console.error(error);

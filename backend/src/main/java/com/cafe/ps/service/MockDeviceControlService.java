@@ -63,11 +63,14 @@ public class MockDeviceControlService implements DeviceControlService {
                 device.getName(),
                 DeviceControlProvider.NONE,
                 null,
+                null,
                 status.physicalState(),
                 List.of(),
                 status.success(),
                 status.message(),
-                status.timestamp()
+                status.timestamp(),
+                device.getLastControlAt(),
+                device.getLastControlError()
         );
     }
 

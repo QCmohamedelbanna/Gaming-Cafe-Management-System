@@ -12,7 +12,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "tuya")
 public class TuyaProperties {
     private boolean enabled = false;
-    private URI endpoint = URI.create("https://openapi.tuyaus.com");
+    private URI endpoint = URI.create("https://openapi.tuyaeu.com");
     private String clientId = "";
     private String clientSecret = "";
     private Duration connectTimeout = Duration.ofSeconds(2);

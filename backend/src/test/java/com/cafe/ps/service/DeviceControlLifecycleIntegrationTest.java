@@ -29,6 +29,10 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -183,6 +187,32 @@ class DeviceControlLifecycleIntegrationTest extends AbstractMySQLIntegrationTest
     }
 
     @Test
+    void concurrentFinalizationSchedulesOnlyOnePowerOff() throws Exception {
+        when(deviceControlService.powerOff(any(Device.class)))
+                .thenReturn(success(DevicePowerState.OFF));
+
+        Device device = saveAvailableControlledDevice();
+        GameSession session = saveActiveMatch(device);
+        CyclicBarrier barrier = new CyclicBarrier(2);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> first = executor.submit(() -> finalizeConcurrently(
+                    barrier, session.getId()
+            ));
+            Future<?> second = executor.submit(() -> finalizeConcurrently(
+                    barrier, session.getId()
+            ));
+            first.get();
+            second.get();
+        } finally {
+            executor.shutdownNow();
+        }
+
+        verify(deviceControlService, times(1)).powerOff(any(Device.class));
+        assertThat(billRepository.findBySessionId(session.getId())).isPresent();
+    }
+
+    @Test
     void checkoutStillPaysWhenPowerOffFails() {
         when(deviceControlService.powerOff(any(Device.class)))
                 .thenReturn(PowerCommandResult.failure(
@@ -269,5 +299,14 @@ class DeviceControlLifecycleIntegrationTest extends AbstractMySQLIntegrationTest
                 "stubbed provider result",
                 Instant.now()
         );
+    }
+
+    private void finalizeConcurrently(CyclicBarrier barrier, Long sessionId) {
+        try {
+            barrier.await();
+            billingService.finalizeSession(sessionId, LocalDateTime.now(), true);
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
     }
 }

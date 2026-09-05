@@ -112,8 +112,10 @@ public class DeviceControlLifecycleService {
             recordFailure(device, failure, actor, "DEVICE_POWER_STATUS");
             return new DeviceControlDiagnosticsResponse(
                     device.getId(), device.getName(), device.getControlProvider(),
-                    mask(device.getControllerDeviceId()), failure.physicalState(),
-                    java.util.List.of(), false, failure.message(), failure.timestamp()
+                    mask(device.getControllerDeviceId()), device.getControllerPowerCode(),
+                    failure.physicalState(),
+                    java.util.List.of(), false, failure.message(), failure.timestamp(),
+                    device.getLastControlAt(), device.getLastControlError()
             );
         }
     }

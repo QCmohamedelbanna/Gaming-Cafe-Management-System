@@ -28,11 +28,15 @@ class TuyaCloudClientTest {
     private static final String CLIENT_SECRET = "client-secret";
     private HttpServer server;
     private AtomicInteger tokenRequests;
+    private boolean rejectNextStatusToken;
+    private boolean issueRotatedToken;
     private List<RequestCapture> requests;
 
     @BeforeEach
     void startServer() throws IOException {
         tokenRequests = new AtomicInteger();
+        rejectNextStatusToken = false;
+        issueRotatedToken = false;
         requests = new CopyOnWriteArrayList<>();
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", this::handle);
@@ -102,6 +106,33 @@ class TuyaCloudClientTest {
         ));
     }
 
+    @Test
+    void invalidBusinessTokenIsInvalidatedAndRefreshedForOneRetry() {
+        TuyaProperties properties = new TuyaProperties();
+        properties.setEnabled(true);
+        properties.setEndpoint(URI.create("http://127.0.0.1:" + server.getAddress().getPort()));
+        properties.setClientId(CLIENT_ID);
+        properties.setClientSecret(CLIENT_SECRET);
+        properties.setMaxAttempts(2);
+        rejectNextStatusToken = true;
+        issueRotatedToken = true;
+
+        TuyaCloudClient client = new TuyaCloudClient(properties, new ObjectMapper());
+
+        assertThat(client.getStatus("device123"))
+                .containsExactly(new TuyaStatusEntry("relay_power", true));
+        assertThat(tokenRequests).hasValue(2);
+
+        List<RequestCapture> statusRequests = requests.stream()
+                .filter(request -> request.path().endsWith("/status"))
+                .toList();
+        assertThat(statusRequests).hasSize(2);
+        assertThat(statusRequests.get(0).headers().getFirst("access_token"))
+                .isEqualTo("test-access-token");
+        assertThat(statusRequests.get(1).headers().getFirst("access_token"))
+                .isEqualTo("fresh-token-2");
+    }
+
     private void handle(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         requests.add(new RequestCapture(
@@ -114,11 +145,20 @@ class TuyaCloudClientTest {
         String response;
         if (path.equals("/v1.0/token")) {
             tokenRequests.incrementAndGet();
-            response = "{\"success\":true,\"result\":{\"access_token\":\"test-access-token\",\"expire_time\":3600}}";
+            String token = issueRotatedToken && tokenRequests.get() > 1
+                    ? "fresh-token-" + tokenRequests.get()
+                    : "test-access-token";
+            response = "{\"success\":true,\"result\":{\"access_token\":\""
+                    + token + "\",\"expire_time\":3600}}";
         } else if (path.endsWith("/functions")) {
             response = "{\"success\":true,\"result\":{\"category\":\"cz\",\"functions\":[{\"code\":\"relay_power\"},{\"code\":\"timer\"}]}}";
         } else if (path.endsWith("/status")) {
-            response = "{\"success\":true,\"result\":[{\"code\":\"relay_power\",\"value\":true}]}";
+            if (rejectNextStatusToken) {
+                rejectNextStatusToken = false;
+                response = "{\"success\":false,\"code\":1010,\"msg\":\"token invalid\"}";
+            } else {
+                response = "{\"success\":true,\"result\":[{\"code\":\"relay_power\",\"value\":true}]}";
+            }
         } else if (path.endsWith("/commands")) {
             response = "{\"success\":true,\"result\":true}";
         } else {

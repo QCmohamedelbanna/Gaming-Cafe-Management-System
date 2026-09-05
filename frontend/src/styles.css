@@ -2533,6 +2533,12 @@ body {
 .device-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .device-form-grid label { margin-bottom: 8px; }
 .device-form-hint { margin: 14px 0 0; color: #7889aa; font-size: 12px; line-height: 1.5; }
+.device-control-form-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #293247; }
+.device-control-form-heading { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.device-control-form-heading strong { color: #dce5fb; }
+.device-control-form-heading span { color: #7889aa; font-size: 12px; line-height: 1.5; }
+.device-control-checkbox { display: flex; align-items: center; gap: 9px; margin: 14px 0 4px; color: #dce5fb; }
+.device-control-checkbox input { width: auto; accent-color: #7184ff; }
 .delete-device-modal { max-width: 560px; }
 .delete-role-modal { max-width: 560px; }
 .device-card-locked { border-color: #47364a; }

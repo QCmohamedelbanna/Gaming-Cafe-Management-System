@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "../../i18n";
 
 const DEVICE_STATUSES = ["AVAILABLE", "MAINTENANCE", "OFFLINE"];
+const CONTROL_PROVIDERS = ["NONE", "TUYA"];
+const SHUTDOWN_POLICIES = ["NONE", "DIRECT_POWER"];
 
 export default function DeviceFormModal({ device, saving, onClose, onSave }) {
     const { t } = useLanguage();
@@ -13,8 +15,24 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
     const [maintenanceNote, setMaintenanceNote] = useState(
         device?.maintenanceNote ?? ""
     );
+    const [provider, setProvider] = useState(device?.controlProvider ?? "NONE");
+    const [controllerDeviceId, setControllerDeviceId] = useState(
+        device?.controllerDeviceId ?? ""
+    );
+    const [controllerPowerCode, setControllerPowerCode] = useState(
+        device?.controllerPowerCode ?? (device?.controlProvider === "TUYA" ? "switch_1" : "")
+    );
+    const [powerControlEnabled, setPowerControlEnabled] = useState(
+        Boolean(device?.powerControlEnabled)
+    );
+    const [shutdownPolicy, setShutdownPolicy] = useState(
+        device?.shutdownPolicy ?? "NONE"
+    );
     const editing = Boolean(device);
-    const valid = name.trim().length > 0;
+    const valid = name.trim().length > 0
+        && (provider !== "TUYA"
+            || (controllerDeviceId.trim().length > 0
+                && (!powerControlEnabled || controllerPowerCode.trim().length > 0)));
 
     useEffect(() => {
         function handleKeyDown(event) {
@@ -33,17 +51,46 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
         }
     }
 
+    function handleProviderChange(event) {
+        const nextProvider = event.target.value;
+        setProvider(nextProvider);
+        if (nextProvider === "NONE") {
+            setPowerControlEnabled(false);
+            setShutdownPolicy("NONE");
+        } else if (shutdownPolicy === "NONE") {
+            setShutdownPolicy("DIRECT_POWER");
+        }
+        if (nextProvider === "TUYA" && !controllerPowerCode.trim()) {
+            setControllerPowerCode("switch_1");
+        }
+    }
+
     function submit(event) {
         event.preventDefault();
         if (!valid || saving) return;
 
         onSave({
-            name: name.trim(),
-            type,
-            status,
-            maintenanceNote: status === "MAINTENANCE"
-                ? maintenanceNote.trim() || null
-                : null,
+            device: {
+                name: name.trim(),
+                type,
+                status,
+                maintenanceNote: status === "MAINTENANCE"
+                    ? maintenanceNote.trim() || null
+                    : null,
+            },
+            control: {
+                provider,
+                controllerDeviceId: provider === "TUYA"
+                    ? controllerDeviceId.trim() || null
+                    : null,
+                controllerPowerCode: provider === "TUYA"
+                    ? controllerPowerCode.trim() || null
+                    : null,
+                enabled: provider === "TUYA" && powerControlEnabled,
+                shutdownPolicy: provider === "TUYA" && powerControlEnabled
+                    ? shutdownPolicy
+                    : "NONE",
+            },
         });
     }
 
@@ -138,6 +185,83 @@ export default function DeviceFormModal({ device, saving, onClose, onSave }) {
                 <p className="device-form-hint">
                     {t("devices.formHint")}
                 </p>
+
+                <div className="device-control-form-section">
+                    <div className="device-control-form-heading">
+                        <strong>{t("devices.hardwareControl")}</strong>
+                        <span>{t("devices.hardwareControlHint")}</span>
+                    </div>
+
+                    <label htmlFor="device-control-provider">{t("devices.controlProvider")}</label>
+                    <select
+                        id="device-control-provider"
+                        value={provider}
+                        onChange={handleProviderChange}
+                    >
+                        {CONTROL_PROVIDERS.map((value) => (
+                            <option key={value} value={value}>
+                                {value === "TUYA" ? "TUYA" : t("devices.controlNone")}
+                            </option>
+                        ))}
+                    </select>
+
+                    {provider === "TUYA" && (
+                        <>
+                            <label htmlFor="tuya-device-id">{t("devices.tuyaDeviceId")}</label>
+                            <input
+                                id="tuya-device-id"
+                                maxLength="255"
+                                value={controllerDeviceId}
+                                onChange={(event) => setControllerDeviceId(event.target.value)}
+                                placeholder={t("devices.tuyaDeviceIdPlaceholder")}
+                            />
+
+                            <label htmlFor="tuya-power-code">{t("devices.powerCommandCode")}</label>
+                            <input
+                                id="tuya-power-code"
+                                maxLength="100"
+                                value={controllerPowerCode}
+                                onChange={(event) => setControllerPowerCode(event.target.value)}
+                                placeholder="switch_1"
+                            />
+
+                            <label className="device-control-checkbox" htmlFor="device-power-enabled">
+                                <input
+                                    id="device-power-enabled"
+                                    type="checkbox"
+                                    checked={powerControlEnabled}
+                                    onChange={(event) => {
+                                        const enabled = event.target.checked;
+                                        setPowerControlEnabled(enabled);
+                                        if (enabled && shutdownPolicy === "NONE") {
+                                            setShutdownPolicy("DIRECT_POWER");
+                                        }
+                                    }}
+                                />
+                                <span>{t("devices.powerControlEnabled")}</span>
+                            </label>
+
+                            <label htmlFor="device-shutdown-policy">{t("devices.shutdownPolicy")}</label>
+                            <select
+                                id="device-shutdown-policy"
+                                value={shutdownPolicy}
+                                disabled={!powerControlEnabled}
+                                onChange={(event) => setShutdownPolicy(event.target.value)}
+                            >
+                                {SHUTDOWN_POLICIES.map((value) => (
+                                    <option key={value} value={value}>
+                                        {value === "DIRECT_POWER"
+                                            ? t("devices.directPower")
+                                            : t("devices.controlNone")}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="device-form-hint">
+                                {t("devices.directPowerHint")}
+                            </p>
+                        </>
+                    )}
+                </div>
 
                 <div className="product-form-actions">
                     <button

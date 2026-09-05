@@ -41,8 +41,8 @@ region, available services, and device-specific functions.
 6. Use API Explorer to call the plug's device details, functions, and status.
    The application diagnostic endpoint also exposes only safe, parsed data:
    `GET /api/devices/{id}/power/diagnostics`.
-7. Identify the boolean power instruction code returned by the device. Do not
-   assume `switch_1`; it may be different for this plug.
+7. Identify the boolean power instruction code returned by the device. For the
+   verified phone-charger plug in this project, the code is `switch_1`.
 
 Tuya documents the device APIs as:
 
@@ -63,7 +63,7 @@ Set these in the backend process environment or the untracked development
 ```text
 DEVICE_CONTROL_MODE=tuya
 TUYA_ENABLED=true
-TUYA_ENDPOINT=https://openapi.tuyaus.com
+TUYA_ENDPOINT=https://openapi.tuyaeu.com
 TUYA_CLIENT_ID=<project client id>
 TUYA_CLIENT_SECRET=<project client secret>
 TUYA_CONNECT_TIMEOUT=2s
@@ -71,7 +71,7 @@ TUYA_REQUEST_TIMEOUT=5s
 TUYA_MAX_ATTEMPTS=2
 ```
 
-Choose the endpoint for the project's actual data center. Development and
+This verified project uses the Central Europe endpoint above. Development and
 automated tests should use `DEVICE_CONTROL_MODE=mock` and
 `TUYA_ENABLED=false`; no test contacts Tuya Cloud.
 
@@ -87,11 +87,27 @@ Content-Type: application/json
 {
   "provider": "TUYA",
   "controllerDeviceId": "<tuya-device-id>",
-  "controllerPowerCode": "<boolean-code-from-functions>",
+  "controllerPowerCode": "switch_1",
   "enabled": true,
   "shutdownPolicy": "DIRECT_POWER"
 }
 ```
+
+For the verified physical test, create or edit a logical device named `PS4-1`.
+The name and device type are application metadata only; the actual controlled
+load must remain the phone charger:
+
+```text
+PS4-1
+provider = TUYA
+controllerDeviceId = <real Tuya device id>
+controllerPowerCode = switch_1
+enabled = true
+shutdownPolicy = DIRECT_POWER
+```
+
+The Client ID and Client Secret belong only in the backend process environment.
+They are never entered in this device form or stored on the `devices` row.
 
 For discovery before the code is known, save the provider and device ID with
 `enabled: false`, call the diagnostics endpoint, then save the discovered
@@ -109,19 +125,40 @@ Restricted manual operations are:
 
 Do not use a PS4 or PS5 for this PoC.
 
-1. Plug only a phone charger into the Tuya plug and confirm it is ON in Smart Life.
-2. In Gaming Cafe, query the configured device power state and confirm `ON`.
-3. Use the restricted manual OFF operation; confirm the charger loses power.
-4. Use manual ON; confirm the charger receives power again.
-5. Start a test Gaming Cafe session; confirm the application schedules ON.
-6. Stop/finalize the session; confirm billing completes normally and the plug
-   is turned OFF.
-7. Start a planned timed session and let it expire; confirm a pending bill is
-   created, the plug turns OFF, and no inventory sale occurs until payment.
-8. Disconnect the backend's internet access. Start/stop a test session and
-   confirm session/billing still work while the device reports a hardware
-   warning/error.
-9. Restore internet access, refresh status, and retry manual control.
+Use an authenticated Admin/manager session for the restricted operations below.
+The exact API paths are:
+
+```text
+GET  /api/devices/{id}/power/diagnostics
+GET  /api/devices/{id}/power
+POST /api/devices/{id}/power/on
+POST /api/devices/{id}/power/off
+```
+
+* **Test A — backend diagnostics:** Confirm the diagnostics response reports
+  provider `TUYA`, the masked device ID, code `switch_1`, the code in the
+  supported functions, a readable physical state, and success/online status.
+* **Test B — manual ON:** Turn the plug OFF first, call `POST .../power/on`,
+  and confirm the plug turns ON and the phone begins charging.
+* **Test C — manual OFF:** Call `POST .../power/off` and confirm the plug turns
+  OFF and the phone stops charging.
+* **Test D — start session:** With the plug OFF, start a Gaming Cafe session
+  for `PS4-1`. Confirm the session is `ACTIVE`, the logical device is
+  `PLAYING`, and the plug turns ON.
+* **Test E — manual stop:** Stop/finalize the active session. Confirm the
+  session is `COMPLETED`, the bill is correct, and the plug turns OFF.
+* **Test F — checkout:** Start another session and use checkout. Confirm one
+  bill is created, payment behavior is correct, and exactly one OFF lifecycle
+  operation is issued.
+* **Test G — automatic expiry:** Start a short planned session and let the
+  scheduler expire it. Confirm the session is `COMPLETED`, the bill is
+  `PENDING_PAYMENT` when applicable, the plug turns OFF, and inventory remains
+  unchanged until payment.
+* **Test H — internet failure:** Start a session while connected, then block
+  backend internet access before finalization. Confirm the session, bill,
+  payment, and inventory state remain correct even though OFF reports a
+  hardware warning and the device records `ERROR` or `OFFLINE`. Restore
+  internet, refresh status, and verify manual control recovers.
 
 Before any higher-risk load, add and validate a safe device-specific shutdown
 mechanism. Directly cutting console power can corrupt data or damage the

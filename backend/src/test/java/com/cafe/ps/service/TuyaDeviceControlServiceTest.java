@@ -7,6 +7,7 @@ import com.cafe.ps.entity.DeviceControlProvider;
 import com.cafe.ps.entity.DevicePowerState;
 import com.cafe.ps.entity.DeviceStatus;
 import com.cafe.ps.entity.DeviceType;
+import com.cafe.ps.dto.DeviceControlDiagnosticsResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,7 @@ class TuyaDeviceControlServiceTest {
     void setUp() {
         TuyaProperties properties = new TuyaProperties();
         properties.setEnabled(true);
+        properties.setClientSecret("do-not-expose-this-secret");
         service = new TuyaDeviceControlService(client, properties);
         device = Device.builder()
                 .id(7L)
@@ -80,5 +82,22 @@ class TuyaDeviceControlServiceTest {
         assertThat(result.physicalState()).isEqualTo(DevicePowerState.OFFLINE);
         assertThat(result.message()).contains("unreachable");
         verify(client).sendCommand("tuya-device-7", "relay_power", false);
+    }
+
+    @Test
+    void diagnosticsExposeSafeDeviceInformationWithoutSecrets() {
+        when(client.getFunctions("tuya-device-7"))
+                .thenReturn(new TuyaDeviceFunctions("cz", List.of("relay_power", "timer")));
+        when(client.getStatus("tuya-device-7"))
+                .thenReturn(List.of(new TuyaStatusEntry("relay_power", true)));
+
+        DeviceControlDiagnosticsResponse result = service.getDiagnostics(device);
+
+        assertThat(result.provider()).isEqualTo(DeviceControlProvider.TUYA);
+        assertThat(result.maskedControllerDeviceId()).isEqualTo("tuya...ce-7");
+        assertThat(result.controllerPowerCode()).isEqualTo("relay_power");
+        assertThat(result.powerCommandCodes()).containsExactly("relay_power", "timer");
+        assertThat(result.physicalState()).isEqualTo(DevicePowerState.ON);
+        assertThat(result.toString()).doesNotContain("do-not-expose-this-secret");
     }
 }

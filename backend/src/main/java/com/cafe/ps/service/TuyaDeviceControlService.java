@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -97,7 +96,6 @@ public class TuyaDeviceControlService implements DeviceControlService {
                     device.getControllerPowerCode(),
                     desiredOn
             );
-
             PowerCommandResult confirmed = getPowerState(device);
             if (confirmed.success() && confirmed.physicalState() == desired) {
                 return PowerCommandResult.success(
@@ -161,11 +159,14 @@ public class TuyaDeviceControlService implements DeviceControlService {
                 device.getName(),
                 DeviceControlProvider.TUYA,
                 mask(device.getControllerDeviceId()),
+                device.getControllerPowerCode(),
                 result.physicalState(),
                 codes,
                 result.success(),
                 result.message(),
-                result.timestamp()
+                result.timestamp(),
+                device.getLastControlAt(),
+                device.getLastControlError()
         );
     }
 

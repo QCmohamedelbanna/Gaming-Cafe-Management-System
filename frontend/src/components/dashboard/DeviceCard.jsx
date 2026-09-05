@@ -28,7 +28,7 @@ function getElapsedSeconds(startTime, now) {
 }
 
 function PhysicalPower({ device, t }) {
-    if (!device.powerControlEnabled) return null;
+    if (device.controlProvider !== "TUYA" || !device.powerControlEnabled) return null;
     const state = device.physicalPowerStatus || "UNKNOWN";
     return (
         <div className={`device-physical-power device-physical-power-${String(state).toLowerCase()}`}>

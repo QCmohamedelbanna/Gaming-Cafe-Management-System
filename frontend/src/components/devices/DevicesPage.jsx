@@ -7,6 +7,7 @@ import {
     getDevicePower,
     powerOnDevice,
     powerOffDevice,
+    configureDeviceControl,
     setDeviceActive,
     updateDevice,
 } from "../../api/deviceApi";
@@ -60,9 +61,10 @@ export default function DevicesPage() {
         try {
             setSaving(true);
             setError("");
-            const saved = formDevice
-                ? await updateDevice(formDevice.id, data)
-                : await createDevice(data);
+            const savedBase = formDevice
+                ? await updateDevice(formDevice.id, data.device)
+                : await createDevice(data.device);
+            const saved = await configureDeviceControl(savedBase.id, data.control);
 
             setDevices((current) => {
                 const next = formDevice
@@ -238,7 +240,7 @@ export default function DevicesPage() {
                                             </span>
                                         </td>
                                         <td>
-                                            {device.powerControlEnabled ? (
+                                            {device.controlProvider === "TUYA" && device.powerControlEnabled ? (
                                                 <span className={`device-admin-active ${String(device.physicalPowerStatus || "UNKNOWN").toLowerCase()}`}>
                                                     {device.physicalPowerStatus || "UNKNOWN"}
                                                 </span>
@@ -246,7 +248,7 @@ export default function DevicesPage() {
                                         </td>
                                         <td>
                                             <div className="product-row-actions device-row-actions">
-                                                {device.powerControlEnabled && (
+                                                {device.controlProvider === "TUYA" && device.powerControlEnabled && (
                                                     <>
                                                         <button
                                                             type="button"

@@ -12,8 +12,15 @@ target/
 
 # Environment overrides (never commit real secrets/URLs)
 .env
+.env.*
+!.env.example
+!.env.*.example
 .env.local
 .env.*.local
+
+# Locally cached credentials/tokens, if a provider or developer tool writes them
+*.token
+.tokens/
 
 # Runtime logs, database backups, and private key material
 backend/logs/

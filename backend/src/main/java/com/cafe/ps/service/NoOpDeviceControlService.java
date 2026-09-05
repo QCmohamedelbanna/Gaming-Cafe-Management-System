@@ -33,7 +33,8 @@ public class NoOpDeviceControlService implements DeviceControlService {
         PowerCommandResult result = disabled();
         return new DeviceControlDiagnosticsResponse(
                 device.getId(), device.getName(), DeviceControlProvider.NONE, null,
-                result.physicalState(), List.of(), result.success(), result.message(), result.timestamp()
+                null, result.physicalState(), List.of(), result.success(), result.message(),
+                result.timestamp(), device.getLastControlAt(), device.getLastControlError()
         );
     }
 

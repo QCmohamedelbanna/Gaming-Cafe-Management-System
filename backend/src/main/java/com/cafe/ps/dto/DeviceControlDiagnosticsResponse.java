@@ -4,6 +4,7 @@ import com.cafe.ps.entity.DeviceControlProvider;
 import com.cafe.ps.entity.DevicePowerState;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record DeviceControlDiagnosticsResponse(
@@ -11,10 +12,13 @@ public record DeviceControlDiagnosticsResponse(
         String deviceName,
         DeviceControlProvider provider,
         String maskedControllerDeviceId,
+        String controllerPowerCode,
         DevicePowerState physicalState,
         List<String> powerCommandCodes,
         boolean success,
         String message,
-        Instant timestamp
+        Instant timestamp,
+        LocalDateTime lastControlAt,
+        String lastControlError
 ) {
 }

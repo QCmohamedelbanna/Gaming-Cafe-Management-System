@@ -109,6 +109,16 @@ public class TuyaCloudClient {
             try {
                 token = accessToken();
             } catch (TuyaCloudException failure) {
+                lastFailure = failure;
+                // Token endpoint failures are bounded by the same request
+                // budget. This covers a transient invalid/expired-token
+                // response without ever creating an unbounded retry loop.
+                if ((failure.isAuthenticationFailure() || failure.isConnectivityFailure())
+                        && attempt < attempts) {
+                    invalidateToken(null);
+                    if (failure.isConnectivityFailure()) boundedBackoff(attempt);
+                    continue;
+                }
                 throw failure;
             }
 
@@ -367,7 +377,10 @@ public class TuyaCloudClient {
 
     private void invalidateToken(String token) {
         synchronized (tokenMonitor) {
-            if (cachedToken != null && cachedToken.value().equals(token)) cachedToken = null;
+            if (token == null
+                    || (cachedToken != null && cachedToken.value().equals(token))) {
+                cachedToken = null;
+            }
         }
     }
 
