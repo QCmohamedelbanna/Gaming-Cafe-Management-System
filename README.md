@@ -460,9 +460,36 @@ Generated or machine-local folders are intentionally excluded from source contro
 - ⚛️ Node.js 20.19+ and npm 10.8.2+ for direct frontend work. Release Maven builds provision the pinned frontend toolchain in an isolated workspace.
 - 🗃️ A disposable MySQL instance only for the opt-in MySQL integration suite; the application runtime uses SQLite.
 
-### Optional local environment
+### Local environment
 
-Copy `.env.example` to `.env` and fill in local values privately. The file is ignored by Git and must never be committed. No credentials are documented here.
+Spring Boot does not load arbitrary `.env` files automatically. This repository
+imports the optional repository-root `.env` from the `dev` profile, and the
+Spring Boot Maven plugin activates that profile for `mvn spring-boot:run`.
+The import is resolved relative to `backend/`, so keep one local file at
+`<repository-root>/.env`.
+
+Use this flow:
+
+```bash
+git checkout feature/tuya-session-device-control
+git pull
+cp .env.example .env
+# Edit .env and replace the local placeholders privately.
+cd backend
+mvn spring-boot:run
+```
+
+On Windows, use `copy .env.example .env` for the copy step. The root `.env` is
+optional, local-only, ignored by Git, and never sent to the frontend. If it is
+missing, the application uses its normal defaults and process environment
+variables; local development therefore starts in safe mock mode unless Tuya
+values are supplied another way.
+
+Process environment variables take precedence over values imported from
+`.env`, which keeps CI and deployment configuration authoritative. When both
+`DEVICE_CONTROL_MODE=tuya` and `TUYA_ENABLED=true` are selected, startup fails
+with a configuration error if either Tuya credential is blank. Credential
+values are never written to startup logs.
 
 ### Start the backend
 

@@ -57,8 +57,22 @@ failure. It never logs token/signature material.
 
 ## Backend configuration
 
-Set these in the backend process environment or the untracked development
-`.env` file:
+Set these in the backend process environment or the untracked repository-root
+`.env` file. From the repository root, the normal local flow is:
+
+```bash
+cp .env.example .env
+# Edit .env privately.
+cd backend
+mvn spring-boot:run
+```
+
+The `dev` profile imports `../.env` relative to `backend/`. The file is
+optional, ignored by Git, and process environment variables override values
+from it. Spring Boot does not load arbitrary `.env` files without this
+explicit configuration import.
+
+Use these variables:
 
 ```text
 DEVICE_CONTROL_MODE=tuya
@@ -73,7 +87,10 @@ TUYA_MAX_ATTEMPTS=2
 
 This verified project uses the Central Europe endpoint above. Development and
 automated tests should use `DEVICE_CONTROL_MODE=mock` and
-`TUYA_ENABLED=false`; no test contacts Tuya Cloud.
+`TUYA_ENABLED=false`; no test contacts Tuya Cloud. If both Tuya mode and
+Tuya-enabled mode are selected, startup requires both credentials and reports
+a configuration error when either is blank. The actual credential values,
+tokens, local keys, and signatures are never logged.
 
 ## Configure the application device
 
