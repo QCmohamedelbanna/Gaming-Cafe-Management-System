@@ -92,10 +92,25 @@ if errorlevel 1 (
 )
 
 echo Creating Windows installer...
-jpackage.exe --type exe --name "Gaming Cafe" --app-version "%APP_VERSION%" --vendor "Gaming Cafe" --description "Gaming Cafe Management System" --input "%JPACKAGE_INPUT%" --dest "%OUTPUT_DIR%" --outfile GamingCafeSetup.exe --main-jar gaming-cafe.jar --main-class com.cafe.ps.launcher.GamingCafeLauncher --java-options "-Dfile.encoding=UTF-8" --java-options "-Djava.awt.headless=false" --install-dir GamingCafe --win-menu --win-menu-group "Gaming Cafe" --win-shortcut --win-upgrade-uuid 8d8f4a61-7094-4cc2-a83d-1b9178f94707
+jpackage.exe --type exe --name "Gaming Cafe" --app-version "%APP_VERSION%" --vendor "Gaming Cafe" --description "Gaming Cafe Management System" --input "%JPACKAGE_INPUT%" --dest "%OUTPUT_DIR%" --main-jar gaming-cafe.jar --main-class com.cafe.ps.launcher.GamingCafeLauncher --java-options "-Dfile.encoding=UTF-8" --java-options "-Djava.awt.headless=false" --install-dir GamingCafe --win-menu --win-menu-group "Gaming Cafe" --win-shortcut --win-upgrade-uuid 8d8f4a61-7094-4cc2-a83d-1b9178f94707
 if errorlevel 1 (
     echo ERROR: Windows installer creation failed.
     exit /b 1
+)
+
+set "GENERATED_INSTALLER="
+for /f "delims=" %%F in ('dir /b /a-d "%OUTPUT_DIR%\*.exe" 2^>nul') do if not defined GENERATED_INSTALLER set "GENERATED_INSTALLER=%%F"
+if not defined GENERATED_INSTALLER (
+    echo ERROR: jpackage reported success but no root-level .exe installer was found in "%OUTPUT_DIR%".
+    exit /b 1
+)
+
+if /I not "%GENERATED_INSTALLER%"=="GamingCafeSetup.exe" (
+    move /Y "%OUTPUT_DIR%\%GENERATED_INSTALLER%" "%OUTPUT_DIR%\GamingCafeSetup.exe" >nul
+    if errorlevel 1 (
+        echo ERROR: Could not rename "%OUTPUT_DIR%\%GENERATED_INSTALLER%" to "%OUTPUT_DIR%\GamingCafeSetup.exe".
+        exit /b 1
+    )
 )
 
 if not exist "%OUTPUT_DIR%\GamingCafeSetup.exe" (
