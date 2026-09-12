@@ -8,10 +8,12 @@ if [[ "${1:-}" == "" ]]; then
   exit 1
 fi
 backup_file="$1"
-database_path="${GAMING_CAFE_DB_PATH:-}"
-if [[ -z "$database_path" ]]; then
-  database_path="${PROGRAMDATA:-${HOME:?HOME is required}}/GamingCafe/data/gaming-cafe.db"
+data_directory="${GAMING_CAFE_DATA_DIR:-}"
+if [[ -z "$data_directory" ]]; then
+  data_directory="${PROGRAMDATA:-${HOME:?HOME is required}}/GamingCafe"
 fi
+
+database_path="${GAMING_CAFE_DB_PATH:-$data_directory/data/gaming-cafe.db}"
 
 if [[ ! -f "$backup_file" || ! -f "$database_path" ]]; then
   echo "Both the backup and target SQLite database must exist." >&2
@@ -22,7 +24,7 @@ command -v sqlite3 >/dev/null 2>&1 || {
   exit 1
 }
 
-if [[ -f "${database_path%/*}/../gaming-cafe.lock" ]]; then
+if [[ -f "$data_directory/gaming-cafe.lock" ]]; then
   echo "Stop Gaming Cafe before restoring the database." >&2
   exit 1
 fi
@@ -39,7 +41,7 @@ if [[ "$confirmation" != "RESTORE" ]]; then
   exit 1
 fi
 
-backup_dir="${GAMING_CAFE_BACKUP_DIR:-$(dirname "$database_path")/../backup}"
+backup_dir="${GAMING_CAFE_BACKUP_DIR:-$data_directory/backup}"
 mkdir -p "$backup_dir"
 umask 077
 timestamp="$(date +%Y-%m-%d-%H%M%S)"

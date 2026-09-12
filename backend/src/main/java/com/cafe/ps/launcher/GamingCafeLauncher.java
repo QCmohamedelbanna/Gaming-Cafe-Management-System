@@ -51,23 +51,30 @@ public final class GamingCafeLauncher {
     private static FileChannel instanceChannel;
     private static FileLock instanceLock;
     private static Path launcherLog;
+    private static Path runtimeDataDirectory;
+    private static int runtimePort;
 
     private GamingCafeLauncher() {
     }
 
     public static void main(String[] args) {
-        Path dataDirectory = RuntimePaths.defaultDataDirectory()
+        Path dataDirectory = RuntimePaths.resolveDataDirectory()
                 .toAbsolutePath()
                 .normalize();
+        runtimeDataDirectory = dataDirectory;
         launcherLog = prepareLauncherLog(dataDirectory);
         BootstrapCredentials bootstrapCredentials = null;
+        ConfigurableApplicationContext context = null;
 
         try {
+            runtimePort = RuntimePaths.applicationPort(dataDirectory, args);
+
             try {
                 acquireLock(dataDirectory.resolve("gaming-cafe.lock"));
             } catch (ExistingInstanceHandledException handled) {
                 return;
             }
+            RuntimePaths.ensureProductionConfigTemplate(dataDirectory);
             Runtime.getRuntime().addShutdownHook(new Thread(
                     GamingCafeLauncher::releaseLock,
                     "gaming-cafe-launcher-shutdown"
@@ -82,17 +89,16 @@ public final class GamingCafeLauncher {
                 return;
             }
             if (initialProbe == Probe.OCCUPIED) {
-                int port = RuntimePaths.applicationPort();
                 fail(
-                        "Port " + port + " is already in use",
-                        "Another application is using port " + port
+                        "Port " + runtimePort + " is already in use",
+                        "Another application is using port " + runtimePort
                                 + ". Close it or configure the conflict before starting Gaming Cafe."
                 );
                 releaseLock();
                 return;
             }
 
-            ConfigurableApplicationContext context = startApplication(args);
+            context = startApplication(args);
             if (!waitUntilReady(STARTUP_TIMEOUT)) {
                 closeQuietly(context);
                 fail(
@@ -109,11 +115,21 @@ public final class GamingCafeLauncher {
                 showBootstrapCredentials(bootstrapCredentials);
             }
         } catch (Exception exception) {
+            closeQuietly(context);
             writeLog("Startup failed: " + exception.getMessage(), exception);
-            fail(
-                    "Gaming Cafe could not start",
-                    "Review the launcher log at:\n" + launcherLog
-            );
+            if (probe() == Probe.OCCUPIED) {
+                fail(
+                        "Port " + runtimePort + " is already in use",
+                        "Another application is using port " + runtimePort
+                                + ". Close it or configure the conflict before starting Gaming Cafe.\n\n"
+                                + "Review the launcher log at:\n" + launcherLog
+                );
+            } else {
+                fail(
+                        "Gaming Cafe could not start",
+                        "Review the launcher log at:\n" + launcherLog
+                );
+            }
             releaseLock();
         }
     }
@@ -199,13 +215,21 @@ public final class GamingCafeLauncher {
 
     private static ConfigurableApplicationContext startApplication(String[] args) {
         System.setProperty("app.launcher-managed", "true");
+        System.setProperty(
+                "GAMING_CAFE_CONFIG_FILE",
+                RuntimePaths.productionConfigPath(runtimeDataDirectory, args)
+                        .toAbsolutePath()
+                        .normalize()
+                        .toUri()
+                        .toString()
+        );
         List<String> applicationArgs = new ArrayList<>(Arrays.asList(args));
         if (applicationArgs.stream().noneMatch(
                 argument -> argument.startsWith("--spring.profiles.active="))) {
             applicationArgs.add("--spring.profiles.active=prod");
         }
 
-        writeLog("Starting Spring Boot on port " + RuntimePaths.applicationPort(), null);
+        writeLog("Starting Spring Boot on port " + runtimePort, null);
         SpringApplication application = new SpringApplication(PlaystationCafeApplication.class);
         application.setAdditionalProfiles("prod");
         return application.run(applicationArgs.toArray(String[]::new));
@@ -257,7 +281,7 @@ public final class GamingCafeLauncher {
     }
 
     private static Probe probe() {
-        int port = RuntimePaths.applicationPort();
+        int port = runtimePort > 0 ? runtimePort : RuntimePaths.applicationPort(runtimeDataDirectory);
         URI statusUri = URI.create("http://127.0.0.1:" + port + "/api/system/status");
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(HTTP_TIMEOUT)
@@ -291,7 +315,7 @@ public final class GamingCafeLauncher {
     }
 
     private static void openBrowser() {
-        int port = RuntimePaths.applicationPort();
+        int port = runtimePort > 0 ? runtimePort : RuntimePaths.applicationPort(runtimeDataDirectory);
         URI uri = URI.create("http://localhost:" + port + "/");
         try {
             if (!Desktop.isDesktopSupported()) {

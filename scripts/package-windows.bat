@@ -25,6 +25,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
+where java.exe >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: java.exe was not found. A JDK 17 or newer is required on the build machine.
+    exit /b 1
+)
+
 where mvn.cmd >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Maven was not found; it is needed to read the project version.
@@ -75,13 +81,13 @@ if /I "%GAMING_CAFE_APP_IMAGE_ONLY%"=="1" (
 where candle.exe >nul 2>&1
 if errorlevel 1 (
     echo ERROR: WiX Toolset 3 candle.exe was not found on PATH.
-    echo Install WiX Toolset 3.14.1 or a compatible WiX 3 release and rerun this script, or set GAMING_CAFE_APP_IMAGE_ONLY=1 for an app image.
+    echo Install WiX Toolset 3.14.1 or a compatible WiX 3 release on the build machine and rerun this script, or set GAMING_CAFE_APP_IMAGE_ONLY=1 for an app image.
     exit /b 1
 )
 where light.exe >nul 2>&1
 if errorlevel 1 (
     echo ERROR: WiX Toolset 3 light.exe was not found on PATH.
-    echo Install WiX Toolset 3.14.1 or a compatible WiX 3 release and rerun this script, or set GAMING_CAFE_APP_IMAGE_ONLY=1 for an app image.
+    echo Install WiX Toolset 3.14.1 or a compatible WiX 3 release on the build machine and rerun this script, or set GAMING_CAFE_APP_IMAGE_ONLY=1 for an app image.
     exit /b 1
 )
 

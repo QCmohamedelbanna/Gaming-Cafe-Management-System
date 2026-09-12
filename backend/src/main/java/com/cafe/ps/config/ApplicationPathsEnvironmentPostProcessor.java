@@ -5,6 +5,7 @@ import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.Profiles;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,7 +31,7 @@ public final class ApplicationPathsEnvironmentPostProcessor
         boolean development = isDevelopmentProfile(environment);
         Path defaultDataDirectory = development
                 ? Path.of(".")
-                : RuntimePaths.defaultDataDirectory();
+                : RuntimePaths.resolveDataDirectory();
 
         Path dataDirectory = pathProperty(
                 environment,
@@ -52,6 +53,7 @@ public final class ApplicationPathsEnvironmentPostProcessor
                 "app.backup-dir",
                 dataDirectory.resolve("backup")
         );
+        Path configDirectory = RuntimePaths.configDirectory(dataDirectory);
         Path lockFile = dataDirectory.resolve("gaming-cafe.lock");
 
         try {
@@ -59,6 +61,10 @@ public final class ApplicationPathsEnvironmentPostProcessor
             createDirectories(databasePath.toAbsolutePath().normalize().getParent());
             createDirectories(logDirectory);
             createDirectories(backupDirectory);
+            createDirectories(configDirectory);
+            if (isProductionProfile(environment)) {
+                RuntimePaths.ensureProductionConfigTemplate(dataDirectory);
+            }
         } catch (IOException exception) {
             throw new IllegalStateException(
                     "Unable to create Gaming Cafe runtime directories under "
@@ -106,5 +112,9 @@ public final class ApplicationPathsEnvironmentPostProcessor
             if ("dev".equalsIgnoreCase(profile)) return true;
         }
         return false;
+    }
+
+    private static boolean isProductionProfile(ConfigurableEnvironment environment) {
+        return environment.acceptsProfiles(Profiles.of("prod"));
     }
 }

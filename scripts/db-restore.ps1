@@ -33,7 +33,10 @@ function Get-DefaultDataDirectory {
     return Join-Path $programData "GamingCafe"
 }
 
-$dataDirectory = Get-DefaultDataDirectory
+$dataDirectory = [Environment]::GetEnvironmentVariable("GAMING_CAFE_DATA_DIR")
+if ([string]::IsNullOrWhiteSpace($dataDirectory)) {
+    $dataDirectory = Get-DefaultDataDirectory
+}
 if ([string]::IsNullOrWhiteSpace($DatabasePath)) {
     $DatabasePath = [Environment]::GetEnvironmentVariable("GAMING_CAFE_DB_PATH")
 }
@@ -74,7 +77,10 @@ if ($confirmation -cne "RESTORE") {
     throw "Restore cancelled."
 }
 
-$backupDirectory = Join-Path $dataDirectory "backup"
+$backupDirectory = [Environment]::GetEnvironmentVariable("GAMING_CAFE_BACKUP_DIR")
+if ([string]::IsNullOrWhiteSpace($backupDirectory)) {
+    $backupDirectory = Join-Path $dataDirectory "backup"
+}
 New-Item -ItemType Directory -Force -Path $backupDirectory | Out-Null
 $timestamp = Get-Date -Format "yyyy-MM-dd-HHmmss"
 $preRestore = Join-Path $backupDirectory "before-restore-$timestamp.db"

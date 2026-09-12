@@ -6,6 +6,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
+
 /** Writes safe runtime locations and configuration diagnostics for a client PC. */
 @Component
 public class RuntimeStartupLogger {
@@ -40,7 +42,7 @@ public class RuntimeStartupLogger {
                         + "Tuya client secret configured={}",
                 deviceControlProperties.getMode(),
                 tuyaProperties.isEnabled(),
-                tuyaProperties.getEndpoint(),
+                safeEndpoint(tuyaProperties.getEndpoint()),
                 configured(tuyaProperties.getClientId()),
                 configured(tuyaProperties.getClientSecret())
         );
@@ -48,5 +50,13 @@ public class RuntimeStartupLogger {
 
     private static boolean configured(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private static String safeEndpoint(URI endpoint) {
+        if (endpoint == null || endpoint.getScheme() == null || endpoint.getHost() == null) {
+            return "not configured";
+        }
+        String port = endpoint.getPort() < 0 ? "" : ":" + endpoint.getPort();
+        return endpoint.getScheme() + "://" + endpoint.getHost() + port;
     }
 }

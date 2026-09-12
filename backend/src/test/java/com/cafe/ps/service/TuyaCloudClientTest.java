@@ -21,6 +21,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TuyaCloudClientTest {
 
@@ -30,6 +31,7 @@ class TuyaCloudClientTest {
     private AtomicInteger tokenRequests;
     private boolean rejectNextStatusToken;
     private boolean issueRotatedToken;
+    private boolean returnSecretInError;
     private List<RequestCapture> requests;
 
     @BeforeEach
@@ -37,6 +39,7 @@ class TuyaCloudClientTest {
         tokenRequests = new AtomicInteger();
         rejectNextStatusToken = false;
         issueRotatedToken = false;
+        returnSecretInError = false;
         requests = new CopyOnWriteArrayList<>();
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", this::handle);
@@ -133,6 +136,24 @@ class TuyaCloudClientTest {
                 .isEqualTo("fresh-token-2");
     }
 
+    @Test
+    void providerErrorMessagesCannotEchoTheConfiguredClientSecret() {
+        TuyaProperties properties = new TuyaProperties();
+        properties.setEnabled(true);
+        properties.setEndpoint(URI.create("http://127.0.0.1:" + server.getAddress().getPort()));
+        properties.setClientId(CLIENT_ID);
+        properties.setClientSecret(CLIENT_SECRET);
+        properties.setMaxAttempts(1);
+        returnSecretInError = true;
+
+        TuyaCloudClient client = new TuyaCloudClient(properties, new ObjectMapper());
+
+        assertThatThrownBy(() -> client.getStatus("device123"))
+                .isInstanceOf(TuyaCloudException.class)
+                .hasMessageContaining("[redacted]")
+                .hasMessageNotContaining(CLIENT_SECRET);
+    }
+
     private void handle(HttpExchange exchange) throws IOException {
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         requests.add(new RequestCapture(
@@ -153,7 +174,10 @@ class TuyaCloudClientTest {
         } else if (path.endsWith("/functions")) {
             response = "{\"success\":true,\"result\":{\"category\":\"cz\",\"functions\":[{\"code\":\"relay_power\"},{\"code\":\"timer\"}]}}";
         } else if (path.endsWith("/status")) {
-            if (rejectNextStatusToken) {
+            if (returnSecretInError) {
+                response = "{\"success\":false,\"code\":1000,\"msg\":\"provider echoed "
+                        + CLIENT_SECRET + "\"}";
+            } else if (rejectNextStatusToken) {
                 rejectNextStatusToken = false;
                 response = "{\"success\":false,\"code\":1010,\"msg\":\"token invalid\"}";
             } else {

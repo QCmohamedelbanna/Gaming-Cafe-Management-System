@@ -4,14 +4,16 @@
 # this script or sqlite3 on the client machine.
 set -euo pipefail
 
-database_path="${GAMING_CAFE_DB_PATH:-}"
-if [[ -z "$database_path" ]]; then
-  database_path="${PROGRAMDATA:-${HOME:?HOME is required}}/GamingCafe/data/gaming-cafe.db"
+data_directory="${GAMING_CAFE_DATA_DIR:-}"
+if [[ -z "$data_directory" ]]; then
+  data_directory="${PROGRAMDATA:-${HOME:?HOME is required}}/GamingCafe"
 fi
+
+database_path="${GAMING_CAFE_DB_PATH:-$data_directory/data/gaming-cafe.db}"
 
 backup_dir="${GAMING_CAFE_BACKUP_DIR:-}"
 if [[ -z "$backup_dir" ]]; then
-  backup_dir="$(dirname "$database_path")/../backup"
+  backup_dir="$data_directory/backup"
 fi
 
 if [[ ! -f "$database_path" ]]; then

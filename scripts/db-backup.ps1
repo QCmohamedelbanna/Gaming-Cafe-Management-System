@@ -32,7 +32,10 @@ function Get-DefaultDataDirectory {
     return Join-Path $programData "GamingCafe"
 }
 
-$dataDirectory = Get-DefaultDataDirectory
+$dataDirectory = [Environment]::GetEnvironmentVariable("GAMING_CAFE_DATA_DIR")
+if ([string]::IsNullOrWhiteSpace($dataDirectory)) {
+    $dataDirectory = Get-DefaultDataDirectory
+}
 if ([string]::IsNullOrWhiteSpace($DatabasePath)) {
     $DatabasePath = [Environment]::GetEnvironmentVariable("GAMING_CAFE_DB_PATH")
 }

@@ -352,9 +352,16 @@ public class TuyaCloudClient {
         return node.get(field).asText();
     }
 
-    private static String safeMessage(String message) {
+    private String safeMessage(String message) {
         if (message == null || message.isBlank()) return "Tuya Cloud request failed";
         String sanitized = message.replaceAll("[\\r\\n\\t]+", " ").trim();
+        if (properties.getClientSecret() != null && !properties.getClientSecret().isBlank()) {
+            sanitized = sanitized.replace(properties.getClientSecret(), "[redacted]");
+        }
+        CachedToken token = cachedToken;
+        if (token != null && token.value() != null && !token.value().isBlank()) {
+            sanitized = sanitized.replace(token.value(), "[redacted]");
+        }
         return sanitized.length() <= 240 ? sanitized : sanitized.substring(0, 240);
     }
 

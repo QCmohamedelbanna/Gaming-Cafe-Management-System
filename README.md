@@ -47,6 +47,7 @@
 - [📦 Production packaging](#-production-packaging)
 - [🪟 Client experience](#-client-experience)
 - [💾 Operations, backups, and upgrades](#-operations-backups-and-upgrades)
+- [🪟 Clean Windows client installation](#-clean-windows-client-installation)
 - [✅ Testing and verification](#-testing-and-verification)
 - [⚠️ Known limitations](#️-known-limitations)
 
@@ -458,6 +459,7 @@ Generated or machine-local folders are intentionally excluded from source contro
 - ☕ JDK 17 or newer with `java` and `jpackage` available.
 - 🧰 Maven 3.9 or newer.
 - ⚛️ Node.js 20.19+ and npm 10.8.2+ for direct frontend work. Release Maven builds provision the pinned frontend toolchain in an isolated workspace.
+- 🧱 WiX Toolset 3.x with `candle.exe` and `light.exe`; the packaging script currently documents WiX 3.14.1 as its supported assumption.
 - 🗃️ A disposable MySQL instance only for the opt-in MySQL integration suite; the application runtime uses SQLite.
 
 ### Local environment
@@ -617,6 +619,7 @@ sequenceDiagram
 - 🔒 Prevents multiple application instances from sharing the SQLite database.
 - ⏳ Opens the browser only after the readiness endpoint responds successfully.
 - 🚧 Detects an occupied port 8080 and records a useful failure instead of silently selecting a random port.
+- 🧩 Creates a safe production configuration template under `config/`; Tuya credentials stay in the external backend-only properties file.
 - 🔑 On a new database with no users, uses explicitly supplied admin environment values or generates a strong one-time password and displays it once after startup. It does not write that password to logs.
 - 📴 Runs without a normal terminal window when launched from the packaged Windows entry point.
 - 🔁 Optional start-at-login can be enabled by placing the installed shortcut in the user’s Windows Startup folder; it is not forced by the installer.
@@ -634,6 +637,9 @@ C:\Program Files\GamingCafe\
 C:\ProgramData\GamingCafe\
     data\
         gaming-cafe.db
+    config\
+        gaming-cafe.properties
+        gaming-cafe.properties.example
     logs\
         gaming-cafe.log
         launcher.log
@@ -702,13 +708,24 @@ The fixed jpackage upgrade UUID lets Windows recognize later installers as upgra
 
 ## 🌐 Local network mode
 
-The workstation can be the shop’s local host. Other authorized computers on the same network can use:
+Production binds to `127.0.0.1` by default. If the workstation is intentionally
+used as a shop LAN host, set `SERVER_ADDRESS=0.0.0.0` through an approved
+deployment configuration and apply the required firewall/access controls.
+Other authorized computers can then use:
 
 ```text
 http://<host-pc-name-or-ip>:8080
 ```
 
-The host Windows Firewall must permit inbound TCP 8080, and the shop’s network should be trusted. No external internet connection is required after the application is installed; external services are not part of the core runtime path.
+The host Windows Firewall must permit inbound TCP 8080, and the shop’s network should be trusted. No external internet connection is required after the application is installed for core local operations; Tuya hardware control requires access to Tuya Cloud.
+
+## 🪟 Clean Windows client installation
+
+See [`docs/CLIENT_INSTALLATION.md`](docs/CLIENT_INSTALLATION.md) for the
+client prerequisites, persistent paths, production configuration, backup and
+upgrade behavior, Tuya IP allowlist troubleshooting, and the TC01–TC21 clean
+Windows acceptance plan. The plan remains manual until it is run on a clean
+Windows machine.
 
 ## ⚠️ Known limitations
 

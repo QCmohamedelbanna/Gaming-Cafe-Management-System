@@ -55,10 +55,11 @@ The backend uses the current HMAC-SHA256 signing scheme, requests a token via
 `expire_time`, and refreshes it before expiration or after an authentication
 failure. It never logs token/signature material.
 
-## Backend configuration
+## Backend development configuration
 
-Set these in the backend process environment or the untracked repository-root
-`.env` file. From the repository root, the normal local flow is:
+For local development, set these in the backend process environment or the
+untracked repository-root `.env` file. From the repository root, the normal
+local flow is:
 
 ```bash
 cp .env.example .env
@@ -71,6 +72,34 @@ The `dev` profile imports `../.env` relative to `backend/`. The file is
 optional, ignored by Git, and process environment variables override values
 from it. Spring Boot does not load arbitrary `.env` files without this
 explicit configuration import.
+
+An installed Windows client does not use the repository `.env`. Put the
+production properties in:
+
+```text
+C:\ProgramData\GamingCafe\config\gaming-cafe.properties
+```
+
+The launcher creates `gaming-cafe.properties.example` with safe empty values
+on first run. Copy it to `gaming-cafe.properties`, fill in the values below
+privately, and keep the file accessible to the account running Gaming Cafe.
+Spring Boot reads this file on the server side only. The precedence is
+command-line/system properties, process environment variables, the external
+production file, and finally packaged defaults. Do not put the file in the
+frontend, source repository, installer archive, or a device row.
+
+Use dot-separated property names in the installed file:
+
+```properties
+device-control.mode=tuya
+tuya.enabled=true
+tuya.endpoint=https://openapi.tuyaeu.com
+tuya.client-id=<project client id>
+tuya.client-secret=<project client secret>
+tuya.connect-timeout=2s
+tuya.request-timeout=5s
+tuya.max-attempts=2
+```
 
 Use these variables:
 
@@ -91,6 +120,27 @@ automated tests should use `DEVICE_CONTROL_MODE=mock` and
 Tuya-enabled mode are selected, startup requires both credentials and reports
 a configuration error when either is blank. The actual credential values,
 tokens, local keys, and signatures are never logged.
+
+If the production file is absent, the application remains in safe mock mode.
+If Tuya mode and Tuya-enabled mode are explicitly selected while either
+credential is blank, startup fails with an actionable configuration error and
+the launcher points to the persistent log directory.
+
+## Tuya public-IP allowlist troubleshooting
+
+Tuya Cloud may reject a correct request when the shop's current public IP is
+not authorized. An error equivalent to:
+
+```text
+your ip(...) don't have access to this API
+```
+
+usually means the project's Authorization IP Allowlist in the Tuya Developer
+Platform needs the shop's current public IP. A dynamic ISP address can change,
+so check the allowlist again after a network change. Also verify the project
+region, subscribed APIs, linked Smart Life account, and device ID. Application
+code can be correct while Tuya rejects the current IP. Do not reset the Client
+Secret unnecessarily; an allowlist update may be the only required change.
 
 ## Configure the application device
 
@@ -123,8 +173,9 @@ enabled = true
 shutdownPolicy = DIRECT_POWER
 ```
 
-The Client ID and Client Secret belong only in the backend process environment.
-They are never entered in this device form or stored on the `devices` row.
+The Client ID and Client Secret belong only in the backend process environment
+or the protected external production properties file. They are never entered
+in this device form or stored on the `devices` row.
 
 For discovery before the code is known, save the provider and device ID with
 `enabled: false`, call the diagnostics endpoint, then save the discovered

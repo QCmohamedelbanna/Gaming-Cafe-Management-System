@@ -18,6 +18,11 @@ target/
 .env.local
 .env.*.local
 
+# External production configuration when a local checkout is used for
+# packaged-runtime smoke testing. The real client file lives under ProgramData.
+config/gaming-cafe.properties
+backend/config/gaming-cafe.properties
+
 # Locally cached credentials/tokens, if a provider or developer tool writes them
 *.token
 .tokens/
