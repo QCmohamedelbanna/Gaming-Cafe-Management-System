@@ -42,7 +42,8 @@ class ProductionConfigurationLoadingTest {
         try (ConfigurableApplicationContext context = application.run(
                 "--app.data-dir=" + dataDirectory,
                 "--GAMING_CAFE_CONFIG_FILE=" + config.toUri(),
-                "--tuya.client-id=command-line-client-id"
+                "--tuya.client-id=command-line-client-id",
+                "--spring.profiles.active=prod"
         )) {
             DeviceControlProperties deviceControl = context.getBean(DeviceControlProperties.class);
             TuyaProperties tuya = context.getBean(TuyaProperties.class);
