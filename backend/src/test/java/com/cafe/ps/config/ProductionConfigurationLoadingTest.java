@@ -43,6 +43,7 @@ class ProductionConfigurationLoadingTest {
                 "--app.data-dir=" + dataDirectory,
                 "--GAMING_CAFE_CONFIG_FILE=" + config.toUri(),
                 "--tuya.client-id=command-line-client-id",
+                "--logging.config=classpath:logback-config-loading-test.xml",
                 "--spring.profiles.active=prod"
         )) {
             DeviceControlProperties deviceControl = context.getBean(DeviceControlProperties.class);
